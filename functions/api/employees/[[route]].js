@@ -1,178 +1,118 @@
-// /api/employees/* — CRUD for company employees
-import { requireAuth, requireRole, json, error } from '../_lib/auth.js';
+// /api/employees — list, create, update — self-contained
+const enc = new TextEncoder();
 
-export async function onRequest({ request, env, params }) {
-  const result = await requireAuth(request, env);
-  if (result.error) return error(result.error, result.status);
+function parseB64u(str) {
+  str = str.replace(/-/g,'+').replace(/_/g,'/');
+  while (str.length % 4) str += '=';
+  return Uint8Array.from(atob(str), c => c.charCodeAt(0));
+}
 
-  const { user } = result;
-  const db = env.DB;
+async function verifyJWT(token, secret) {
+  try {
+    const [h, b, sig] = token.split('.');
+    if (!h || !b || !sig) return null;
+    const key = await crypto.subtle.importKey('raw', enc.encode(secret), {name:'HMAC',hash:'SHA-256'}, false, ['verify']);
+    const valid = await crypto.subtle.verify('HMAC', key, parseB64u(sig), enc.encode(`${h}.${b}`));
+    if (!valid) return null;
+    const payload = JSON.parse(new TextDecoder().decode(parseB64u(b)));
+    if (payload.exp < Math.floor(Date.now()/1000)) return null;
+    return payload;
+  } catch { return null; }
+}
+
+function json(data, status=200) {
+  return new Response(JSON.stringify(data), {status, headers:{'Content-Type':'application/json'}});
+}
+
+export async function onRequest({request, env, params}) {
+  const auth = request.headers.get('Authorization') || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+  if (!token) return json({error:'Unauthorized'}, 401);
+  const payload = await verifyJWT(token, env.JWT_SECRET);
+  if (!payload) return json({error:'Token expired or invalid'}, 401);
+
+  const allowed = ['ghaya_admin','company_admin','manager'];
+  if (!allowed.includes(payload.role)) return json({error:'Forbidden'}, 403);
+
+  const parts = params.route || [];
+  const id = parts[0] || null;
   const method = request.method;
-  const url = new URL(request.url);
-  const route = params.route || [];
-  const employeeId = Array.isArray(route) ? route[0] : route;
-
-  // Only ghaya_admin, company_admin, manager can access employee data
-  if (!['ghaya_admin','company_admin','manager','employee'].includes(user.role)) {
-    return error('Forbidden', 403);
-  }
-
-  // Employees can only see their own record
-  if (user.role === 'employee') {
-    if (method !== 'GET') return error('Forbidden', 403);
-    const emp = await db.prepare(
-      'SELECT * FROM employees WHERE user_id = ? AND company_id = ?'
-    ).bind(user.sub, user.company_id).first();
-    return emp ? json({ employee: emp }) : error('Not found', 404);
-  }
-
-  // company scope
-  const companyId = user.role === 'ghaya_admin'
-    ? url.searchParams.get('company_id')
-    : user.company_id;
-  if (!companyId) return error('company_id required');
+  const db = env.DB;
+  const company_id = payload.company_id;
 
   // GET /api/employees
-  if (method === 'GET' && !employeeId) {
-    const { results } = await db.prepare(`
-      SELECT e.*, d.name_en as dept_name, j.title_en as job_title,
-        u.email as login_email
-      FROM employees e
-      LEFT JOIN departments d ON d.id = e.department_id
-      LEFT JOIN job_titles j ON j.id = e.job_title_id
-      LEFT JOIN users u ON u.id = e.user_id
-      WHERE e.company_id = ? AND e.status != 'terminated'
-      ORDER BY e.first_name_en
-    `).bind(companyId).all();
-    return json({ employees: results, total: results.length });
+  if (method === 'GET' && !id) {
+    let query, args;
+    if (payload.role === 'ghaya_admin') {
+      query = 'SELECT * FROM employees ORDER BY created_at DESC';
+      args = [];
+    } else {
+      if (!company_id) return json({error:'No company associated'}, 400);
+      query = 'SELECT * FROM employees WHERE company_id = ? ORDER BY created_at DESC';
+      args = [company_id];
+    }
+    const result = await db.prepare(query).bind(...args).all();
+    return json({employees: result.results ?? []});
   }
 
   // GET /api/employees/:id
-  if (method === 'GET' && employeeId) {
-    const emp = await db.prepare(`
-      SELECT e.*, d.name_en as dept_name, j.title_en as job_title,
-        u.email as login_email
-      FROM employees e
-      LEFT JOIN departments d ON d.id = e.department_id
-      LEFT JOIN job_titles j ON j.id = e.job_title_id
-      LEFT JOIN users u ON u.id = e.user_id
-      WHERE e.id = ? AND e.company_id = ?
-    `).bind(employeeId, companyId).first();
-    if (!emp) return error('Employee not found', 404);
-    return json({ employee: emp });
+  if (method === 'GET' && id) {
+    const emp = await db.prepare('SELECT * FROM employees WHERE id = ?').bind(id).first();
+    if (!emp) return json({error:'Not found'}, 404);
+    if (payload.role !== 'ghaya_admin' && emp.company_id !== company_id) return json({error:'Forbidden'}, 403);
+    return json({employee: emp});
   }
 
-  // POST /api/employees — create employee
+  // POST /api/employees
   if (method === 'POST') {
-    if (!['ghaya_admin','company_admin'].includes(user.role)) return error('Forbidden', 403);
     let body;
-    try { body = await request.json(); } catch { return error('Invalid JSON'); }
+    try { body = await request.json(); } catch { return json({error:'Invalid JSON'}, 400); }
 
-    const {
-      first_name_en, last_name_en, first_name_ar, last_name_ar,
-      civil_id, nationality, is_kuwaiti, gender, date_of_birth,
-      mobile, work_email, personal_email,
-      department_id, job_title_id, direct_manager_id,
-      employment_type, hire_date, probation_end_date,
-      basic_salary, housing_allowance, transport_allowance, other_allowances,
-      annual_leave_days, pifss_enrolled, pifss_start_date,
-      employee_number, notes
-    } = body;
-
-    if (!first_name_en || !hire_date) return error('first_name_en and hire_date are required');
-
-    // Get company settings for law minimums
-    const settings = await db.prepare('SELECT * FROM company_settings WHERE company_id = ?').bind(companyId).first();
-    const lawMinLeave = settings?.default_annual_leave ?? 30;
-    const actualLeave = annual_leave_days ? Math.max(annual_leave_days, lawMinLeave) : lawMinLeave;
+    const coId = payload.role === 'ghaya_admin' ? (body.company_id || company_id) : company_id;
+    if (!coId) return json({error:'company_id required'}, 400);
+    if (!body.first_name_en || !body.last_name_en) return json({error:'first_name_en and last_name_en required'}, 400);
 
     const id = crypto.randomUUID();
     await db.prepare(`
-      INSERT INTO employees (
-        id, company_id, employee_number,
-        first_name_en, last_name_en, first_name_ar, last_name_ar,
-        civil_id, nationality, is_kuwaiti, gender, date_of_birth,
-        mobile, work_email, personal_email,
-        department_id, job_title_id, direct_manager_id,
-        employment_type, hire_date, probation_end_date,
-        basic_salary, housing_allowance, transport_allowance, other_allowances,
-        annual_leave_days, pifss_enrolled, pifss_start_date, notes, status
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'active')
+      INSERT INTO employees
+        (id, company_id, first_name_en, last_name_en, first_name_ar, last_name_ar,
+         civil_id, nationality, job_title_en, department, basic_salary,
+         employment_start_date, work_email, phone, contract_type, is_active)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
     `).bind(
-      id, companyId, employee_number || null,
-      first_name_en, last_name_en || '', first_name_ar || null, last_name_ar || null,
-      civil_id || null, nationality || null, is_kuwaiti ? 1 : 0, gender || null, date_of_birth || null,
-      mobile || null, work_email || null, personal_email || null,
-      department_id || null, job_title_id || null, direct_manager_id || null,
-      employment_type || 'full_time', hire_date, probation_end_date || null,
-      basic_salary || 0, housing_allowance || 0, transport_allowance || 0, other_allowances || 0,
-      actualLeave, pifss_enrolled ? 1 : 0, pifss_start_date || null, notes || null
+      id, coId,
+      body.first_name_en, body.last_name_en,
+      body.first_name_ar || null, body.last_name_ar || null,
+      body.civil_id || null, body.nationality || null,
+      body.job_title_en || null, body.department || null,
+      body.basic_salary || 0,
+      body.employment_start_date || null,
+      body.work_email || null, body.phone || null,
+      body.contract_type || 'full_time'
     ).run();
 
-    // Create login user if work_email provided
-    if (work_email) {
-      const userId = crypto.randomUUID();
-      // Temporary password = first name + hire year (e.g. Ahmed2024)
-      const { hashPassword } = await import('../_lib/auth.js');
-      const hireYear = hire_date.substring(0,4);
-      const tempPass = `${first_name_en}${hireYear}!`;
-      const hash = await hashPassword(tempPass);
-      await db.prepare(
-        "INSERT OR IGNORE INTO users (id, company_id, email, password_hash, role, employee_id) VALUES (?,?,?,?,'employee',?)"
-      ).bind(userId, companyId, work_email.toLowerCase(), hash, id).run();
-      await db.prepare("UPDATE employees SET user_id = ? WHERE id = ?").bind(userId, id).run();
-    }
-
-    // Audit log
-    await db.prepare(
-      "INSERT INTO audit_log (company_id, user_id, action, entity_type, entity_id, new_values) VALUES (?,?,?,?,?,?)"
-    ).bind(companyId, user.sub, 'employee.create', 'employee', id, JSON.stringify(body)).run();
-
-    const created = await db.prepare('SELECT * FROM employees WHERE id = ?').bind(id).first();
-    return json({ employee: created, message: 'Employee created' }, 201);
+    return json({success: true, employee_id: id}, 201);
   }
 
-  // PUT /api/employees/:id — update
-  if (method === 'PUT' && employeeId) {
-    if (!['ghaya_admin','company_admin','manager'].includes(user.role)) return error('Forbidden', 403);
+  // PUT /api/employees/:id
+  if (method === 'PUT' && id) {
     let body;
-    try { body = await request.json(); } catch { return error('Invalid JSON'); }
+    try { body = await request.json(); } catch { return json({error:'Invalid JSON'}, 400); }
 
-    const allowed = [
-      'first_name_en','last_name_en','first_name_ar','last_name_ar',
-      'civil_id','nationality','gender','date_of_birth','mobile',
-      'work_email','personal_email','department_id','job_title_id',
-      'direct_manager_id','employment_type','probation_end_date',
-      'basic_salary','housing_allowance','transport_allowance','other_allowances',
-      'annual_leave_days','pifss_enrolled','pifss_start_date','notes','status'
-    ];
-    const updates = Object.entries(body).filter(([k]) => allowed.includes(k));
-    if (!updates.length) return error('No valid fields to update');
+    const emp = await db.prepare('SELECT company_id FROM employees WHERE id = ?').bind(id).first();
+    if (!emp) return json({error:'Not found'}, 404);
+    if (payload.role !== 'ghaya_admin' && emp.company_id !== company_id) return json({error:'Forbidden'}, 403);
 
-    const setClause = updates.map(([k]) => `${k} = ?`).join(', ');
-    const values = updates.map(([,v]) => v);
-    values.push(employeeId, companyId);
-
-    await db.prepare(
-      `UPDATE employees SET ${setClause}, updated_at = datetime('now') WHERE id = ? AND company_id = ?`
-    ).bind(...values).run();
-
-    await db.prepare(
-      "INSERT INTO audit_log (company_id, user_id, action, entity_type, entity_id, new_values) VALUES (?,?,?,?,?,?)"
-    ).bind(companyId, user.sub, 'employee.update', 'employee', employeeId, JSON.stringify(body)).run();
-
-    const updated = await db.prepare('SELECT * FROM employees WHERE id = ?').bind(employeeId).first();
-    return json({ employee: updated, message: 'Employee updated' });
+    const allowed_fields = ['first_name_en','last_name_en','first_name_ar','last_name_ar','civil_id','nationality','job_title_en','department','basic_salary','employment_start_date','work_email','phone','contract_type','is_active'];
+    const fields = [], values = [];
+    for (const key of allowed_fields) {
+      if (key in body) { fields.push(`${key} = ?`); values.push(body[key]); }
+    }
+    if (!fields.length) return json({error:'No fields to update'}, 400);
+    values.push(id);
+    await db.prepare(`UPDATE employees SET ${fields.join(', ')} WHERE id = ?`).bind(...values).run();
+    return json({success: true});
   }
 
-  // DELETE /api/employees/:id — soft delete (terminate)
-  if (method === 'DELETE' && employeeId) {
-    if (!['ghaya_admin','company_admin'].includes(user.role)) return error('Forbidden', 403);
-    await db.prepare(
-      "UPDATE employees SET status = 'terminated', termination_date = date('now'), updated_at = datetime('now') WHERE id = ? AND company_id = ?"
-    ).bind(employeeId, companyId).run();
-    return json({ message: 'Employee terminated' });
-  }
-
-  return error('Not found', 404);
+  return json({error:'Method not allowed'}, 405);
 }
