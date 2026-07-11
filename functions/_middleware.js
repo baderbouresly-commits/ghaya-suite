@@ -1,12 +1,6 @@
-// ============================================================
-// GHAYA SUITE — Global Middleware
-// Runs on every /api/* request
-// ============================================================
-
 export async function onRequest(context) {
-  const { request, env, next } = context;
+  const { request, next } = context;
 
-  // CORS headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
@@ -17,12 +11,15 @@ export async function onRequest(context) {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
-  // Add CORS to all responses
-  const response = await next();
-  const newHeaders = new Headers(response.headers);
-  Object.entries(corsHeaders).forEach(([k, v]) => newHeaders.set(k, v));
-  return new Response(response.body, {
-    status: response.status,
-    headers: newHeaders,
-  });
+  try {
+    const response = await next();
+    const newHeaders = new Headers(response.headers);
+    Object.entries(corsHeaders).forEach(([k, v]) => newHeaders.set(k, v));
+    return new Response(response.body, { status: response.status, headers: newHeaders });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: e.message, stack: e.stack }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
+  }
 }
