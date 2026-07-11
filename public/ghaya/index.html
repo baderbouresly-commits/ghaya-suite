@@ -390,10 +390,11 @@ async function loadDashboard() {
   try {
     const data = await api('GET', '/dashboard');
     if (!data) return;
-    document.getElementById('stat-companies').textContent = data.total_companies ?? '—';
-    document.getElementById('stat-employees').textContent = data.total_employees ?? '—';
-    document.getElementById('stat-managed').textContent = data.managed_companies ?? '—';
-    document.getElementById('stat-active').textContent = data.active_subscriptions ?? '—';
+const s = data.stats || data;
+    document.getElementById('stat-companies').textContent = s.total_companies ?? '—';
+    document.getElementById('stat-employees').textContent = s.total_employees ?? '—';
+    document.getElementById('stat-managed').textContent = s.managed_companies ?? '—';
+    document.getElementById('stat-active').textContent = s.active_subscriptions ?? s.active_companies ?? '—';
     renderRecentCompanies(data.recent_companies || []);
   } catch(e) {
     document.getElementById('recent-companies-list').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Could not load data</div></div>';
