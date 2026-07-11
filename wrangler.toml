@@ -13,3 +13,4 @@ JWT_EXPIRES_IN = "86400"
 APP_NAME = "Ghaya Suite"
 SUPPORT_EMAIL = "support@ghaya.hr"
 
+
