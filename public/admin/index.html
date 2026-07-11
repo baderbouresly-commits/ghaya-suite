@@ -1,818 +1,527 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ghaya Suite — Admin Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-  <style>
-    :root {
-      --cream:   #FAF6F1;
-      --coral:   #E8472A;
-      --navy:    #0A2540;
-      --teal:    #00BFA6;
-      --charcoal:#1A1A1A;
-      --gray:    #6B7A9A;
-      --border:  #E4DDD6;
-      --white:   #FFFFFF;
-      --coral-light: #FDF0EE;
-      --teal-light: #E6FAF7;
-      --navy-light: #EEF2F7;
-      --shadow: 0 1px 3px rgba(10,37,64,.07), 0 4px 16px rgba(10,37,64,.05);
-      --sidebar-w: 220px;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', 'Almarai', sans-serif; background: var(--cream); color: var(--charcoal); min-height: 100vh; }
-
-    /* ── Sidebar ──────────────────────────────── */
-    .sidebar {
-      position: fixed;
-      top: 0; left: 0;
-      width: var(--sidebar-w);
-      height: 100vh;
-      background: var(--navy);
-      display: flex;
-      flex-direction: column;
-      z-index: 50;
-      overflow-y: auto;
-    }
-
-    .sidebar-logo {
-      padding: 24px 20px 20px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .sidebar-logo svg { width: 36px; height: 36px; flex-shrink: 0; }
-    .sidebar-logo-text {
-      font-family: 'Almarai', sans-serif;
-      font-weight: 800;
-      font-size: 18px;
-      color: var(--white);
-    }
-    .sidebar-logo-sub { font-size: 10px; color: var(--gray); letter-spacing: .05em; }
-
-    .sidebar-section-label {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,.3);
-      padding: 20px 20px 8px;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 20px;
-      font-size: 13px;
-      font-weight: 500;
-      color: rgba(255,255,255,.6);
-      cursor: pointer;
-      transition: all .15s;
-      border-radius: 0;
-      border: none;
-      background: none;
-      width: 100%;
-      text-align: left;
-      text-decoration: none;
-    }
-    .nav-item:hover { background: rgba(255,255,255,.06); color: white; }
-    .nav-item.active { background: rgba(232,71,42,.18); color: var(--coral); }
-    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
-    .nav-badge {
-      margin-left: auto;
-      background: var(--coral);
-      color: white;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 10px;
-      min-width: 18px;
-      text-align: center;
-    }
-
-    .sidebar-footer {
-      margin-top: auto;
-      padding: 20px;
-      border-top: 1px solid rgba(255,255,255,.08);
-    }
-    .sidebar-user {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .sidebar-avatar {
-      width: 34px; height: 34px;
-      background: var(--coral);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Almarai', sans-serif;
-      font-weight: 700;
-      font-size: 12px;
-      color: white;
-      flex-shrink: 0;
-    }
-    .sidebar-user-name { font-size: 12px; color: rgba(255,255,255,.8); font-weight: 600; }
-    .sidebar-user-role { font-size: 10px; color: var(--gray); }
-    .btn-logout {
-      width: 100%;
-      padding: 8px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 6px;
-      color: rgba(255,255,255,.5);
-      font-size: 12px;
-      cursor: pointer;
-      transition: all .15s;
-    }
-    .btn-logout:hover { background: rgba(232,71,42,.2); color: var(--coral); border-color: rgba(232,71,42,.3); }
-
-    /* ── Main Content ─────────────────────────── */
-    .main { margin-left: var(--sidebar-w); min-height: 100vh; }
-
-    .topbar {
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      padding: 0 28px;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 40;
-    }
-    .topbar-title {
-      font-family: 'Almarai', sans-serif;
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--navy);
-    }
-    .topbar-right { display: flex; align-items: center; gap: 12px; }
-    .lang-btns { display: flex; gap: 4px; }
-    .lang-btn { padding: 4px 9px; border: 1.5px solid var(--border); border-radius: 5px; background: transparent; color: var(--gray); font-size: 11px; font-weight: 600; cursor: pointer; transition: all .15s; }
-    .lang-btn.active { background: var(--navy); border-color: var(--navy); color: white; }
-
-    .content { padding: 28px; }
-
-    /* ── Stats Grid ───────────────────────────── */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 28px;
-    }
-    .stat-card {
-      background: var(--white);
-      border-radius: 14px;
-      padding: 20px;
-      box-shadow: var(--shadow);
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-    }
-    .stat-icon {
-      width: 44px; height: 44px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .stat-icon.coral { background: var(--coral-light); }
-    .stat-icon.teal { background: var(--teal-light); }
-    .stat-icon.navy { background: var(--navy-light); }
-    .stat-icon.yellow { background: #FFF8E1; }
-    .stat-icon svg { width: 20px; height: 20px; }
-    .stat-info {}
-    .stat-value {
-      font-family: 'Almarai', sans-serif;
-      font-size: 28px;
-      font-weight: 800;
-      color: var(--navy);
-      line-height: 1;
-    }
-    .stat-label { font-size: 12px; color: var(--gray); margin-top: 4px; }
-
-    /* ── Grid Layout ──────────────────────────── */
-    .content-grid {
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 20px;
-    }
-
-    /* ── Card ─────────────────────────────────── */
-    .card {
-      background: var(--white);
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-    .card-head {
-      padding: 18px 20px 14px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .card-title {
-      font-family: 'Almarai', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--navy);
-    }
-    .card-action {
-      font-size: 12px;
-      color: var(--coral);
-      text-decoration: none;
-      font-weight: 600;
-      cursor: pointer;
-      background: none;
-      border: none;
-      padding: 0;
-    }
-
-    /* ── Leave Requests Table ─────────────────── */
-    .table { width: 100%; border-collapse: collapse; }
-    .table th {
-      text-align: left;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: var(--gray);
-      padding: 10px 20px;
-      border-bottom: 1px solid var(--border);
-      background: var(--cream);
-    }
-    .table td { padding: 12px 20px; font-size: 13px; border-bottom: 1px solid rgba(228,221,214,.5); vertical-align: middle; }
-    .table tr:last-child td { border-bottom: none; }
-    .table tr:hover td { background: var(--cream); }
-
-    .emp-name { font-weight: 600; color: var(--navy); }
-    .emp-sub { font-size: 11px; color: var(--gray); margin-top: 1px; }
-
-    .status-badge {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 20px;
-      white-space: nowrap;
-    }
-    .status-badge.pending { background: #FFF3CD; color: #856404; }
-    .status-badge.approved { background: var(--teal-light); color: #007A6B; }
-    .status-badge.rejected { background: var(--coral-light); color: var(--coral); }
-    .status-badge.active { background: var(--teal-light); color: #007A6B; }
-    .status-badge.draft { background: var(--navy-light); color: var(--navy); }
-
-    .action-btns { display: flex; gap: 6px; }
-    .btn-approve {
-      padding: 5px 10px;
-      background: var(--teal-light);
-      border: 1px solid rgba(0,191,166,.3);
-      border-radius: 6px;
-      color: #007A6B;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all .15s;
-    }
-    .btn-approve:hover { background: var(--teal); color: white; }
-    .btn-reject {
-      padding: 5px 10px;
-      background: var(--coral-light);
-      border: 1px solid rgba(232,71,42,.2);
-      border-radius: 6px;
-      color: var(--coral);
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all .15s;
-    }
-    .btn-reject:hover { background: var(--coral); color: white; }
-
-    /* ── Right Column ─────────────────────────── */
-    .right-col { display: flex; flex-direction: column; gap: 20px; }
-
-    /* Quick Actions */
-    .quick-actions { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-    .qa-btn {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      background: transparent;
-      cursor: pointer;
-      transition: all .15s;
-      font-size: 13px;
-      color: var(--navy);
-      font-weight: 500;
-      text-align: left;
-      width: 100%;
-    }
-    .qa-btn:hover { border-color: var(--coral); background: var(--coral-light); color: var(--coral); }
-    .qa-icon { font-size: 18px; width: 28px; text-align: center; }
-
-    /* Department breakdown */
-    .dept-list { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
-    .dept-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .dept-name { font-size: 13px; color: var(--charcoal); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .dept-count { font-size: 12px; font-weight: 600; color: var(--navy); white-space: nowrap; }
-    .dept-bar { flex: 2; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
-    .dept-bar-fill { height: 100%; background: var(--coral); border-radius: 3px; }
-
-    /* Expiring docs */
-    .alert-list { padding: 12px 20px; display: flex; flex-direction: column; gap: 8px; }
-    .alert-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 10px 12px;
-      background: var(--coral-light);
-      border-radius: 8px;
-      font-size: 12px;
-      color: var(--coral);
-    }
-    .alert-item svg { flex-shrink: 0; margin-top: 1px; }
-    .alert-item-body {}
-    .alert-item-name { font-weight: 600; }
-    .alert-item-date { color: rgba(232,71,42,.7); }
-
-    /* Probation */
-    .prob-item {
-      padding: 10px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 13px;
-    }
-    .prob-item:last-child { border-bottom: none; }
-    .prob-name { font-weight: 600; color: var(--navy); }
-    .prob-date { font-size: 11px; color: var(--coral); }
-
-    /* Loading */
-    .loading-overlay { position: fixed; inset: 0; background: var(--cream); display: flex; align-items: center; justify-content: center; z-index: 1000; flex-direction: column; gap: 16px; }
-    .loading-spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--coral); border-radius: 50%; animation: spin .7s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { font-size: 14px; color: var(--gray); }
-
-    /* Empty state */
-    .empty-state { padding: 32px 20px; text-align: center; color: var(--gray); font-size: 13px; }
-    .empty-icon { font-size: 32px; margin-bottom: 8px; }
-
-    /* Payroll banner */
-    .payroll-banner {
-      background: linear-gradient(135deg, var(--navy) 0%, #1a3a5c 100%);
-      border-radius: 12px;
-      padding: 20px;
-      color: white;
-      margin-bottom: 20px;
-    }
-    .payroll-banner-title { font-family: 'Almarai', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 4px; opacity: .7; }
-    .payroll-banner-amount { font-family: 'Almarai', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 4px; }
-    .payroll-banner-period { font-size: 11px; opacity: .6; }
-    .payroll-banner-status { margin-top: 12px; display: flex; align-items: center; gap: 8px; }
-    .payroll-status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); }
-    .payroll-status-text { font-size: 12px; opacity: .8; }
-
-    /* Managed badge */
-    .managed-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--teal-light);
-      color: #007A6B;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 20px;
-    }
-    .managed-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
-
-    /* Responsive */
-    @media (max-width: 900px) {
-      .sidebar { transform: translateX(-100%); }
-      .main { margin-left: 0; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .content-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 600px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .content { padding: 16px; }
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Ghaya — Company Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Almarai',sans-serif;background:#FAF6F1;color:#1a1a2e;min-height:100vh}
+body.ar{direction:rtl}
+.sidebar{position:fixed;top:0;left:0;width:240px;height:100vh;background:#1a1a2e;color:#fff;display:flex;flex-direction:column;z-index:100}
+body.ar .sidebar{left:auto;right:0}
+.sidebar-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-circle{width:36px;height:36px;border-radius:50%;background:#E8472A;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff}
+.logo-text{font-size:20px;font-weight:800}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:1px;margin-top:2px}
+.company-badge{margin-top:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:6px 10px;font-size:11px;color:rgba(255,255,255,.7);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav{flex:1;padding:16px 0;overflow-y:auto}
+.nav-section{padding:8px 20px 4px;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1.5px;font-weight:700}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;transition:background .2s;color:rgba(255,255,255,.7);font-size:14px;border-left:3px solid transparent}
+body.ar .nav-item{border-left:none;border-right:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav-item.active{background:rgba(232,71,42,.15);color:#E8472A;border-left-color:#E8472A}
+body.ar .nav-item.active{border-left-color:transparent;border-right-color:#E8472A}
+.nav-icon{font-size:16px;width:20px;text-align:center}
+.nav-badge{margin-left:auto;background:#E8472A;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:800}
+body.ar .nav-badge{margin-left:0;margin-right:auto}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.1)}
+.user-row{display:flex;align-items:center;gap:10px}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:#E8472A;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:10px;color:rgba(255,255,255,.4)}
+.logout-btn{background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;padding:4px;transition:color .2s}
+.logout-btn:hover{color:#E8472A}
+.main{margin-left:240px;min-height:100vh}
+body.ar .main{margin-left:0;margin-right:240px}
+.topbar{background:#fff;border-bottom:1px solid #e8e0d8;padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.page-title{font-size:18px;font-weight:800;color:#1a1a2e}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.lang-toggle{display:flex;border:1px solid #e8e0d8;border-radius:8px;overflow:hidden}
+.lang-btn{padding:6px 14px;font-size:12px;font-family:'Almarai',sans-serif;cursor:pointer;border:none;background:#fff;color:#666;font-weight:700;transition:all .2s}
+.lang-btn.active{background:#1a1a2e;color:#fff}
+.content{padding:32px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:#fff;border-radius:12px;padding:20px;border:1px solid #e8e0d8}
+.stat-icon{font-size:22px;margin-bottom:8px}
+.stat-label{font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;margin-bottom:6px}
+.stat-value{font-size:30px;font-weight:800;color:#1a1a2e;line-height:1}
+.stat-sub{font-size:11px;color:#888;margin-top:4px}
+.section-card{background:#fff;border-radius:12px;border:1px solid #e8e0d8;margin-bottom:24px;overflow:hidden}
+.section-header{padding:20px 24px;border-bottom:1px solid #f0ebe4;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.section-title{font-size:15px;font-weight:800;color:#1a1a2e}
+.section-sub{font-size:12px;color:#888;margin-top:2px}
+.section-actions{display:flex;gap:8px;align-items:center}
+.btn{padding:9px 18px;border-radius:8px;font-family:'Almarai',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:#E8472A;color:#fff}
+.btn-primary:hover{background:#d03d22}
+.btn-ghost{background:#f5f0eb;color:#1a1a2e;border:1px solid #e8e0d8}
+.btn-ghost:hover{background:#e8e0d8}
+.btn-success{background:#1a7a42;color:#fff}
+.btn-success:hover{background:#156234}
+.btn-danger{background:#fff;color:#c42a00;border:1px solid #E8472A}
+.btn-danger:hover{background:#E8472A;color:#fff}
+.btn-sm{padding:6px 12px;font-size:12px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 20px;text-align:left;font-size:11px;font-weight:700;color:#888;letter-spacing:.5px;border-bottom:1px solid #f0ebe4;white-space:nowrap;background:#faf6f1}
+body.ar th{text-align:right}
+td{padding:13px 20px;font-size:13px;border-bottom:1px solid #f5f0eb;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fdf9f6}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-green{background:#e6f7ee;color:#1a7a42}
+.badge-blue{background:#e6f0ff;color:#1a4da0}
+.badge-orange{background:#fff3e6;color:#c46a00}
+.badge-red{background:#ffeee6;color:#c42a00}
+.badge-gray{background:#f0ebe4;color:#666}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.modal-header{padding:24px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:17px;font-weight:800}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#888;padding:4px}
+.modal-body{padding:24px}
+.modal-footer{padding:0 24px 24px;display:flex;gap:10px;justify-content:flex-end}
+.form-row{margin-bottom:14px}
+.form-label{display:block;font-size:12px;font-weight:700;color:#555;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
+.form-input{width:100%;padding:10px 14px;border:1px solid #e8e0d8;border-radius:8px;font-family:'Almarai',sans-serif;font-size:14px;color:#1a1a2e;background:#faf6f1;transition:border .2s}
+.form-input:focus{outline:none;border-color:#E8472A;background:#fff}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+select.form-input{cursor:pointer}
+.empty{padding:48px 24px;text-align:center;color:#888}
+.empty-icon{font-size:40px;margin-bottom:10px}
+.empty-text{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
+.empty-sub{font-size:13px}
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:#1a7a42}
+.toast.error{background:#c42a00}
+.loading{display:flex;align-items:center;justify-content:center;padding:48px;color:#888;font-size:14px;gap:8px}
+.spinner{width:20px;height:20px;border:2px solid #e8e0d8;border-top-color:#E8472A;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.payroll-card{background:linear-gradient(135deg,#1a1a2e 0%,#2d2d4e 100%);border-radius:12px;padding:28px;color:#fff;margin-bottom:24px}
+.payroll-title{font-size:13px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:1px;margin-bottom:8px}
+.payroll-amount{font-size:40px;font-weight:800;margin-bottom:4px}
+.payroll-sub{font-size:13px;color:rgba(255,255,255,.5)}
+.payroll-actions{margin-top:20px;display:flex;gap:10px}
+.search-bar{padding:8px 14px;border:1px solid #e8e0d8;border-radius:8px;font-family:'Almarai',sans-serif;font-size:13px;width:200px;background:#faf6f1}
+.search-bar:focus{outline:none;border-color:#E8472A}
+.leave-card{border:1px solid #e8e0d8;border-radius:10px;padding:16px 20px;margin:12px 24px;display:flex;align-items:center;gap:16px;background:#fff}
+.leave-card:last-child{margin-bottom:24px}
+.leave-avatar{width:38px;height:38px;border-radius:50%;background:#E8472A;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;flex-shrink:0}
+.leave-info{flex:1}
+.leave-name{font-size:14px;font-weight:700}
+.leave-detail{font-size:12px;color:#888;margin-top:2px}
+.leave-actions{display:flex;gap:8px}
+.filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter-btn{padding:5px 12px;border-radius:20px;font-family:'Almarai',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #e8e0d8;background:#fff;color:#888;transition:all .2s}
+.filter-btn.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0!important;margin-right:0!important}.stats-grid{grid-template-columns:1fr 1fr}.content{padding:16px}.form-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 
-<div class="loading-overlay" id="loading">
-  <div class="loading-spinner"></div>
-  <div class="loading-text">Loading dashboard…</div>
-</div>
-
-<!-- Sidebar -->
-<aside class="sidebar">
+<div class="sidebar">
   <div class="sidebar-logo">
-    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 70,42 A 28,28 0 1 0 70,70" stroke="rgba(255,255,255,0.92)" stroke-width="12" stroke-linecap="round" fill="none"/>
-      <circle cx="61" cy="13" r="9" fill="#00BFA6"/>
-    </svg>
-    <div>
-      <div class="sidebar-logo-text">Ghaya</div>
-      <div class="sidebar-logo-sub">HR SUITE</div>
-    </div>
-  </div>
-
-  <div class="sidebar-section-label" id="nav-label-main">MAIN</div>
-  <a class="nav-item active" href="/admin/" id="nav-dashboard">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-    <span id="nav-home">Dashboard</span>
-  </a>
-  <a class="nav-item" href="/admin/employees.html" id="nav-employees">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    <span id="nav-emp-label">Employees</span>
-  </a>
-  <a class="nav-item" href="/admin/leaves.html" id="nav-leaves">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    <span id="nav-leaves-label">Leaves</span>
-    <span class="nav-badge" id="pending-badge" style="display:none"></span>
-  </a>
-  <a class="nav-item" href="/admin/payroll.html" id="nav-payroll">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-    <span id="nav-payroll-label">Payroll</span>
-  </a>
-  <a class="nav-item" href="/admin/documents.html" id="nav-docs">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-    <span id="nav-docs-label">Documents</span>
-  </a>
-
-  <div class="sidebar-section-label" id="nav-label-settings" style="margin-top:8px;">SETTINGS</div>
-  <a class="nav-item" href="/admin/settings.html" id="nav-settings">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-    <span id="nav-settings-label">Settings</span>
-  </a>
-
-  <div class="sidebar-footer">
-    <div class="sidebar-user">
-      <div class="sidebar-avatar" id="sidebar-avatar">?</div>
+    <div class="logo-row">
+      <div class="logo-circle">غ</div>
       <div>
-        <div class="sidebar-user-name" id="sidebar-name"></div>
-        <div class="sidebar-user-role" id="sidebar-role"></div>
+        <div class="logo-text">Ghaya <span style="font-size:13px;opacity:.6">غاية</span></div>
+        <div class="logo-sub">YOUR TRUSTED HR SUPPORT</div>
       </div>
     </div>
-    <div class="lang-btns" style="margin-bottom:10px;gap:6px;">
-      <button class="lang-btn" id="lbtn-en" onclick="setLang('en')">EN</button>
-      <button class="lang-btn" id="lbtn-ar" onclick="setLang('ar')">ع</button>
-    </div>
-    <button class="btn-logout" onclick="logout()">
-      <span id="nav-logout">Logout</span>
-    </button>
+    <div class="company-badge" id="company-name">Loading...</div>
   </div>
-</aside>
+  <nav class="nav">
+    <div class="nav-section">OVERVIEW</div>
+    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+      <span class="nav-icon">📊</span><span data-en="Dashboard" data-ar="لوحة التحكم">Dashboard</span>
+    </div>
+    <div class="nav-section" style="margin-top:8px">HR MANAGEMENT</div>
+    <div class="nav-item" onclick="showPage('employees')" id="nav-employees">
+      <span class="nav-icon">👥</span><span data-en="Employees" data-ar="الموظفون">Employees</span>
+    </div>
+    <div class="nav-item" onclick="showPage('leaves')" id="nav-leaves">
+      <span class="nav-icon">🌴</span><span data-en="Leave Requests" data-ar="طلبات الإجازة">Leave Requests</span>
+      <span class="nav-badge" id="leave-badge" style="display:none">0</span>
+    </div>
+    <div class="nav-item" onclick="showPage('payroll')" id="nav-payroll">
+      <span class="nav-icon">💰</span><span data-en="Payroll" data-ar="الرواتب">Payroll</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="user-avatar" id="user-avatar">A</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name">Loading...</div>
+        <div class="user-role" data-en="Company Admin" data-ar="مدير الشركة">Company Admin</div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Logout">↩</button>
+    </div>
+  </div>
+</div>
 
-<!-- Main Content -->
 <div class="main">
   <div class="topbar">
-    <div class="topbar-title" id="page-title">Dashboard</div>
+    <div class="page-title" id="page-title">Dashboard</div>
     <div class="topbar-right">
-      <div id="managed-indicator"></div>
+      <div class="lang-toggle">
+        <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" id="btn-ar" onclick="setLang('ar')">ع</button>
+      </div>
     </div>
   </div>
+  <div class="content">
 
-  <div class="content" id="main-content" style="display:none;">
-
-    <!-- Stats -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon navy">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#0A2540" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <div class="stat-info">
-          <div class="stat-value" id="stat-headcount">—</div>
-          <div class="stat-label" id="lbl-headcount">Total Employees</div>
-        </div>
+    <!-- DASHBOARD -->
+    <div id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label" data-en="Total Employees" data-ar="إجمالي الموظفين">Total Employees</div><div class="stat-value" id="s-total">—</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label" data-en="Active" data-ar="نشطون">Active</div><div class="stat-value" id="s-active">—</div></div>
+        <div class="stat-card"><div class="stat-icon">🌴</div><div class="stat-label" data-en="Pending Leaves" data-ar="إجازات معلقة">Pending Leaves</div><div class="stat-value" id="s-leaves">—</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label" data-en="Monthly Payroll (KWD)" data-ar="الرواتب الشهرية">Monthly Payroll (KWD)</div><div class="stat-value" id="s-payroll">—</div></div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon coral">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#E8472A" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <div class="section-card">
+        <div class="section-header">
+          <div><div class="section-title" data-en="Recent Employees" data-ar="أحدث الموظفين">Recent Employees</div></div>
+          <button class="btn btn-primary btn-sm" onclick="showPage('employees')"><span data-en="View All" data-ar="عرض الكل">View All</span> →</button>
         </div>
-        <div class="stat-info">
-          <div class="stat-value" id="stat-pending">—</div>
-          <div class="stat-label" id="lbl-pending">Pending Leaves</div>
-        </div>
+        <div id="dash-employees"><div class="loading"><div class="spinner"></div></div></div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon teal">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#00BFA6" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      <div class="section-card">
+        <div class="section-header">
+          <div><div class="section-title" data-en="Pending Leave Requests" data-ar="طلبات الإجازة المعلقة">Pending Leave Requests</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="showPage('leaves')"><span data-en="View All" data-ar="عرض الكل">View All</span></button>
         </div>
-        <div class="stat-info">
-          <div class="stat-value" id="stat-on-leave">—</div>
-          <div class="stat-label" id="lbl-on-leave">On Leave Today</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon yellow">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </div>
-        <div class="stat-info">
-          <div class="stat-value" id="stat-payroll">—</div>
-          <div class="stat-label" id="lbl-payroll">Last Payroll</div>
-        </div>
+        <div id="dash-leaves"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
 
-    <!-- Main Grid -->
-    <div class="content-grid">
-
-      <!-- Left Column -->
-      <div class="left-col">
-
-        <!-- Pending Leave Requests -->
-        <div class="card" style="margin-bottom:20px;">
-          <div class="card-head">
-            <div class="card-title" id="card-pending-title">Pending Leave Requests</div>
-            <a href="/admin/leaves.html" class="card-action" id="view-all-leaves">View all</a>
-          </div>
-          <div id="pending-leaves-content">
-            <div class="empty-state">
-              <div class="loading-spinner" style="margin:0 auto 8px;width:24px;height:24px;border-width:2px;"></div>
-            </div>
+    <!-- EMPLOYEES -->
+    <div id="page-employees" style="display:none">
+      <div class="section-card">
+        <div class="section-header">
+          <div><div class="section-title" data-en="All Employees" data-ar="جميع الموظفين">All Employees</div><div class="section-sub" id="emp-count">—</div></div>
+          <div class="section-actions">
+            <input class="search-bar" id="emp-search" placeholder="Search..." oninput="filterEmployees()"/>
+            <button class="btn btn-primary" onclick="openAddEmployee()">+ <span data-en="Add Employee" data-ar="إضافة موظف">Add Employee</span></button>
           </div>
         </div>
-
-        <!-- Payroll Run -->
-        <div class="card">
-          <div class="card-head">
-            <div class="card-title" id="card-payroll-title">Latest Payroll Run</div>
-            <a href="/admin/payroll.html" class="card-action" id="view-payroll">Open</a>
-          </div>
-          <div id="payroll-content" style="padding:20px;">
-            <div class="empty-state">Loading…</div>
-          </div>
-        </div>
-
+        <div id="employees-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
+    </div>
 
-      <!-- Right Column -->
-      <div class="right-col">
-
-        <!-- Quick Actions -->
-        <div class="card">
-          <div class="card-head">
-            <div class="card-title" id="card-actions-title">Quick Actions</div>
-          </div>
-          <div class="quick-actions">
-            <button class="qa-btn" onclick="location.href='/admin/employees.html?action=add'">
-              <span class="qa-icon">➕</span>
-              <span id="qa-add-emp">Add Employee</span>
-            </button>
-            <button class="qa-btn" onclick="location.href='/admin/payroll.html?action=run'">
-              <span class="qa-icon">💰</span>
-              <span id="qa-run-payroll">Run Payroll</span>
-            </button>
-            <button class="qa-btn" onclick="location.href='/admin/documents.html'">
-              <span class="qa-icon">📁</span>
-              <span id="qa-docs">Manage Documents</span>
-            </button>
+    <!-- LEAVES -->
+    <div id="page-leaves" style="display:none">
+      <div class="section-card">
+        <div class="section-header">
+          <div><div class="section-title" data-en="Leave Requests" data-ar="طلبات الإجازة">Leave Requests</div></div>
+          <div class="filter-row">
+            <button class="filter-btn active" onclick="filterLeaves('pending',this)">Pending</button>
+            <button class="filter-btn" onclick="filterLeaves('approved',this)">Approved</button>
+            <button class="filter-btn" onclick="filterLeaves('rejected',this)">Rejected</button>
+            <button class="filter-btn" onclick="filterLeaves('all',this)">All</button>
           </div>
         </div>
-
-        <!-- Departments -->
-        <div class="card">
-          <div class="card-head">
-            <div class="card-title" id="card-depts-title">By Department</div>
-          </div>
-          <div class="dept-list" id="dept-content">
-            <div class="empty-state">Loading…</div>
-          </div>
-        </div>
-
-        <!-- Expiring Documents -->
-        <div class="card" id="exp-docs-card" style="display:none;">
-          <div class="card-head">
-            <div class="card-title" id="card-exp-title">Documents Expiring Soon</div>
-          </div>
-          <div class="alert-list" id="exp-docs-content"></div>
-        </div>
-
-        <!-- Probation Ending -->
-        <div class="card" id="prob-card" style="display:none;">
-          <div class="card-head">
-            <div class="card-title" id="card-prob-title">Probation Ending Soon</div>
-          </div>
-          <div id="prob-content"></div>
-        </div>
-
+        <div id="leaves-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
+    </div>
+
+    <!-- PAYROLL -->
+    <div id="page-payroll" style="display:none">
+      <div class="payroll-card">
+        <div class="payroll-title" data-en="ESTIMATED MONTHLY PAYROLL" data-ar="الرواتب الشهرية المقدرة">ESTIMATED MONTHLY PAYROLL</div>
+        <div class="payroll-amount" id="payroll-total">KWD 0.000</div>
+        <div class="payroll-sub" id="payroll-sub">0 employees</div>
+        <div class="payroll-actions">
+          <button class="btn btn-primary" onclick="runPayroll()">▶ <span data-en="Run Payroll" data-ar="تشغيل الرواتب">Run Payroll</span></button>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="section-header"><div class="section-title" data-en="Payroll Breakdown" data-ar="تفاصيل الرواتب">Payroll Breakdown</div></div>
+        <div id="payroll-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Add/Edit Employee Modal -->
+<div class="modal-overlay" id="modal-employee">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-emp-title">Add Employee</div>
+      <button class="modal-close" onclick="closeModal('modal-employee')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="emp-id"/>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">First Name (EN)</label><input class="form-input" id="emp-first-en" placeholder="Ahmed"/></div>
+        <div class="form-row"><label class="form-label">Last Name (EN)</label><input class="form-input" id="emp-last-en" placeholder="Al-Rashidi"/></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">First Name (AR)</label><input class="form-input" id="emp-first-ar" placeholder="أحمد"/></div>
+        <div class="form-row"><label class="form-label">Last Name (AR)</label><input class="form-input" id="emp-last-ar" placeholder="الراشدي"/></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Civil ID</label><input class="form-input" id="emp-civil-id" placeholder="28012345678"/></div>
+        <div class="form-row"><label class="form-label">Nationality</label>
+          <select class="form-input" id="emp-nationality">
+            <option value="Kuwaiti">Kuwaiti</option><option value="Saudi">Saudi</option><option value="Egyptian">Egyptian</option>
+            <option value="Indian">Indian</option><option value="Pakistani">Pakistani</option><option value="Bangladeshi">Bangladeshi</option>
+            <option value="Filipino">Filipino</option><option value="Sri Lankan">Sri Lankan</option><option value="Nepalese">Nepalese</option><option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Job Title (EN)</label><input class="form-input" id="emp-title-en" placeholder="Sales Associate"/></div>
+        <div class="form-row"><label class="form-label">Department</label><input class="form-input" id="emp-dept" placeholder="Sales"/></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Basic Salary (KWD)</label><input class="form-input" id="emp-salary" type="number" step="0.001" placeholder="350.000"/></div>
+        <div class="form-row"><label class="form-label">Start Date</label><input class="form-input" id="emp-start" type="date"/></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Work Email</label><input class="form-input" id="emp-email" type="email" placeholder="ahmed@company.com"/></div>
+        <div class="form-row"><label class="form-label">Phone</label><input class="form-input" id="emp-phone" placeholder="+965 9999 9999"/></div>
+      </div>
+      <div class="form-row"><label class="form-label">Contract Type</label>
+        <select class="form-input" id="emp-contract">
+          <option value="full_time">Full Time</option><option value="part_time">Part Time</option><option value="contract">Contract</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-employee')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEmployee()" id="save-emp-btn">Add Employee</button>
     </div>
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const API='/api';
+let token=localStorage.getItem('ghaya_token');
+let currentUser=null,currentLang=localStorage.getItem('ghaya_lang')||'en';
+let employeesData=[],leavesData=[],currentLeaveFilter='pending',editingEmpId=null;
 
-  let lang = localStorage.getItem('ghaya_lang') || 'en';
-  const token = localStorage.getItem('ghaya_token');
-  const user = JSON.parse(localStorage.getItem('ghaya_user') || 'null');
-  if (!token || !user || !['company_admin','manager','ghaya_admin'].includes(user.role)) {
-    window.location.href = '/';
-  }
+if(!token){window.location.href='/';}
 
-  function setLang(l) { localStorage.setItem('ghaya_lang', l); location.reload(); }
-  function logout() { localStorage.clear(); window.location.href = '/'; }
-
-  function formatDate(s) {
-    if (!s) return '';
-    const d = new Date(s);
-    return `${d.getDate()} ${lang === 'ar' ? MONTHS_AR[d.getMonth()] : MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-  }
-  function formatCurrency(n) { return `KWD ${Number(n||0).toLocaleString('en-KW', {minimumFractionDigits:3, maximumFractionDigits:3})}`; }
-  function formatMonth(m, y) { return lang === 'ar' ? `${MONTHS_AR[m-1]} ${y}` : `${MONTHS[m-1]} ${y}`; }
-
-  async function apiFetch(path, opts={}) {
-    const res = await fetch(path, {
-      ...opts,
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers||{}) }
-    });
-    if (res.status === 401) { logout(); return null; }
+async function apicall(method,path,body){
+  try{
+    const res=await fetch(API+path,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:body?JSON.stringify(body):undefined});
+    if(res.status===401){logout();return null;}
     return res.json();
-  }
+  }catch(e){return null;}
+}
 
-  async function loadDashboard() {
-    const data = await apiFetch('/api/dashboard');
-    if (!data) return;
-
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('main-content').style.display = 'block';
-
-    // Sidebar user
-    const initials = (user.name||'A').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
-    document.getElementById('sidebar-avatar').textContent = initials;
-    document.getElementById('sidebar-name').textContent = user.name || user.email;
-    document.getElementById('sidebar-role').textContent = user.role === 'company_admin' ? (lang==='ar'?'مدير الموارد البشرية':'Company Admin') : user.role;
-
-    document.getElementById('lbtn-en').classList.toggle('active', lang==='en');
-    document.getElementById('lbtn-ar').classList.toggle('active', lang==='ar');
-
-    // Managed indicator
-    if (data.company?.managed_by_ghaya) {
-      document.getElementById('managed-indicator').innerHTML =
-        `<div class="managed-badge"><div class="managed-dot"></div>${lang==='ar'?'مُدار من غاية':'Managed by Ghaya'}</div>`;
+async function init(){
+  try{
+    const me=await apicall('GET','/auth/me');
+    if(!me||me.error){logout();return;}
+    if(!['company_admin','manager'].includes(me.user.role)){logout();return;}
+    currentUser=me.user;
+    document.getElementById('user-name').textContent=me.user.name||me.user.email;
+    document.getElementById('user-avatar').textContent=(me.user.name||me.user.email)[0].toUpperCase();
+    if(me.user.company_id){
+      const co=await apicall('GET','/companies/'+me.user.company_id);
+      if(co&&co.company)document.getElementById('company-name').textContent=currentLang==='ar'?(co.company.name_ar||co.company.name_en):co.company.name_en;
     }
-
-    // Stats
-    document.getElementById('stat-headcount').textContent = data.stats?.headcount || 0;
-    document.getElementById('stat-pending').textContent = data.stats?.pending_leaves || 0;
-    document.getElementById('stat-on-leave').textContent = data.stats?.on_leave || 0;
-    if (data.latest_payroll) {
-      document.getElementById('stat-payroll').textContent = formatCurrency(data.latest_payroll.total_net).replace('KWD ','');
-    }
-
-    const pb = document.getElementById('pending-badge');
-    if (data.stats?.pending_leaves > 0) { pb.textContent = data.stats.pending_leaves; pb.style.display = ''; }
-
-    // Pending leaves table
-    renderPendingLeaves(data.pending_leaves || []);
-
-    // Payroll
-    renderPayroll(data.latest_payroll);
-
-    // Departments
-    renderDepartments(data.departments || []);
-
-    // Expiring docs
-    const expDocs = data.expiring_documents || [];
-    if (expDocs.length) {
-      document.getElementById('exp-docs-card').style.display = '';
-      document.getElementById('exp-docs-content').innerHTML = expDocs.map(d => `
-        <div class="alert-item">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <div class="alert-item-body">
-            <div class="alert-item-name">${d.employee_name}</div>
-            <div class="alert-item-date">${d.doc_type} · ${formatDate(d.expiry_date)}</div>
-          </div>
-        </div>`).join('');
-    }
-
-    // Probation
-    const probs = data.probation_ending || [];
-    if (probs.length) {
-      document.getElementById('prob-card').style.display = '';
-      document.getElementById('prob-content').innerHTML = probs.map(p => `
-        <div class="prob-item">
-          <span class="prob-name">${p.name}</span>
-          <span class="prob-date">${formatDate(p.probation_end_date)}</span>
-        </div>`).join('');
-    }
-  }
-
-  function renderPendingLeaves(leaves) {
-    const el = document.getElementById('pending-leaves-content');
-    if (!leaves.length) {
-      el.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><div>No pending leave requests</div></div>`;
-      return;
-    }
-    el.innerHTML = `<table class="table">
-      <thead><tr>
-        <th>Employee</th>
-        <th>Type</th>
-        <th>Dates</th>
-        <th>Days</th>
-        <th>Actions</th>
-      </tr></thead>
-      <tbody>${leaves.map(l => `
-        <tr>
-          <td><div class="emp-name">${l.employee_name}</div></td>
-          <td>${l.type_name}</td>
-          <td><div class="emp-sub">${formatDate(l.start_date)} – ${formatDate(l.end_date)}</div></td>
-          <td>${l.days_count}d</td>
-          <td>
-            <div class="action-btns">
-              <button class="btn-approve" onclick="actionLeave('${l.id}','approve')">✓ Approve</button>
-              <button class="btn-reject" onclick="actionLeave('${l.id}','reject')">✗ Reject</button>
-            </div>
-          </td>
-        </tr>`).join('')}
-      </tbody>
-    </table>`;
-  }
-
-  async function actionLeave(id, action) {
-    const confirmed = action === 'reject' ? confirm('Reject this leave request?') : true;
-    if (!confirmed) return;
-    const res = await apiFetch(`/api/leaves/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify({ action }),
-    });
-    if (res?.message) loadDashboard();
-    else alert(res?.error || 'Error');
-  }
-
-  function renderPayroll(run) {
-    const el = document.getElementById('payroll-content');
-    if (!run) {
-      el.innerHTML = `<div style="text-align:center;color:var(--gray);font-size:13px;">No payroll runs yet. <a href="/admin/payroll.html" style="color:var(--coral);">Start first payroll →</a></div>`;
-      return;
-    }
-    const isManaged = user.managed_by_ghaya;
-    el.innerHTML = `
-      <div class="payroll-banner">
-        <div class="payroll-banner-title">${lang==='ar'?'آخر دورة راتب':'Latest Payroll Run'}</div>
-        <div class="payroll-banner-amount">${formatCurrency(run.total_net)}</div>
-        <div class="payroll-banner-period">${formatMonth(run.period_month, run.period_year)}</div>
-        <div class="payroll-banner-status">
-          <div class="payroll-status-dot"></div>
-          <span class="payroll-status-text">${run.status}</span>
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
-          <span style="color:var(--gray);">Gross</span>
-          <span style="font-weight:600;">${formatCurrency(run.total_gross)}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
-          <span style="color:var(--gray);">PIFSS (Employer)</span>
-          <span style="font-weight:600;">- ${formatCurrency(run.total_pifss_employer)}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;">
-          <span style="color:var(--gray);">Net</span>
-          <span style="font-weight:600;color:var(--navy);">${formatCurrency(run.total_net)}</span>
-        </div>
-      </div>
-      ${isManaged
-        ? `<div style="margin-top:16px;padding:12px;background:var(--teal-light);border-radius:8px;font-size:12px;color:#007A6B;">
-             ℹ️ Payroll is managed by Ghaya. Contact your HR manager for changes.
-           </div>`
-        : `<button onclick="location.href='/admin/payroll.html'" style="margin-top:16px;width:100%;padding:10px;background:var(--coral);border:none;border-radius:8px;color:white;font-family:'Almarai',sans-serif;font-weight:700;font-size:13px;cursor:pointer;">
-             Run Next Payroll
-           </button>`}
-    `;
-  }
-
-  function renderDepartments(depts) {
-    const el = document.getElementById('dept-content');
-    if (!depts.length) { el.innerHTML = `<div class="empty-state">No departments set up</div>`; return; }
-    const max = Math.max(...depts.map(d=>d.count), 1);
-    el.innerHTML = depts.map(d => `
-      <div class="dept-row">
-        <span class="dept-name">${d.name_en}</span>
-        <div class="dept-bar"><div class="dept-bar-fill" style="width:${(d.count/max*100).toFixed(0)}%"></div></div>
-        <span class="dept-count">${d.count}</span>
-      </div>`).join('');
-  }
-
+  }catch(e){logout();return;}
+  setLang(currentLang,false);
   loadDashboard();
+}
+
+function showPage(page){
+  ['dashboard','employees','leaves','payroll'].forEach(p=>{
+    document.getElementById('page-'+p).style.display=p===page?'':'none';
+    const nav=document.getElementById('nav-'+p);
+    if(nav)nav.classList.toggle('active',p===page);
+  });
+  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},payroll:{en:'Payroll',ar:'الرواتب'}};
+  document.getElementById('page-title').textContent=titles[page]?.[currentLang]||titles[page]?.en;
+  if(page==='dashboard')loadDashboard();
+  if(page==='employees')loadEmployees();
+  if(page==='leaves')loadLeaves();
+  if(page==='payroll')loadPayroll();
+}
+
+async function loadDashboard(){
+  const[emps,leaves]=await Promise.all([apicall('GET','/employees'),apicall('GET','/leaves?status=pending')]);
+  const employees=emps?.employees||[];
+  const pendingLeaves=leaves?.leaves||[];
+  const active=employees.filter(e=>e.is_active);
+  const totalSalary=active.reduce((s,e)=>s+(parseFloat(e.basic_salary)||0),0);
+  document.getElementById('s-total').textContent=employees.length;
+  document.getElementById('s-active').textContent=active.length;
+  document.getElementById('s-leaves').textContent=pendingLeaves.length;
+  document.getElementById('s-payroll').textContent=totalSalary.toFixed(3);
+  if(pendingLeaves.length>0){document.getElementById('leave-badge').style.display='';document.getElementById('leave-badge').textContent=pendingLeaves.length;}
+  renderDashEmployees(employees.slice(0,5));
+  renderDashLeaves(pendingLeaves.slice(0,3));
+}
+
+function renderDashEmployees(list){
+  const el=document.getElementById('dash-employees');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees yet</div><div class="empty-sub">Add your first employee to get started</div></div>';return;}
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Title</th><th>Department</th><th>Salary (KWD)</th><th>Status</th></tr></thead><tbody>${list.map(e=>`
+    <tr>
+      <td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.nationality||''}</div></td>
+      <td>${e.job_title_en||'—'}</td><td>${e.department||'—'}</td>
+      <td style="font-weight:700">${parseFloat(e.basic_salary||0).toFixed(3)}</td>
+      <td><span class="badge ${e.is_active?'badge-green':'badge-gray'}">${e.is_active?'Active':'Inactive'}</span></td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+
+function renderDashLeaves(list){
+  const el=document.getElementById('dash-leaves');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">No pending leave requests</div></div>';return;}
+  el.innerHTML=list.map(l=>`
+    <div class="leave-card">
+      <div class="leave-avatar">${(l.employee_name||'?')[0]}</div>
+      <div class="leave-info"><div class="leave-name">${l.employee_name||'—'}</div><div class="leave-detail">${l.leave_type||'Annual'} · ${l.start_date} → ${l.end_date} · ${l.days_requested||'?'} days</div></div>
+      <div class="leave-actions">
+        <button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓</button>
+        <button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+async function loadEmployees(){
+  document.getElementById('employees-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const data=await apicall('GET','/employees');
+  employeesData=data?.employees||[];
+  document.getElementById('emp-count').textContent=`${employeesData.length} ${currentLang==='ar'?'موظف':'employees'}`;
+  renderEmployeesTable(employeesData);
+}
+
+function filterEmployees(){
+  const q=document.getElementById('emp-search').value.toLowerCase();
+  renderEmployeesTable(employeesData.filter(e=>`${e.first_name_en} ${e.last_name_en} ${e.job_title_en||''} ${e.department||''}`.toLowerCase().includes(q)));
+}
+
+function renderEmployeesTable(list){
+  const el=document.getElementById('employees-list');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees found</div><div class="empty-sub">Add your first employee using the button above</div></div>';return;}
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Title / Dept</th><th>Nationality</th><th>Basic Salary</th><th>Start Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((e,i)=>`
+    <tr>
+      <td style="color:#888;font-size:12px">${i+1}</td>
+      <td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></td>
+      <td><div>${e.job_title_en||'—'}</div><div style="font-size:11px;color:#888">${e.department||'—'}</div></td>
+      <td style="font-size:12px">${e.nationality||'—'}</td>
+      <td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td>
+      <td style="font-size:12px;color:#888">${e.employment_start_date||'—'}</td>
+      <td><span class="badge ${e.is_active?'badge-green':'badge-gray'}">${e.is_active?'Active':'Inactive'}</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button></td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+
+async function loadLeaves(){
+  document.getElementById('leaves-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const data=await apicall('GET','/leaves?status='+currentLeaveFilter);
+  leavesData=data?.leaves||[];
+  renderLeavesList(leavesData);
+}
+
+function filterLeaves(status,btn){
+  currentLeaveFilter=status;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  loadLeaves();
+}
+
+function renderLeavesList(list){
+  const el=document.getElementById('leaves-list');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div>';return;}
+  const statusBadge={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>'};
+  el.innerHTML=list.map(l=>`
+    <div class="leave-card">
+      <div class="leave-avatar">${(l.employee_name||'?')[0]}</div>
+      <div class="leave-info"><div class="leave-name">${l.employee_name||'—'} ${statusBadge[l.status]||''}</div><div class="leave-detail">${l.leave_type||'Annual'} · ${l.start_date} → ${l.end_date} · ${l.days_requested||'?'} days${l.reason?' · '+l.reason:''}</div></div>
+      ${l.status==='pending'?`<div class="leave-actions"><button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕ Reject</button></div>`:''}
+    </div>`).join('');
+}
+
+async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'approved'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
+async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'rejected'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
+
+async function loadPayroll(){
+  document.getElementById('payroll-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const data=await apicall('GET','/employees');
+  const employees=(data?.employees||[]).filter(e=>e.is_active);
+  let total=employees.reduce((s,e)=>s+(parseFloat(e.basic_salary)||0),0);
+  document.getElementById('payroll-total').textContent='KWD '+total.toFixed(3);
+  document.getElementById('payroll-sub').textContent=`${employees.length} active employees · PIFSS deductions apply for Kuwaitis`;
+  if(!employees.length){document.getElementById('payroll-list').innerHTML='<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">No active employees</div></div>';return;}
+  document.getElementById('payroll-list').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Nationality</th><th>Basic Salary</th><th>PIFSS (5%)</th><th>Net Pay</th></tr></thead><tbody>${employees.map(e=>{
+    const basic=parseFloat(e.basic_salary||0);
+    const pifss=e.nationality==='Kuwaiti'?basic*0.05:0;
+    const net=basic-pifss;
+    return`<tr><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.job_title_en||''}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td>KWD ${basic.toFixed(3)}</td><td style="color:${pifss>0?'#c42a00':'#888'}">${pifss>0?'− KWD '+pifss.toFixed(3):'—'}</td><td style="font-weight:800;color:#1a7a42">KWD ${net.toFixed(3)}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+function runPayroll(){showToast('Payroll processing — coming in next update!','');}
+
+function openAddEmployee(){
+  editingEmpId=null;
+  document.getElementById('modal-emp-title').textContent='Add Employee';
+  document.getElementById('save-emp-btn').textContent='Add Employee';
+  ['emp-id','emp-first-en','emp-last-en','emp-first-ar','emp-last-ar','emp-civil-id','emp-title-en','emp-dept','emp-salary','emp-email','emp-phone'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('emp-start').value=new Date().toISOString().split('T')[0];
+  document.getElementById('modal-employee').classList.add('open');
+}
+
+function editEmployee(id){
+  const emp=employeesData.find(e=>e.id===id);if(!emp)return;
+  editingEmpId=id;
+  document.getElementById('modal-emp-title').textContent='Edit Employee';
+  document.getElementById('save-emp-btn').textContent='Save Changes';
+  document.getElementById('emp-id').value=emp.id;
+  document.getElementById('emp-first-en').value=emp.first_name_en||'';
+  document.getElementById('emp-last-en').value=emp.last_name_en||'';
+  document.getElementById('emp-first-ar').value=emp.first_name_ar||'';
+  document.getElementById('emp-last-ar').value=emp.last_name_ar||'';
+  document.getElementById('emp-civil-id').value=emp.civil_id||'';
+  document.getElementById('emp-nationality').value=emp.nationality||'Kuwaiti';
+  document.getElementById('emp-title-en').value=emp.job_title_en||'';
+  document.getElementById('emp-dept').value=emp.department||'';
+  document.getElementById('emp-salary').value=emp.basic_salary||'';
+  document.getElementById('emp-start').value=emp.employment_start_date||'';
+  document.getElementById('emp-email').value=emp.work_email||'';
+  document.getElementById('emp-phone').value=emp.phone||'';
+  document.getElementById('emp-contract').value=emp.contract_type||'full_time';
+  document.getElementById('modal-employee').classList.add('open');
+}
+
+async function saveEmployee(){
+  const body={first_name_en:document.getElementById('emp-first-en').value.trim(),last_name_en:document.getElementById('emp-last-en').value.trim(),first_name_ar:document.getElementById('emp-first-ar').value.trim(),last_name_ar:document.getElementById('emp-last-ar').value.trim(),civil_id:document.getElementById('emp-civil-id').value.trim(),nationality:document.getElementById('emp-nationality').value,job_title_en:document.getElementById('emp-title-en').value.trim(),department:document.getElementById('emp-dept').value.trim(),basic_salary:parseFloat(document.getElementById('emp-salary').value)||0,employment_start_date:document.getElementById('emp-start').value,work_email:document.getElementById('emp-email').value.trim(),phone:document.getElementById('emp-phone').value.trim(),contract_type:document.getElementById('emp-contract').value};
+  if(!body.first_name_en||!body.last_name_en){showToast('First and last name required','error');return;}
+  const res=editingEmpId?await apicall('PUT','/employees/'+editingEmpId,body):await apicall('POST','/employees',body);
+  if(res&&!res.error){showToast(editingEmpId?'Employee updated ✓':'Employee added ✓','success');closeModal('modal-employee');loadEmployees();loadDashboard();}
+  else showToast(res?.error||'Error saving employee','error');
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function setLang(lang,save=true){
+  currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);
+  document.documentElement.lang=lang;document.body.classList.toggle('ar',lang==='ar');
+  document.getElementById('btn-en').classList.toggle('active',lang==='en');
+  document.getElementById('btn-ar').classList.toggle('active',lang==='ar');
+  document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.dataset[lang]||el.dataset.en;});
+}
+
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3000);}
+function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem('ghaya_user');window.location.href='/';}
+
+init();
 </script>
 </body>
 </html>
