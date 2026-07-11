@@ -21,7 +21,7 @@ wrangler d1 create ghaya-db
 ```
 Copy the `database_id` it prints. Paste it into `wrangler.toml`:
 ```toml
-database_id = "PASTE_YOUR_D1_ID_HERE"
+database_id = "548be003-b8ca-417c-b0f1-03dad840fe92"
 ```
 
 ---
