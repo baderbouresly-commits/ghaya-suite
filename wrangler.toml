@@ -2,6 +2,11 @@ name = "ghaya-suite"
 compatibility_date = "2024-01-01"
 pages_build_output_dir = "public"
 
+[[d1_databases]]
+binding = "DB"
+database_name = "ghaya-db"
+database_id = "548be003-b8ca-417c-b0f1-03dad840fe92"
+
 [[r2_buckets]]
 binding = "R2"
 bucket_name = "ghaya-files"
