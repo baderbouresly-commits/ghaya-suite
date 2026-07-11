@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#0A2540"/>
+  <title>Ghaya Suite — My Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --cream:   #FAF6F1;
+      --coral:   #E8472A;
+      --navy:    #0A2540;
+      --teal:    #00BFA6;
+      --charcoal:#1A1A1A;
+      --gray:    #6B7A9A;
+      --border:  #E4DDD6;
+      --white:   #FFFFFF;
+      --coral-light: #FDF0EE;
+      --teal-light: #E6FAF7;
+      --navy-light: #EEF2F7;
+      --shadow: 0 1px 3px rgba(10,37,64,.07), 0 4px 16px rgba(10,37,64,.05);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', 'Almarai', sans-serif;
+      background: var(--cream);
+      color: var(--charcoal);
+      min-height: 100vh;
+    }
+
+    /* ── Top Nav ──────────────────────────────── */
+    .topnav {
+      background: var(--navy);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .nav-logo svg { width: 32px; height: 32px; }
+    .nav-logo-text {
+      font-family: 'Almarai', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--white);
+    }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .avatar {
+      width: 34px; height: 34px;
+      background: var(--coral);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Almarai', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      color: white;
+      flex-shrink: 0;
+    }
+    .nav-name {
+      font-size: 13px;
+      color: rgba(255,255,255,.8);
+      font-weight: 500;
+    }
+    .btn-logout {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 6px;
+      color: rgba(255,255,255,.7);
+      font-size: 12px;
+      padding: 5px 10px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,.2); color: white; }
+
+    .lang-btns { display: flex; gap: 4px; }
+    .lang-btn {
+      padding: 4px 8px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 5px;
+      background: transparent;
+      color: rgba(255,255,255,.6);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .lang-btn.active { background: var(--coral); border-color: var(--coral); color: white; }
+
+    /* ── Page Content ─────────────────────────── */
+    .page { max-width: 800px; margin: 0 auto; padding: 24px 20px 48px; }
+
+    .greeting {
+      margin-bottom: 28px;
+    }
+    .greeting-hello {
+      font-family: 'Almarai', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .greeting-date {
+      font-size: 13px;
+      color: var(--gray);
+      margin-top: 2px;
+    }
+
+    /* ── Stats Row ────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 18px 16px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .stat-value {
+      font-family: 'Almarai', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-value.coral { color: var(--coral); }
+    .stat-value.teal { color: var(--teal); }
+    .stat-label {
+      font-size: 11px;
+      color: var(--gray);
+      font-weight: 500;
+    }
+
+    /* ── Action Buttons ───────────────────────── */
+    .actions-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .action-btn {
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all .15s;
+      text-align: left;
+      width: 100%;
+    }
+    .action-btn:hover {
+      border-color: var(--coral);
+      box-shadow: 0 4px 16px rgba(232,71,42,.12);
+      transform: translateY(-1px);
+    }
+    .action-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .action-icon.coral { background: var(--coral-light); }
+    .action-icon.teal { background: var(--teal-light); }
+    .action-icon svg { width: 22px; height: 22px; }
+    .action-title {
+      font-family: 'Almarai', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .action-desc {
+      font-size: 12px;
+      color: var(--gray);
+      margin-top: 2px;
+    }
+
+    /* ── Cards ────────────────────────────────── */
+    .cards-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-family: 'Almarai', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .card-link {
+      font-size: 12px;
+      color: var(--coral);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .card-link:hover { text-decoration: underline; }
+
+    /* Leave balance bars */
+    .leave-item { margin-bottom: 14px; }
+    .leave-item:last-child { margin-bottom: 0; }
+    .leave-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .leave-name { font-size: 13px; color: var(--charcoal); font-weight: 500; }
+    .leave-count { font-size: 12px; color: var(--gray); }
+    .leave-count strong { color: var(--navy); font-weight: 600; }
+    .leave-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .leave-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--coral);
+      transition: width .5s ease;
+    }
+    .leave-bar-fill.teal { background: var(--teal); }
+    .leave-bar-fill.navy { background: var(--navy); }
+
+    /* Recent leaves table */
+    .leave-list { display: flex; flex-direction: column; gap: 8px; }
+    .leave-row-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--cream);
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .leave-type-tag {
+      font-weight: 600;
+      color: var(--navy);
+    }
+    .leave-dates { color: var(--gray); font-size: 12px; }
+    .status-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+    .status-badge.pending { background: #FFF3CD; color: #856404; }
+    .status-badge.approved { background: var(--teal-light); color: #007A6B; }
+    .status-badge.rejected { background: var(--coral-light); color: var(--coral); }
+
+    /* Payslip card */
+    .payslip-amount {
+      font-family: 'Almarai', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 4px;
+    }
+    .payslip-period { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+    .payslip-rows { display: flex; flex-direction: column; gap: 6px; }
+    .payslip-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--gray);
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .payslip-row:last-child { border-bottom: none; }
+    .payslip-row .label { color: var(--charcoal); }
+    .btn-download {
+      margin-top: 16px;
+      width: 100%;
+      padding: 10px;
+      background: var(--navy-light);
+      border: none;
+      border-radius: 8px;
+      color: var(--navy);
+      font-family: 'Almarai', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-download:hover { background: var(--navy); color: white; }
+
+    /* Alert banner */
+    .alerts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .alert-banner {
+      background: var(--coral-light);
+      border: 1px solid rgba(232,71,42,.2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--coral);
+    }
+    .alert-banner svg { flex-shrink: 0; }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed; inset: 0;
+      background: var(--cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .loading-spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--coral);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 14px; color: var(--gray); }
+
+    /* Leave request modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(10,37,64,.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+      display: none;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 28px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(10,37,64,.2);
+    }
+    .modal-title {
+      font-family: 'Almarai', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 20px;
+    }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+    select, input[type="date"], textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: var(--charcoal);
+      background: var(--cream);
+      outline: none;
+      transition: border-color .15s;
+    }
+    select:focus, input[type="date"]:focus, textarea:focus {
+      border-color: var(--coral);
+      background: var(--white);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-cancel {
+      flex: 1;
+      padding: 11px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--gray);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn-submit {
+      flex: 2;
+      padding: 11px;
+      background: var(--coral);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-family: 'Almarai', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-submit:hover { background: #C93920; }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .actions-row { grid-template-columns: 1fr; }
+      .cards-row { grid-template-columns: 1fr; }
+      .topnav { padding: 0 16px; }
+      .nav-name { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loading-text">Loading your dashboard…</div>
+</div>
+
+<!-- Leave Request Modal -->
+<div class="modal-overlay" id="leave-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Request Leave</div>
+    <div class="field">
+      <label id="ml-type">Leave Type</label>
+      <select id="leave-type-select"></select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="field">
+        <label id="ml-start">Start Date</label>
+        <input type="date" id="leave-start"/>
+      </div>
+      <div class="field">
+        <label id="ml-end">End Date</label>
+        <input type="date" id="leave-end"/>
+      </div>
+    </div>
+    <div class="field">
+      <label id="ml-reason">Reason (optional)</label>
+      <textarea id="leave-reason" rows="3"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeLeaveModal()" id="ml-cancel">Cancel</button>
+      <button class="btn-submit" onclick="submitLeave()" id="ml-submit">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- Top Nav -->
+<nav class="topnav">
+  <a href="/" class="nav-logo">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 70,42 A 28,28 0 1 0 70,70" stroke="rgba(255,255,255,0.92)" stroke-width="12" stroke-linecap="round" fill="none"/>
+      <circle cx="61" cy="13" r="9" fill="#00BFA6"/>
+    </svg>
+    <span class="nav-logo-text">Ghaya</span>
+  </a>
+  <div class="nav-right">
+    <div class="lang-btns">
+      <button class="lang-btn" id="lbtn-en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="lbtn-ar" onclick="setLang('ar')">ع</button>
+    </div>
+    <div class="nav-user">
+      <div class="avatar" id="avatar">?</div>
+      <span class="nav-name" id="nav-name"></span>
+    </div>
+    <button class="btn-logout" onclick="logout()" id="logout-btn">Logout</button>
+  </div>
+</nav>
+
+<!-- Page Content -->
+<div class="page" id="page-content" style="display:none;">
+
+  <div class="greeting">
+    <div class="greeting-hello" id="greeting-hello"></div>
+    <div class="greeting-date" id="greeting-date"></div>
+  </div>
+
+  <!-- Alerts (expiring docs etc) -->
+  <div class="alerts" id="alerts-section"></div>
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value" id="stat-leave-remaining">—</div>
+      <div class="stat-label" id="lbl-leave-remaining">Leave Days Left</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value coral" id="stat-leave-used">—</div>
+      <div class="stat-label" id="lbl-leave-used">Days Used</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value teal" id="stat-leave-pending">—</div>
+      <div class="stat-label" id="lbl-leave-pending">Pending</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-net-salary">—</div>
+      <div class="stat-label" id="lbl-net-salary">Last Net Pay</div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions-row">
+    <button class="action-btn" onclick="openLeaveModal()">
+      <div class="action-icon coral">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#E8472A" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <div>
+        <div class="action-title" id="act-request-leave">Request Leave</div>
+        <div class="action-desc" id="act-request-leave-desc">Submit a leave request</div>
+      </div>
+    </button>
+    <button class="action-btn" onclick="viewDocuments()">
+      <div class="action-icon teal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00BFA6" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <div>
+        <div class="action-title" id="act-documents">My Documents</div>
+        <div class="action-desc" id="act-documents-desc">View & download your files</div>
+      </div>
+    </button>
+  </div>
+
+  <!-- Cards -->
+  <div class="cards-row">
+    <!-- Leave Balances -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title" id="card-leave-title">Leave Balances</div>
+        <a href="#" class="card-link" id="card-leave-link">View all</a>
+      </div>
+      <div id="leave-balances-content">
+        <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Latest Payslip -->
+    <div class="card" id="payslip-card">
+      <div class="card-header">
+        <div class="card-title" id="card-payslip-title">Latest Payslip</div>
+      </div>
+      <div id="payslip-content">
+        <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Leave Requests -->
+  <div class="card" id="recent-leaves-card">
+    <div class="card-header">
+      <div class="card-title" id="card-recent-title">Recent Leave Requests</div>
+    </div>
+    <div id="recent-leaves-content">
+      <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading…</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const API = '';  // same origin
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+  // ── i18n ─────────────────────────────────────
+  const i18n = {
+    en: {
+      loading: 'Loading your dashboard…',
+      hello: (name) => `Hello, ${name}! 👋`,
+      today: 'Today',
+      leaveLeft: 'Leave Days Left',
+      leaveUsed: 'Days Used',
+      leavePending: 'Pending',
+      lastPay: 'Last Net Pay',
+      requestLeave: 'Request Leave',
+      requestLeaveDesc: 'Submit a leave request',
+      myDocs: 'My Documents',
+      myDocsDesc: 'View & download your files',
+      leaveBalances: 'Leave Balances',
+      viewAll: 'View all',
+      latestPayslip: 'Latest Payslip',
+      recentLeaves: 'Recent Leave Requests',
+      noPayslip: 'No payslip published yet.',
+      noLeaves: 'No leave requests yet.',
+      gross: 'Gross Salary',
+      deductions: 'Deductions',
+      net: 'Net Salary',
+      download: 'Download Payslip PDF',
+      leaveModal: 'Request Leave',
+      mlType: 'Leave Type',
+      mlStart: 'Start Date',
+      mlEnd: 'End Date',
+      mlReason: 'Reason (optional)',
+      mlCancel: 'Cancel',
+      mlSubmit: 'Submit Request',
+      logout: 'Logout',
+      docExpiry: (doc, date) => `⚠️ ${doc} expires on ${date}`,
+    },
+    ar: {
+      loading: 'جارٍ تحميل لوحة التحكم…',
+      hello: (name) => `مرحباً، ${name}! 👋`,
+      today: 'اليوم',
+      leaveLeft: 'أيام الإجازة المتبقية',
+      leaveUsed: 'أيام مستخدمة',
+      leavePending: 'قيد الانتظار',
+      lastPay: 'آخر صافي راتب',
+      requestLeave: 'طلب إجازة',
+      requestLeaveDesc: 'تقديم طلب إجازة',
+      myDocs: 'وثائقي',
+      myDocsDesc: 'عرض وتنزيل الملفات',
+      leaveBalances: 'أرصدة الإجازات',
+      viewAll: 'عرض الكل',
+      latestPayslip: 'آخر قسيمة راتب',
+      recentLeaves: 'طلبات الإجازة الأخيرة',
+      noPayslip: 'لا توجد قسيمة راتب بعد.',
+      noLeaves: 'لا توجد طلبات إجازة بعد.',
+      gross: 'الراتب الإجمالي',
+      deductions: 'الاستقطاعات',
+      net: 'صافي الراتب',
+      download: 'تنزيل قسيمة الراتب PDF',
+      leaveModal: 'طلب إجازة',
+      mlType: 'نوع الإجازة',
+      mlStart: 'تاريخ البداية',
+      mlEnd: 'تاريخ النهاية',
+      mlReason: 'السبب (اختياري)',
+      mlCancel: 'إلغاء',
+      mlSubmit: 'تقديم الطلب',
+      logout: 'تسجيل الخروج',
+      docExpiry: (doc, date) => `⚠️ ${doc} تنتهي صلاحيته في ${date}`,
+    }
+  };
+
+  let lang = localStorage.getItem('ghaya_lang') || 'en';
+  let t = i18n[lang];
+  let dashData = null;
+  let leaveTypes = [];
+
+  function setLang(l) { localStorage.setItem('ghaya_lang', l); location.reload(); }
+
+  function applyLang() {
+    document.documentElement.lang = lang;
+    const rtl = lang === 'ar';
+    document.body.dir = rtl ? 'rtl' : 'ltr';
+    document.getElementById('loading-text').textContent = t.loading;
+    document.getElementById('lbtn-en').classList.toggle('active', lang === 'en');
+    document.getElementById('lbtn-ar').classList.toggle('active', lang === 'ar');
+    document.getElementById('logout-btn').textContent = t.logout;
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return `${d.getDate()} ${lang === 'ar' ? MONTHS_AR[d.getMonth()] : MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  function formatMonth(m, y) {
+    return lang === 'ar' ? `${MONTHS_AR[m-1]} ${y}` : `${MONTHS[m-1]} ${y}`;
+  }
+
+  // ── Auth ──────────────────────────────────────
+  const token = localStorage.getItem('ghaya_token');
+  const user = JSON.parse(localStorage.getItem('ghaya_user') || 'null');
+  if (!token || !user) { window.location.href = '/'; }
+
+  function logout() {
+    localStorage.removeItem('ghaya_token');
+    localStorage.removeItem('ghaya_user');
+    window.location.href = '/';
+  }
+
+  async function apiFetch(path, opts = {}) {
+    const res = await fetch(API + path, {
+      ...opts,
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    });
+    if (res.status === 401) { logout(); return null; }
+    return res.json();
+  }
+
+  // ── Dashboard load ───────────────────────────
+  async function loadDashboard() {
+    const data = await apiFetch('/api/dashboard');
+    if (!data) return;
+    dashData = data;
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('page-content').style.display = 'block';
+
+    // Nav user
+    const initials = (user.name || 'U').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    document.getElementById('avatar').textContent = initials;
+    document.getElementById('nav-name').textContent = user.name || user.email;
+
+    // Greeting
+    const now = new Date();
+    const dateStr = `${t.today}, ${formatDate(now.toISOString())}`;
+    document.getElementById('greeting-hello').textContent = t.hello(user.name || user.email);
+    document.getElementById('greeting-date').textContent = dateStr;
+
+    // Labels
+    document.getElementById('lbl-leave-remaining').textContent = t.leaveLeft;
+    document.getElementById('lbl-leave-used').textContent = t.leaveUsed;
+    document.getElementById('lbl-leave-pending').textContent = t.leavePending;
+    document.getElementById('lbl-net-salary').textContent = t.lastPay;
+    document.getElementById('act-request-leave').textContent = t.requestLeave;
+    document.getElementById('act-request-leave-desc').textContent = t.requestLeaveDesc;
+    document.getElementById('act-documents').textContent = t.myDocs;
+    document.getElementById('act-documents-desc').textContent = t.myDocsDesc;
+    document.getElementById('card-leave-title').textContent = t.leaveBalances;
+    document.getElementById('card-leave-link').textContent = t.viewAll;
+    document.getElementById('card-payslip-title').textContent = t.latestPayslip;
+    document.getElementById('card-recent-title').textContent = t.recentLeaves;
+    document.getElementById('modal-title').textContent = t.leaveModal;
+    document.getElementById('ml-type').textContent = t.mlType;
+    document.getElementById('ml-start').textContent = t.mlStart;
+    document.getElementById('ml-end').textContent = t.mlEnd;
+    document.getElementById('ml-reason').textContent = t.mlReason;
+    document.getElementById('ml-cancel').textContent = t.mlCancel;
+    document.getElementById('ml-submit').textContent = t.mlSubmit;
+
+    // Alerts (expiring docs)
+    const alertsEl = document.getElementById('alerts-section');
+    alertsEl.innerHTML = '';
+    (data.expiring_documents || []).forEach(doc => {
+      const div = document.createElement('div');
+      div.className = 'alert-banner';
+      div.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>${t.docExpiry(doc.doc_type, formatDate(doc.expiry_date))}</span>`;
+      alertsEl.appendChild(div);
+    });
+
+    // Stats from annual leave balance
+    const annualBalance = data.leave_balances?.find(b => b.type_name === 'Annual Leave') || data.leave_balances?.[0];
+    if (annualBalance) {
+      const remaining = annualBalance.entitled_days - annualBalance.used_days - annualBalance.pending_days;
+      document.getElementById('stat-leave-remaining').textContent = Math.max(0, remaining);
+      document.getElementById('stat-leave-used').textContent = annualBalance.used_days;
+      document.getElementById('stat-leave-pending').textContent = annualBalance.pending_days;
+    }
+
+    // Net salary
+    if (data.latest_payslip) {
+      document.getElementById('stat-net-salary').textContent = `KWD ${Number(data.latest_payslip.net_salary).toFixed(0)}`;
+    }
+
+    // Leave balances
+    renderLeaveBalances(data.leave_balances || []);
+
+    // Payslip
+    renderPayslip(data.latest_payslip, data.visibility);
+
+    // Recent leaves
+    renderRecentLeaves(data.recent_leaves || []);
+
+    // Load leave types for modal
+    loadLeaveTypes();
+  }
+
+  function renderLeaveBalances(balances) {
+    const colors = ['','teal','navy'];
+    const el = document.getElementById('leave-balances-content');
+    if (!balances.length) {
+      el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">No leave balance data</div>`;
+      return;
+    }
+    el.innerHTML = balances.map((b,i) => {
+      const remaining = Math.max(0, b.entitled_days - b.used_days - b.pending_days);
+      const pct = b.entitled_days > 0 ? (b.used_days / b.entitled_days * 100) : 0;
+      return `<div class="leave-item">
+        <div class="leave-row">
+          <span class="leave-name">${lang === 'ar' && b.type_name_ar ? b.type_name_ar : b.type_name}</span>
+          <span class="leave-count"><strong>${remaining}</strong> / ${b.entitled_days} days</span>
+        </div>
+        <div class="leave-bar">
+          <div class="leave-bar-fill ${colors[i] || ''}" style="width:${Math.min(100,pct)}%"></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderPayslip(payslip, visibility) {
+    const el = document.getElementById('payslip-content');
+    if (!payslip || !visibility?.show_payslips) {
+      el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">${t.noPayslip}</div>`;
+      return;
+    }
+    const gross = Number(payslip.gross_salary).toFixed(3);
+    const net = Number(payslip.net_salary).toFixed(3);
+    const deduct = (payslip.gross_salary - payslip.net_salary).toFixed(3);
+    el.innerHTML = `
+      <div class="payslip-amount">KWD ${Number(payslip.net_salary).toFixed(3)}</div>
+      <div class="payslip-period">${formatMonth(payslip.period_month, payslip.period_year)}</div>
+      <div class="payslip-rows">
+        <div class="payslip-row"><span class="label">${t.gross}</span><span>KWD ${gross}</span></div>
+        <div class="payslip-row"><span class="label">${t.deductions}</span><span>- KWD ${deduct}</span></div>
+        <div class="payslip-row"><span class="label"><strong>${t.net}</strong></span><span><strong>KWD ${net}</strong></span></div>
+      </div>
+      <button class="btn-download" onclick="downloadPayslip()">${t.download}</button>
+    `;
+  }
+
+  function renderRecentLeaves(leaves) {
+    const el = document.getElementById('recent-leaves-content');
+    if (!leaves.length) {
+      el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">${t.noLeaves}</div>`;
+      return;
+    }
+    el.innerHTML = `<div class="leave-list">${leaves.map(l => `
+      <div class="leave-row-item">
+        <div>
+          <div class="leave-type-tag">${l.type_name}</div>
+          <div class="leave-dates">${formatDate(l.start_date)} → ${formatDate(l.end_date)} (${l.days_count}d)</div>
+        </div>
+        <span class="status-badge ${l.status}">${l.status}</span>
+      </div>
+    `).join('')}</div>`;
+  }
+
+  async function loadLeaveTypes() {
+    const data = await apiFetch('/api/leaves/types');
+    if (data?.leave_types) {
+      leaveTypes = data.leave_types;
+      const sel = document.getElementById('leave-type-select');
+      sel.innerHTML = leaveTypes.map(lt => `<option value="${lt.id}">${lang === 'ar' && lt.name_ar ? lt.name_ar : lt.name_en}</option>`).join('');
+    }
+  }
+
+  // ── Leave Request Modal ──────────────────────
+  function openLeaveModal() { document.getElementById('leave-modal').classList.add('open'); }
+  function closeLeaveModal() { document.getElementById('leave-modal').classList.remove('open'); }
+
+  async function submitLeave() {
+    const typeId = document.getElementById('leave-type-select').value;
+    const startDate = document.getElementById('leave-start').value;
+    const endDate = document.getElementById('leave-end').value;
+    const reason = document.getElementById('leave-reason').value;
+
+    if (!startDate || !endDate) { alert('Please select start and end dates'); return; }
+
+    const btn = document.getElementById('ml-submit');
+    btn.disabled = true;
+    btn.textContent = '…';
+
+    const res = await apiFetch('/api/leaves', {
+      method: 'POST',
+      body: JSON.stringify({ leave_type_id: typeId, start_date: startDate, end_date: endDate, reason }),
+    });
+
+    btn.disabled = false;
+    btn.textContent = t.mlSubmit;
+
+    if (res?.request_id) {
+      closeLeaveModal();
+      loadDashboard(); // refresh
+    } else {
+      alert(res?.error || 'Error submitting request');
+    }
+  }
+
+  function viewDocuments() { alert('Documents page coming soon!'); }
+  function downloadPayslip() { alert('Payslip download coming soon!'); }
+
+  // ── Start ─────────────────────────────────────
+  applyLang();
+  loadDashboard();
+</script>
+</body>
+</html>

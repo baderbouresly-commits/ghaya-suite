@@ -1,0 +1,22 @@
+name = "ghaya-suite"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "public"
+
+# ─── D1 Database ───────────────────────────────────────────
+[[d1_databases]]
+binding = "DB"
+database_name = "ghaya-db"
+database_id = "PASTE_YOUR_D1_ID_HERE"   # Get this from: wrangler d1 create ghaya-db
+
+# ─── R2 Bucket (file storage) ──────────────────────────────
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "ghaya-files"
+
+# ─── Environment Variables ─────────────────────────────────
+[vars]
+ENVIRONMENT = "production"
+JWT_SECRET = "CHANGE_THIS_TO_A_RANDOM_64_CHAR_STRING"
+JWT_EXPIRES_IN = "86400"   # 24 hours in seconds
+APP_NAME = "Ghaya Suite"
+SUPPORT_EMAIL = "support@ghaya.hr"

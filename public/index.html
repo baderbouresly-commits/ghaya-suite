@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ghaya Suite — Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Brand Tokens ─────────────────────────── */
+    :root {
+      --cream:   #FAF6F1;
+      --coral:   #E8472A;
+      --navy:    #0A2540;
+      --teal:    #00BFA6;
+      --charcoal:#1A1A1A;
+      --gray:    #6B7A9A;
+      --border:  #E4DDD6;
+      --white:   #FFFFFF;
+      --coral-hover: #C93920;
+      --coral-light: #FDF0EE;
+      --shadow:  0 1px 3px rgba(10,37,64,.08), 0 4px 16px rgba(10,37,64,.06);
+      --shadow-lg: 0 8px 32px rgba(10,37,64,.12);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', 'Almarai', sans-serif;
+      background: var(--cream);
+      color: var(--charcoal);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    /* ── Layout ───────────────────────────────── */
+    .page {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      max-width: 1000px;
+      width: 100%;
+      min-height: 580px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* ── Left Panel (brand) ───────────────────── */
+    .brand-panel {
+      background: var(--navy);
+      padding: 56px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-panel::before {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 280px; height: 280px;
+      background: rgba(232,71,42,.12);
+      border-radius: 50%;
+    }
+    .brand-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; left: -60px;
+      width: 200px; height: 200px;
+      background: rgba(0,191,166,.08);
+      border-radius: 50%;
+    }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo-mark svg { width: 48px; height: 48px; }
+
+    .logo-text { color: var(--white); }
+    .logo-name {
+      font-family: 'Almarai', sans-serif;
+      font-weight: 800;
+      font-size: 24px;
+      letter-spacing: .01em;
+      line-height: 1;
+    }
+    .logo-name .arabic { font-size: 18px; opacity: .7; margin-left: 8px; }
+    .logo-tagline {
+      font-size: 10px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-top: 4px;
+    }
+
+    .brand-body { position: relative; z-index: 1; }
+    .brand-headline {
+      font-family: 'Almarai', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1.35;
+      margin-bottom: 16px;
+    }
+    .brand-headline span { color: var(--coral); }
+    .brand-desc {
+      font-size: 14px;
+      color: rgba(255,255,255,.55);
+      line-height: 1.7;
+    }
+
+    .pillars {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .pillar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: rgba(255,255,255,.65);
+    }
+    .pillar-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Right Panel (form) ───────────────────── */
+    .form-panel {
+      background: var(--white);
+      padding: 56px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .form-header { margin-bottom: 36px; }
+    .form-title {
+      font-family: 'Almarai', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+    .form-subtitle {
+      font-size: 14px;
+      color: var(--gray);
+    }
+
+    /* ── Form Fields ──────────────────────────── */
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 7px;
+    }
+
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute;
+      left: 14px; top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      color: var(--gray);
+      pointer-events: none;
+    }
+
+    input[type="email"],
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px 12px 42px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: var(--charcoal);
+      background: var(--cream);
+      transition: border-color .15s, box-shadow .15s;
+      outline: none;
+    }
+    input:focus {
+      border-color: var(--coral);
+      box-shadow: 0 0 0 3px rgba(232,71,42,.1);
+      background: var(--white);
+    }
+    input.error { border-color: var(--coral); }
+
+    .toggle-password {
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      cursor: pointer; color: var(--gray);
+      padding: 0; line-height: 1;
+    }
+    .toggle-password:hover { color: var(--navy); }
+
+    /* ── Button ───────────────────────────────── */
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: var(--coral);
+      color: var(--white);
+      border: none;
+      border-radius: 10px;
+      font-family: 'Almarai', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s, transform .1s, box-shadow .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .btn-primary:hover { background: var(--coral-hover); box-shadow: 0 4px 12px rgba(232,71,42,.3); }
+    .btn-primary:active { transform: scale(.99); }
+    .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+    .btn-primary.loading .spinner { display: block; }
+    .btn-primary.loading .btn-label { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Error Alert ──────────────────────────── */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: none;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .alert.error { background: #FDF0EE; color: var(--coral); border: 1px solid rgba(232,71,42,.2); display: flex; }
+    .alert.success { background: #E6FAF7; color: #007A6B; border: 1px solid rgba(0,191,166,.2); display: flex; }
+
+    /* ── Lang toggle ──────────────────────────── */
+    .lang-toggle {
+      position: absolute;
+      top: 20px; right: 20px;
+      display: flex;
+      gap: 4px;
+    }
+    .lang-btn {
+      padding: 5px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      background: var(--white);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--gray);
+      transition: all .15s;
+    }
+    .lang-btn.active {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: var(--white);
+    }
+
+    .page { position: relative; }
+
+    /* ── Responsive ───────────────────────────── */
+    @media (max-width: 680px) {
+      .page { grid-template-columns: 1fr; min-height: auto; border-radius: 16px; }
+      .brand-panel { padding: 40px 32px 32px; min-height: 200px; }
+      .brand-headline { font-size: 22px; }
+      .pillars { flex-direction: row; flex-wrap: wrap; }
+      .form-panel { padding: 40px 32px; }
+      .lang-toggle { top: 16px; right: 16px; }
+    }
+
+    /* ── Arabic RTL ───────────────────────────── */
+    [lang="ar"] body,
+    .rtl { direction: rtl; }
+    .rtl .input-icon { left: auto; right: 14px; }
+    .rtl input { padding: 12px 42px 12px 14px; }
+    .rtl .toggle-password { right: auto; left: 14px; }
+    .rtl .lang-toggle { right: auto; left: 20px; }
+  </style>
+</head>
+<body>
+
+<div class="page" id="page">
+
+  <!-- Language toggle -->
+  <div class="lang-toggle">
+    <button class="lang-btn active" onclick="setLang('en')" id="btn-en">EN</button>
+    <button class="lang-btn" onclick="setLang('ar')" id="btn-ar">ع</button>
+  </div>
+
+  <!-- Left: Brand Panel -->
+  <div class="brand-panel">
+    <div class="logo-wrap">
+      <div class="logo-mark">
+        <!-- Ghaya logo mark: C-arc (ğ) + teal nuqta -->
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 70,42 A 28,28 0 1 0 70,70" stroke="rgba(255,255,255,0.92)" stroke-width="12" stroke-linecap="round" fill="none"/>
+          <circle cx="61" cy="13" r="9" fill="#00BFA6"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <div class="logo-name">Ghaya <span class="arabic">غاية</span></div>
+        <div class="logo-tagline">Your Trusted HR Support</div>
+      </div>
+    </div>
+
+    <div class="brand-body">
+      <h2 class="brand-headline" id="brand-headline">
+        Kuwait HR,<br/><span>simplified.</span>
+      </h2>
+      <p class="brand-desc" id="brand-desc">
+        Manage leaves, payroll, documents, and compliance — all in one place. Built for Kuwait's Labour Law.
+      </p>
+    </div>
+
+    <div class="pillars">
+      <div class="pillar">
+        <div class="pillar-dot" style="background:#E8472A;"></div>
+        <span id="pillar1">Recruitment</span>
+      </div>
+      <div class="pillar">
+        <div class="pillar-dot" style="background:#6B7A9A;"></div>
+        <span id="pillar2">HR Operations</span>
+      </div>
+      <div class="pillar">
+        <div class="pillar-dot" style="background:#00BFA6;"></div>
+        <span id="pillar3">Training & Development</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Login Form -->
+  <div class="form-panel">
+    <div class="form-header">
+      <h1 class="form-title" id="form-title">Welcome back</h1>
+      <p class="form-subtitle" id="form-subtitle">Sign in to your Ghaya Suite account</p>
+    </div>
+
+    <div class="alert" id="alert" role="alert">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="alert-msg"></span>
+    </div>
+
+    <form id="login-form" novalidate>
+      <div class="field">
+        <label for="email" id="label-email">Email address</label>
+        <div class="input-wrap">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          <input type="email" id="email" name="email" autocomplete="email" required
+            placeholder="you@company.com"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password" id="label-password">Password</label>
+        <div class="input-wrap">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <input type="password" id="password" name="password" autocomplete="current-password" required
+            placeholder="••••••••"/>
+          <button type="button" class="toggle-password" onclick="togglePwd()" id="toggle-pwd" aria-label="Show password">
+            <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submit-btn">
+        <div class="spinner" id="spinner"></div>
+        <span class="btn-label" id="btn-label">Sign in</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // ── Language strings ─────────────────────────
+  const i18n = {
+    en: {
+      headline: 'Kuwait HR,<br/><span>simplified.</span>',
+      desc: 'Manage leaves, payroll, documents, and compliance — all in one place. Built for Kuwait\'s Labour Law.',
+      pillar1: 'Recruitment',
+      pillar2: 'HR Operations',
+      pillar3: 'Training & Development',
+      formTitle: 'Welcome back',
+      formSubtitle: 'Sign in to your Ghaya Suite account',
+      labelEmail: 'Email address',
+      labelPassword: 'Password',
+      btnLabel: 'Sign in',
+      btnLoading: 'Signing in…',
+      errEmpty: 'Please enter your email and password.',
+      errInvalid: 'Invalid email or password.',
+      errNetwork: 'Connection error. Please try again.',
+    },
+    ar: {
+      headline: 'موارد بشرية الكويت،<br/><span>بكل سهولة.</span>',
+      desc: 'أدر الإجازات والرواتب والوثائق والامتثال — كل شيء في مكان واحد. مبني لقانون العمل الكويتي.',
+      pillar1: 'التوظيف والاستقطاب',
+      pillar2: 'الدعم الإداري للموارد البشرية',
+      pillar3: 'التدريب والتطوير',
+      formTitle: 'مرحباً بعودتك',
+      formSubtitle: 'سجّل الدخول إلى حساب غاية',
+      labelEmail: 'البريد الإلكتروني',
+      labelPassword: 'كلمة المرور',
+      btnLabel: 'تسجيل الدخول',
+      btnLoading: 'جارٍ تسجيل الدخول…',
+      errEmpty: 'يرجى إدخال البريد الإلكتروني وكلمة المرور.',
+      errInvalid: 'بريد إلكتروني أو كلمة مرور غير صحيحة.',
+      errNetwork: 'خطأ في الاتصال. يرجى المحاولة مرة أخرى.',
+    }
+  };
+
+  let lang = localStorage.getItem('ghaya_lang') || 'en';
+  let t = i18n[lang];
+
+  function setLang(l) {
+    localStorage.setItem('ghaya_lang', l);
+    location.reload(); // hard refresh as per spec
+  }
+
+  function applyLang() {
+    t = i18n[lang];
+    document.documentElement.lang = lang;
+    const rtl = lang === 'ar';
+    document.body.dir = rtl ? 'rtl' : 'ltr';
+    document.querySelectorAll('.input-icon').forEach(el => {
+      el.style.left = rtl ? 'auto' : '14px';
+      el.style.right = rtl ? '14px' : 'auto';
+    });
+    document.querySelectorAll('input[type="email"],input[type="password"]').forEach(el => {
+      el.style.padding = rtl ? '12px 42px 12px 14px' : '12px 14px 12px 42px';
+    });
+    const tpwd = document.getElementById('toggle-pwd');
+    if (tpwd) { tpwd.style.right = rtl ? 'auto' : '14px'; tpwd.style.left = rtl ? '14px' : 'auto'; }
+    const lt = document.querySelector('.lang-toggle');
+    if (lt) { lt.style.right = rtl ? 'auto' : '20px'; lt.style.left = rtl ? '20px' : 'auto'; }
+
+    document.getElementById('brand-headline').innerHTML = t.headline;
+    document.getElementById('brand-desc').textContent = t.desc;
+    document.getElementById('pillar1').textContent = t.pillar1;
+    document.getElementById('pillar2').textContent = t.pillar2;
+    document.getElementById('pillar3').textContent = t.pillar3;
+    document.getElementById('form-title').textContent = t.formTitle;
+    document.getElementById('form-subtitle').textContent = t.formSubtitle;
+    document.getElementById('label-email').textContent = t.labelEmail;
+    document.getElementById('label-password').textContent = t.labelPassword;
+    document.getElementById('btn-label').textContent = t.btnLabel;
+
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    document.getElementById('btn-ar').classList.toggle('active', lang === 'ar');
+  }
+
+  // ── Password toggle ──────────────────────────
+  function togglePwd() {
+    const pwd = document.getElementById('password');
+    const icon = document.getElementById('eye-icon');
+    const showing = pwd.type === 'text';
+    pwd.type = showing ? 'password' : 'text';
+    icon.innerHTML = showing
+      ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+      : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  }
+
+  // ── Show alert ───────────────────────────────
+  function showAlert(msg, type = 'error') {
+    const el = document.getElementById('alert');
+    el.className = `alert ${type}`;
+    document.getElementById('alert-msg').textContent = msg;
+    el.style.display = 'flex';
+  }
+  function hideAlert() {
+    document.getElementById('alert').style.display = 'none';
+  }
+
+  // ── Login ────────────────────────────────────
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!email || !password) { showAlert(t.errEmpty); return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    document.getElementById('btn-label').textContent = t.btnLoading;
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showAlert(data.error || t.errInvalid);
+        return;
+      }
+
+      // Store token
+      localStorage.setItem('ghaya_token', data.token);
+      localStorage.setItem('ghaya_user', JSON.stringify(data.user));
+
+      // Route by role
+      const role = data.user.role;
+      if (role === 'ghaya_admin') {
+        window.location.href = '/ghaya/';
+      } else if (role === 'company_admin' || role === 'manager') {
+        window.location.href = '/admin/';
+      } else {
+        window.location.href = '/employee/';
+      }
+    } catch (err) {
+      showAlert(t.errNetwork);
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      document.getElementById('btn-label').textContent = t.btnLabel;
+    }
+  });
+
+  // ── Check already logged in ──────────────────
+  (function checkExistingSession() {
+    const token = localStorage.getItem('ghaya_token');
+    const user = JSON.parse(localStorage.getItem('ghaya_user') || 'null');
+    if (token && user) {
+      const role = user.role;
+      if (role === 'ghaya_admin') window.location.href = '/ghaya/';
+      else if (['company_admin','manager'].includes(role)) window.location.href = '/admin/';
+      else window.location.href = '/employee/';
+    }
+  })();
+
+  applyLang();
+</script>
+</body>
+</html>
