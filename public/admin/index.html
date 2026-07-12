@@ -406,7 +406,7 @@ function showPage(page){
 async function loadDashboard(){
   const[emps,leaves]=await Promise.all([apicall('GET','/employees'),apicall('GET','/leaves?status=pending')]);
   const employees=emps?.employees||[];
-  const pendingLeaves=leaves?.leaves||[];
+  const pendingLeaves=leaves?.requests||[];
   const active=employees.filter(e=>e.status==='active');
   const totalSalary=active.reduce((s,e)=>s+(parseFloat(e.basic_salary)||0),0);
   document.getElementById('s-total').textContent=employees.length;
@@ -439,7 +439,7 @@ function renderDashLeaves(list){
   el.innerHTML=list.map(l=>`
     <div class="leave-card">
       <div class="leave-avatar">${(l.employee_name||'?')[0]}</div>
-      <div class="leave-info"><div class="leave-name">${l.employee_name||'—'}</div><div class="leave-detail">${l.leave_type||'Annual'} · ${l.start_date} → ${l.end_date} · ${l.days_requested||'?'} days</div></div>
+      <div class="leave-info"><div class="leave-name">${l.employee_name||'—'}</div><div class="leave-detail">${l.type_name||'Annual'} · ${l.start_date} → ${l.end_date} · ${l.days_count||'?'} days</div></div>
       <div class="leave-actions">
         <button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓</button>
         <button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕</button>
@@ -479,7 +479,7 @@ function renderEmployeesTable(list){
 async function loadLeaves(){
   document.getElementById('leaves-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/leaves?status='+currentLeaveFilter);
-  leavesData=data?.leaves||[];
+  leavesData=data?.requests||[];
   renderLeavesList(leavesData);
 }
 function filterLeaves(status,btn){currentLeaveFilter=status;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');loadLeaves();}
@@ -494,8 +494,8 @@ function renderLeavesList(list){
       ${l.status==='pending'?`<div class="leave-actions"><button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕ Reject</button></div>`:''}
     </div>`).join('');
 }
-async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'approved'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
-async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'rejected'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
+async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'approve'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
+async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'reject'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
 
 async function loadPayroll(){
   document.getElementById('payroll-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
