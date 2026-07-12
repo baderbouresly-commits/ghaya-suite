@@ -241,20 +241,48 @@ select.form-input{cursor:pointer}
       </div>
     </div>
     <!-- PAYROLL -->
-    <div id="page-payroll" style="display:none">
-      <div class="payroll-card">
-        <div class="payroll-title">ESTIMATED MONTHLY PAYROLL</div>
-        <div class="payroll-amount" id="payroll-total">KWD 0.000</div>
-        <div class="payroll-sub" id="payroll-sub">0 employees</div>
-        <div class="payroll-actions">
+<!-- PAYROLL -->
+<div id="page-payroll" style="display:none">
+  <div id="payroll-runs-view">
+    <div class="section-card" style="margin-bottom:24px;">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Run Payroll</div>
+          <div class="section-sub">Calculates salaries + PIFSS for all active employees</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <select class="search-bar" id="payroll-month" style="width:130px;">
+            <option value="1">January</option><option value="2">February</option>
+            <option value="3">March</option><option value="4">April</option>
+            <option value="5">May</option><option value="6">June</option>
+            <option value="7">July</option><option value="8">August</option>
+            <option value="9">September</option><option value="10">October</option>
+            <option value="11">November</option><option value="12">December</option>
+          </select>
+          <select class="search-bar" id="payroll-year" style="width:90px;"></select>
           <button class="btn btn-primary" onclick="runPayroll()">▶ Run Payroll</button>
         </div>
       </div>
-      <div class="section-card">
-        <div class="section-header"><div class="section-title">Payroll Breakdown</div></div>
-        <div id="payroll-list"><div class="loading"><div class="spinner"></div></div></div>
-      </div>
     </div>
+    <div class="section-card">
+      <div class="section-header"><div class="section-title">Payroll History</div></div>
+      <div id="payroll-list"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+  <div id="payroll-detail-view" style="display:none">
+    <div style="margin-bottom:20px;">
+      <button class="btn btn-ghost btn-sm" onclick="showPayrollList()">← Back to History</button>
+    </div>
+    <div id="payroll-detail-summary" style="margin-bottom:24px;"></div>
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title" id="payroll-detail-title">Payroll Breakdown</div>
+        <div id="payroll-detail-actions" style="display:flex;gap:8px;"></div>
+      </div>
+      <div id="payroll-detail-list"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+</div>
     <!-- SETTINGS -->
     <div id="page-settings" style="display:none">
       <div class="section-card">
@@ -497,22 +525,148 @@ function renderLeavesList(list){
 async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'approve'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
 async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'reject'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
 
-async function loadPayroll(){
-  document.getElementById('payroll-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET','/employees');
-  const employees=(data?.employees||[]).filter(e=>e.status==='active');
-  let total=employees.reduce((s,e)=>s+(parseFloat(e.basic_salary)||0),0);
-  document.getElementById('payroll-total').textContent='KWD '+total.toFixed(3);
-  document.getElementById('payroll-sub').textContent=`${employees.length} active employees · PIFSS deductions apply for Kuwaitis`;
-  if(!employees.length){document.getElementById('payroll-list').innerHTML='<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">No active employees</div></div>';return;}
-  document.getElementById('payroll-list').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Nationality</th><th>Basic Salary</th><th>PIFSS (5%)</th><th>Net Pay</th></tr></thead><tbody>${employees.map(e=>{
-    const basic=parseFloat(e.basic_salary||0);
-    const pifss=e.nationality==='Kuwaiti'?basic*0.05:0;
-    const net=basic-pifss;
-    return`<tr><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${getJobTitle(e.job_title_id)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td>KWD ${basic.toFixed(3)}</td><td style="color:${pifss>0?'#c42a00':'#888'}">${pifss>0?'− KWD '+pifss.toFixed(3):'—'}</td><td style="font-weight:800;color:#1a7a42">KWD ${net.toFixed(3)}</td></tr>`;
-  }).join('')}</tbody></table></div>`;
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+async function loadPayroll() {
+  // Set month/year selectors to current
+  const now = new Date();
+  const yearSel = document.getElementById('payroll-year');
+  yearSel.innerHTML = '';
+  for (let y = now.getFullYear(); y >= now.getFullYear() - 3; y--) {
+    yearSel.innerHTML += `<option value="${y}">${y}</option>`;
+  }
+  document.getElementById('payroll-month').value = now.getMonth() + 1;
+
+  const data = await apicall('GET', '/payroll');
+  const runs = data?.runs || [];
+  const el = document.getElementById('payroll-list');
+
+  if (!runs.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">No payroll runs yet</div><div class="empty-sub">Select a month and click Run Payroll</div></div>';
+    return;
+  }
+
+  const statusBadge = { draft:'<span class="badge badge-orange">Draft</span>', approved:'<span class="badge badge-blue">Published</span>', paid:'<span class="badge badge-green">Paid</span>' };
+
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr>
+      <th>Period</th><th>Employees</th><th>Gross (KWD)</th>
+      <th>PIFSS Deducted</th><th>Net Pay (KWD)</th><th>Status</th><th>Actions</th>
+    </tr></thead>
+    <tbody>${runs.map(r => `
+      <tr>
+        <td style="font-weight:700">${MONTH_NAMES[r.period_month-1]} ${r.period_year}</td>
+        <td style="color:#888">—</td>
+        <td>KWD ${(r.total_gross||0).toFixed(3)}</td>
+        <td style="color:#E8472A">- KWD ${(r.total_pifss_employee||0).toFixed(3)}</td>
+        <td style="font-weight:800;color:#1a7a42">KWD ${(r.total_net||0).toFixed(3)}</td>
+        <td>${statusBadge[r.status]||r.status}</td>
+        <td style="display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="viewPayrollRun('${r.id}')">View</button>
+          ${r.status === 'draft' ? `<button class="btn btn-primary btn-sm" onclick="publishPayslips('${r.id}')">Publish</button>` : ''}
+          ${r.status === 'approved' ? `<button class="btn btn-success btn-sm" onclick="markAsPaid('${r.id}')">Mark Paid</button>` : ''}
+          ${r.status !== 'paid' ? `<button class="btn btn-danger btn-sm" onclick="deletePayrollRun('${r.id}')">Delete</button>` : ''}
+        </td>
+      </tr>`).join('')}
+    </tbody></table></div>`;
 }
-function runPayroll(){showToast('Payroll processing — coming in next update!','');}
+
+async function runPayroll() {
+  const month = parseInt(document.getElementById('payroll-month').value);
+  const year  = parseInt(document.getElementById('payroll-year').value);
+  const res = await apicall('POST', '/payroll', { month, year });
+  if (!res || res.error) { showToast(res?.error || 'Error running payroll', 'error'); return; }
+  showToast(`✓ Payroll for ${MONTH_NAMES[month-1]} ${year} created — ${res.employee_count} employees`, 'success');
+  loadPayroll();
+}
+
+async function viewPayrollRun(id) {
+  document.getElementById('payroll-runs-view').style.display = 'none';
+  document.getElementById('payroll-detail-view').style.display = '';
+  document.getElementById('payroll-detail-list').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+  const data = await apicall('GET', '/payroll/' + id);
+  if (!data || data.error) { showToast('Error loading run', 'error'); return; }
+  const { run, entries } = data;
+
+  document.getElementById('payroll-detail-title').textContent =
+    `${MONTH_NAMES[run.period_month-1]} ${run.period_year} — Breakdown`;
+
+  // Summary cards
+  document.getElementById('payroll-detail-summary').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+      <div class="stat-card"><div class="stat-label">Total Gross</div><div class="stat-value" style="font-size:22px">KWD ${(run.total_gross||0).toFixed(3)}</div></div>
+      <div class="stat-card"><div class="stat-label">PIFSS (Employee 8%)</div><div class="stat-value" style="font-size:22px;color:#E8472A">- ${(run.total_pifss_employee||0).toFixed(3)}</div></div>
+      <div class="stat-card"><div class="stat-label">Net Salaries</div><div class="stat-value" style="font-size:22px;color:#1a7a42">KWD ${(run.total_net||0).toFixed(3)}</div></div>
+      <div class="stat-card"><div class="stat-label">PIFSS Cost (Company 11%)</div><div class="stat-value" style="font-size:22px;color:#888">KWD ${(run.total_pifss_employer||0).toFixed(3)}</div></div>
+    </div>`;
+
+  // Action buttons
+  const actionsEl = document.getElementById('payroll-detail-actions');
+  actionsEl.innerHTML = '';
+  if (run.status === 'draft') {
+    actionsEl.innerHTML = `
+      <button class="btn btn-primary" onclick="publishPayslips('${id}')">📤 Publish Payslips</button>
+      <button class="btn btn-danger" onclick="deletePayrollRun('${id}')">Delete</button>`;
+  } else if (run.status === 'approved') {
+    actionsEl.innerHTML = `<button class="btn btn-success" onclick="markAsPaid('${id}')">✓ Mark as Paid</button>`;
+  } else {
+    actionsEl.innerHTML = `<span class="badge badge-green" style="padding:8px 16px;font-size:13px;">✓ Paid</span>`;
+  }
+
+  // Employee table
+  document.getElementById('payroll-detail-list').innerHTML = `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Employee</th><th>Nationality</th><th>Basic Salary</th>
+        <th>PIFSS (8%)</th><th>Net Pay</th><th>Payslip</th>
+      </tr></thead>
+      <tbody>${(entries||[]).map(e => `
+        <tr>
+          <td style="font-weight:700">${e.first_name_en} ${e.last_name_en}</td>
+          <td style="font-size:12px">${e.nationality||'—'}</td>
+          <td>KWD ${(e.basic_salary||0).toFixed(3)}</td>
+          <td style="color:${e.pifss_employee>0?'#E8472A':'#888'}">
+            ${e.pifss_employee > 0 ? `- KWD ${e.pifss_employee.toFixed(3)}` : '—'}
+          </td>
+          <td style="font-weight:800;color:#1a7a42">KWD ${(e.net_salary||0).toFixed(3)}</td>
+          <td>${e.payslip_published
+            ? '<span class="badge badge-green">Published</span>'
+            : '<span class="badge badge-gray">Pending</span>'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+function showPayrollList() {
+  document.getElementById('payroll-runs-view').style.display = '';
+  document.getElementById('payroll-detail-view').style.display = 'none';
+}
+
+async function publishPayslips(id) {
+  const res = await apicall('PUT', '/payroll/' + id, { action: 'publish' });
+  if (!res || res.error) { showToast(res?.error || 'Error', 'error'); return; }
+  showToast('Payslips published to employees ✓', 'success');
+  loadPayroll();
+  viewPayrollRun(id);
+}
+
+async function markAsPaid(id) {
+  const res = await apicall('PUT', '/payroll/' + id, { action: 'pay' });
+  if (!res || res.error) { showToast(res?.error || 'Error', 'error'); return; }
+  showToast('Payroll marked as paid ✓', 'success');
+  loadPayroll();
+  viewPayrollRun(id);
+}
+
+async function deletePayrollRun(id) {
+  if (!confirm('Delete this payroll run?')) return;
+  const res = await apicall('DELETE', '/payroll/' + id);
+  if (!res || res.error) { showToast(res?.error || 'Error', 'error'); return; }
+  showToast('Deleted', 'success');
+  showPayrollList();
+  loadPayroll();
+}
 
 // ── Settings ─────────────────────────────────────────────────────
 function renderSettings(){
