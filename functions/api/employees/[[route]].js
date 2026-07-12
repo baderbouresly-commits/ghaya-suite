@@ -116,6 +116,7 @@ export async function onRequest({request, env, params}) {
           INSERT INTO users (id, company_id, email, password_hash, role, employee_id, is_active)
           VALUES (?,?,?,?,?,?,1)
         `).bind(userId, company_id, work_email.toLowerCase().trim(), passwordHash, 'employee', newId).run();
+        await env.DB.prepare('UPDATE employees SET user_id = ? WHERE id = ?').bind(userId, newId).run();
       } catch(e) {
         // User creation failed (e.g. duplicate email) but employee was created
       }
