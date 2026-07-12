@@ -402,10 +402,10 @@
     }
     function logout() { localStorage.removeItem('ghaya_token'); localStorage.removeItem('ghaya_emp_page'); window.location.href = '/login.html'; }
     document.getElementById('leave-modal').addEventListener('click', function(e) { if (e.target === this) closeLeaveModal(); });
-    init().then(()=>{
-      const saved = localStorage.getItem('ghaya_emp_page') || 'dashboard';
-      showPage(saved);
-    });
+init().finally(()=>{
+  const saved=localStorage.getItem('ghaya_page')||'dashboard';
+  showPage(saved);
+});
   </script>
 </body>
 </html>
