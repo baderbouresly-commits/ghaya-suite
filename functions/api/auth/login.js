@@ -6,13 +6,29 @@ function b64u(data) {
     .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
 }
 
-async function signJWT(payload, secret, exp = 86400) {
+function parseB64u(str) {
+  str = str.replace(/-/g,'+').replace(/_/g,'/');
+  while (str.length % 4) str += '=';
+  return Uint8Array.from(atob(str), c => c.charCodeAt(0));
+}
+
+async function signJWT(payload, secret, exp=86400) {
   const h = b64u(enc.encode(JSON.stringify({alg:'HS256',typ:'JWT'})));
   const now = Math.floor(Date.now()/1000);
   const b = b64u(enc.encode(JSON.stringify({...payload,iat:now,exp:now+exp})));
   const key = await crypto.subtle.importKey('raw',enc.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
   const sig = await crypto.subtle.sign('HMAC',key,enc.encode(`${h}.${b}`));
   return `${h}.${b}.${b64u(sig)}`;
+}
+
+async function verifyPassword(password, hash) {
+  try {
+    const [, saltB64, hashB64] = hash.split(':');
+    const salt = parseB64u(saltB64);
+    const km = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({name:'PBKDF2',salt,hash:'SHA-256',iterations:100000}, km, 256);
+    return b64u(bits) === hashB64;
+  } catch { return false; }
 }
 
 function json(data, status=200) {
@@ -30,29 +46,40 @@ export async function onRequestPost({request, env}) {
     const user = await env.DB.prepare(
       'SELECT u.*, e.id as emp_id, e.first_name_en, e.last_name_en, e.company_id as emp_company_id FROM users u LEFT JOIN employees e ON e.user_id = u.id WHERE u.email = ? AND u.is_active = 1'
     ).bind(email.toLowerCase().trim()).first();
-
     if (!user) return json({error:'Invalid email or password'},401);
 
     let ok = false;
     if (user.password_hash.startsWith('PLACEHOLDER')) {
       ok = (password === 'GhayaAdmin2025!');
+    } else if (user.password_hash.startsWith('pbkdf2:')) {
+      ok = await verifyPassword(password, user.password_hash);
     }
-
     if (!ok) return json({error:'Invalid email or password'},401);
 
     const payload = {
-      sub: user.id, email: user.email, role: user.role,
-      company_id: user.company_id || null,
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      company_id: user.company_id || user.emp_company_id || null,
       employee_id: user.emp_id || null,
-      name: user.email,
+      name: [user.first_name_en, user.last_name_en].filter(Boolean).join(' ') || user.email,
       managed_by_ghaya: false,
     };
+
+    if (payload.company_id) {
+      const co = await env.DB.prepare('SELECT managed_by_ghaya FROM companies WHERE id = ?').bind(payload.company_id).first();
+      if (co) payload.managed_by_ghaya = !!co.managed_by_ghaya;
+    }
 
     const expires = parseInt(env.JWT_EXPIRES_IN||'86400');
     const token = await signJWT(payload, env.JWT_SECRET, expires);
     await env.DB.prepare("UPDATE users SET last_login_at=datetime('now') WHERE id=?").bind(user.id).run();
 
-    return json({token, user:{id:user.id,email:user.email,role:user.role,name:payload.name}, expires_in:expires});
+    return json({
+      token,
+      user:{id:user.id,email:user.email,role:user.role,name:payload.name,company_id:payload.company_id,employee_id:payload.employee_id,managed_by_ghaya:payload.managed_by_ghaya},
+      expires_in:expires
+    });
   } catch(e) {
     return new Response(JSON.stringify({error:e.message,stack:e.stack}),{status:500,headers:{'Content-Type':'application/json'}});
   }
