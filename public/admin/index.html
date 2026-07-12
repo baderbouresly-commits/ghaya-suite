@@ -559,7 +559,7 @@ document.querySelectorAll('.info-icon').forEach(icon=>{
     tip.textContent=this.dataset.tip;document.body.appendChild(tip);
     const r=this.getBoundingClientRect();
     tip.style.left=(r.left+r.width/2-105)+'px';
-    tip.style.top=(r.top-tip.offsetHeight-8)+'px';
+tip.style.top=(r.bottom+8)+'px';
   });
   icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
 });
