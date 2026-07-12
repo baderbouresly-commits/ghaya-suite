@@ -10,7 +10,7 @@ export async function onRequest({ request, env, params }) {
   const method = request.method;
   const url = new URL(request.url);
   const route = Array.isArray(params.route) ? params.route : (params.route ? [params.route] : []);
-  const subResource = route[0]; // 'request', 'balance', 'types', or request ID
+  const subResource = route[0];
 
   const companyId = user.role === 'ghaya_admin'
     ? url.searchParams.get('company_id')
@@ -68,7 +68,7 @@ export async function onRequest({ request, env, params }) {
       binds = [companyId];
     }
     const { results } = await db.prepare(query).bind(...binds).all();
-    return json({ requests: results, total: results.length });
+    return json({ requests: results, leaves: results, total: results.length });
   }
 
   // ── POST /api/leaves — submit leave request ──
@@ -76,20 +76,24 @@ export async function onRequest({ request, env, params }) {
     let body;
     try { body = await request.json(); } catch { return error('Invalid JSON'); }
 
-const { employee_id, start_date, end_date, reason } = body;
-const leave_type_id = body.leave_type_id || body.leave_type;
+    const { employee_id, start_date, end_date, reason } = body;
+    let leave_type_id = body.leave_type_id || body.leave_type;
+    // Normalize: deployed portal sends 'annual', DB stores 'lt-annual'
+    if (leave_type_id && !leave_type_id.startsWith('lt-')) {
+      const map = {annual:'lt-annual',sick:'lt-sick',emergency:'lt-emergency',maternity:'lt-maternity',hajj:'lt-hajj',unpaid:'lt-unpaid'};
+      leave_type_id = map[leave_type_id] || ('lt-' + leave_type_id);
+    }
+
     const empId = user.role === 'employee' ? user.employee_id : employee_id;
     if (!empId || !leave_type_id || !start_date || !end_date) {
       return error('employee_id, leave_type_id, start_date, end_date required');
     }
 
-    // Calculate days count (simple calendar days for now)
     const start = new Date(start_date);
     const end = new Date(end_date);
     if (end < start) return error('end_date must be after start_date');
     const days = Math.round((end - start) / (1000*60*60*24)) + 1;
 
-    // Check balance
     const year = start.getFullYear();
     const balance = await db.prepare(
       'SELECT * FROM leave_balances WHERE employee_id = ? AND leave_type_id = ? AND year = ?'
@@ -100,17 +104,12 @@ const leave_type_id = body.leave_type_id || body.leave_type;
       if (days > available) return error(`Insufficient leave balance. Available: ${available} days`);
     }
 
-const id = crypto.randomUUID();
-    try {
-      await db.prepare(`
-        INSERT INTO leave_requests (id, company_id, employee_id, leave_type_id, start_date, end_date, days_count, reason, status)
-        VALUES (?,?,?,?,?,?,?,?,'pending')
-      `).bind(id, companyId, empId, leave_type_id, start_date, end_date, days, reason || null).run();
-    } catch(e) {
-      return error(`DB error: ${e.message} | cid=${companyId} eid=${empId} ltid=${leave_type_id}`, 500);
-    }
+    const id = crypto.randomUUID();
+    await db.prepare(`
+      INSERT INTO leave_requests (id, company_id, employee_id, leave_type_id, start_date, end_date, days_count, reason, status)
+      VALUES (?,?,?,?,?,?,?,?,'pending')
+    `).bind(id, companyId, empId, leave_type_id, start_date, end_date, days, reason || null).run();
 
-    // Update pending balance
     if (balance) {
       await db.prepare(
         'UPDATE leave_balances SET pending_days = pending_days + ? WHERE employee_id = ? AND leave_type_id = ? AND year = ?'
@@ -139,7 +138,6 @@ const id = crypto.randomUUID();
       WHERE id = ?
     `).bind(newStatus, user.sub, rejection_reason || null, subResource).run();
 
-    // Update leave balances
     if (action === 'approve') {
       await db.prepare(
         "UPDATE leave_balances SET pending_days = MAX(0, pending_days - ?), used_days = used_days + ? WHERE employee_id = ? AND leave_type_id = ? AND year = ?"
