@@ -107,7 +107,7 @@
     </div>
     <nav class="nav">
       <div class="nav-label" id="nav-lbl-overview">OVERVIEW</div>
-      <div class="nav-item active" onclick="showPage('dashboard', this)">
+      <div class="nav-item" onclick="showPage('dashboard', this)">
         <span class="nav-icon">📊</span><span id="nav-dashboard">Dashboard</span>
       </div>
       <div class="nav-label" id="nav-lbl-hr">MY HR</div>
@@ -245,10 +245,13 @@
     let token = localStorage.getItem('ghaya_token');
     let currentUser = null, employeeData = null, lang = 'en';
     let editingLeaveId = null, leavesCache = [];
+    if (!token) { window.location.href = '/login.html'; }
+
     const i18n = {
       en: { appName:'Ghaya غاية',portalSub:'EMPLOYEE PORTAL',navOverview:'OVERVIEW',navDashboard:'Dashboard',navHR:'MY HR',navLeaves:'My Leaves',navPayslips:'My Payslips',navProfile:'My Profile',navLogout:'Sign Out',titleDashboard:'Dashboard',subDashboard:'Welcome back!',lblRemaining:'Annual Leave Remaining',lblPending:'Pending Requests',lblTaken:'Days Taken This Year',lblSalary:'Basic Salary (KWD)',titleQuick:'Quick Actions',titleRecentLeaves:'Recent Leave Requests',titleLeaves:'My Leaves',subLeaves:'View and manage your leave requests',titleBalance:'Leave Balance',lblBalRemaining:'Days Remaining',lblBalTaken:'Taken This Year',lblBalPending:'Pending Days',titleHistory:'Leave History',thType:'Type',thStart:'Start',thEnd:'End',thDays:'Days',thStatus:'Status',thActions:'Actions',titlePayslips:'My Payslips',subPayslips:'Monthly salary breakdown',titleProfile:'My Profile',subProfile:'Your personal information',modalLeave:'Request Leave',lblLeaveType:'Leave Type',lblStart:'Start Date',lblEnd:'End Date',lblReason:'Reason (optional)',btnCancel:'Cancel',btnSubmit:'Submit Request',btnRequest:'Request Leave' },
       ar: { appName:'غاية Ghaya',portalSub:'بوابة الموظف',navOverview:'نظرة عامة',navDashboard:'الرئيسية',navHR:'الموارد البشرية',navLeaves:'إجازاتي',navPayslips:'كشوف الراتب',navProfile:'ملفي',navLogout:'تسجيل الخروج',titleDashboard:'الرئيسية',subDashboard:'أهلاً بك!',lblRemaining:'رصيد الإجازة السنوية',lblPending:'الطلبات المعلقة',lblTaken:'الأيام المستخدمة هذا العام',lblSalary:'الراتب الأساسي (د.ك)',titleQuick:'إجراءات سريعة',titleRecentLeaves:'آخر طلبات الإجازة',titleLeaves:'إجازاتي',subLeaves:'عرض وإدارة طلبات الإجازة',titleBalance:'رصيد الإجازة',lblBalRemaining:'الأيام المتبقية',lblBalTaken:'الأيام المستخدمة',lblBalPending:'الأيام قيد المراجعة',titleHistory:'سجل الإجازات',thType:'النوع',thStart:'البداية',thEnd:'النهاية',thDays:'الأيام',thStatus:'الحالة',thActions:'إجراءات',titlePayslips:'كشوف الراتب',subPayslips:'تفصيل الراتب الشهري',titleProfile:'ملفي الشخصي',subProfile:'بياناتك الشخصية',modalLeave:'طلب إجازة',lblLeaveType:'نوع الإجازة',lblStart:'تاريخ البداية',lblEnd:'تاريخ النهاية',lblReason:'السبب (اختياري)',btnCancel:'إلغاء',btnSubmit:'إرسال الطلب',btnRequest:'طلب إجازة' }
     };
+
     function setLang(l) {
       lang = l; document.body.classList.toggle('rtl', l === 'ar');
       document.getElementById('btn-en').classList.toggle('active', l === 'en');
@@ -257,6 +260,7 @@
       const map = { 'app-name':'appName','portal-sub':'portalSub','nav-lbl-overview':'navOverview','nav-dashboard':'navDashboard','nav-lbl-hr':'navHR','nav-leaves':'navLeaves','nav-payslips':'navPayslips','nav-profile':'navProfile','nav-logout':'navLogout','title-dashboard':'titleDashboard','sub-dashboard':'subDashboard','lbl-stat-remaining':'lblRemaining','lbl-stat-pending':'lblPending','lbl-stat-taken':'lblTaken','lbl-stat-salary':'lblSalary','title-quick-actions':'titleQuick','title-recent-leaves':'titleRecentLeaves','title-leaves':'titleLeaves','sub-leaves':'subLeaves','title-balance':'titleBalance','lbl-bal-remaining':'lblBalRemaining','lbl-bal-taken':'lblBalTaken','lbl-bal-pending':'lblBalPending','title-history':'titleHistory','th-type':'thType','th-start':'thStart','th-end':'thEnd','th-days':'thDays','th-status':'thStatus','th-actions':'thActions','title-payslips':'titlePayslips','sub-payslips':'subPayslips','title-profile':'titleProfile','sub-profile':'subProfile','modal-leave-title':'modalLeave','lbl-leave-type':'lblLeaveType','lbl-start':'lblStart','lbl-end':'lblEnd','lbl-reason':'lblReason','btn-cancel':'btnCancel','btn-submit':'btnSubmit','btn-request-leave':'btnRequest' };
       Object.entries(map).forEach(([id, key]) => { const el = document.getElementById(id); if (el) el.textContent = tx[key]; });
     }
+
     function showPage(page, navEl) {
       localStorage.setItem('ghaya_emp_page', page);
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -269,12 +273,14 @@
       if (page === 'profile') loadProfile();
       if (page === 'dashboard') loadDashboard();
     }
+
     async function api(path, opts = {}) {
       try {
         const res = await fetch(path, { ...opts, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...(opts.headers || {}) } });
         return await res.json();
       } catch(e) { return { error: e.message }; }
     }
+
     async function init() {
       if (!token) { window.location.href = '/login.html'; return; }
       const data = await api('/api/auth/me');
@@ -284,8 +290,9 @@
       document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
       document.getElementById('user-role').textContent = currentUser.role.replace(/_/g, ' ');
     }
+
     async function loadDashboard() {
-      if (currentUser.employee_id) {
+      if (currentUser && currentUser.employee_id) {
         const d = await api(`/api/employees/${currentUser.employee_id}`);
         if (!d.error) { employeeData = d.employee || d; document.getElementById('stat-salary').textContent = parseFloat(employeeData.basic_salary || 0).toFixed(3); }
       }
@@ -309,6 +316,7 @@
         }
       }
     }
+
     async function loadLeaves(status) {
       const url = (!status || status === 'all') ? '/api/leaves' : `/api/leaves?status=${status}`;
       const data = await api(url);
@@ -318,10 +326,12 @@
       if (!leaves.length) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div></td></tr>`; return; }
       tbody.innerHTML = leaves.map((l, i) => `<tr><td>${l.type_name||l.leave_type||l.type||'—'}</td><td>${l.start_date||'—'}</td><td>${l.end_date||'—'}</td><td>${l.days_count||l.days_requested||'—'}</td><td><span class="badge badge-${l.status}">${l.status}</span></td><td>${l.status === 'pending' ? `<button class="action-btn action-btn-edit" onclick="editLeaveModal(leavesCache[${i}])">Edit</button><button class="action-btn action-btn-cancel" onclick="cancelLeave('${l.id}')">Cancel</button>` : '—'}</td></tr>`).join('');
     }
+
     function filterLeaves(status) {
       ['all','pending','approved','rejected'].forEach(s => { document.getElementById('filter-'+s).className = 'btn btn-sm ' + (s === status ? 'btn-primary' : 'btn-secondary'); });
       loadLeaves(status);
     }
+
     function openLeaveModal() {
       editingLeaveId = null;
       document.getElementById('modal-leave-title').textContent = 'Request Leave';
@@ -334,6 +344,7 @@
       document.getElementById('leave-end').value = today;
       document.getElementById('leave-modal').classList.add('open');
     }
+
     function editLeaveModal(l) {
       editingLeaveId = l.id;
       document.getElementById('modal-leave-title').textContent = 'Edit Leave Request';
@@ -345,13 +356,16 @@
       document.getElementById('leave-type').disabled = true;
       document.getElementById('leave-modal').classList.add('open');
     }
+
     async function cancelLeave(id) {
       if (!confirm('Cancel this leave request?')) return;
       const data = await api('/api/leaves/' + id, { method: 'PUT', body: JSON.stringify({ action: 'cancel' }) });
       if (data?.error) { alert(data.error); return; }
       loadDashboard(); loadLeaves('all');
     }
+
     function closeLeaveModal() { document.getElementById('leave-modal').classList.remove('open'); document.getElementById('leave-type').disabled = false; }
+
     async function submitLeave() {
       const alertEl = document.getElementById('leave-alert');
       const start = document.getElementById('leave-start').value;
@@ -371,6 +385,7 @@
       if (document.getElementById('page-leaves').classList.contains('active')) loadLeaves('all');
       loadDashboard();
     }
+
     async function loadPayslip() {
       const content = document.getElementById('payslip-content');
       content.innerHTML = '<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">Loading...</div></div>';
@@ -383,7 +398,7 @@
         content.innerHTML = `<div style="max-width:480px;"><div class="payslip-row"><span>Period</span><span style="font-weight:700;">${mn} ${p.period_year}</span></div><div style="height:12px;"></div><div class="payslip-row"><span style="font-weight:700;">Basic Salary</span><span style="font-weight:700;">KWD ${(p.basic_salary||0).toFixed(3)}</span></div>${p.pifss_employee > 0 ? `<div class="payslip-row"><span style="color:#E8472A;">PIFSS Deduction (8%)</span><span style="color:#E8472A;">- KWD ${p.pifss_employee.toFixed(3)}</span></div>` : ''}<div class="payslip-row" style="margin-top:8px;padding-top:16px;border-top:2px solid #1a1a2e;font-weight:800;font-size:16px;"><span>Net Pay</span><span style="color:#E8472A;">KWD ${(p.net_salary||0).toFixed(3)}</span></div><div style="margin-top:20px;padding:12px 16px;background:#f9f9f9;border-radius:10px;font-size:12px;color:#888;">${p.pifss_employee > 0 ? '✓ PIFSS 8% employee contribution deducted (Kuwaiti national)<br>✓ Company also contributes 11% PIFSS on your behalf' : '✓ No PIFSS deduction (non-Kuwaiti national)'}</div>${payslips.length > 1 ? `<div style="margin-top:16px;font-size:13px;color:#888;font-weight:700;">Previous payslips</div><div style="margin-top:8px;">${payslips.slice(1).map(ps => { const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][ps.period_month-1]; return `<div class="payslip-row"><span>${m} ${ps.period_year}</span><span>KWD ${(ps.net_salary||0).toFixed(3)}</span></div>`; }).join('')}</div>` : ''}</div>`;
         return;
       }
-      if (!employeeData && currentUser.employee_id) { const d = await api(`/api/employees/${currentUser.employee_id}`); if (!d.error) employeeData = d.employee || d; }
+      if (!employeeData && currentUser && currentUser.employee_id) { const d = await api(`/api/employees/${currentUser.employee_id}`); if (!d.error) employeeData = d.employee || d; }
       const now = new Date();
       document.getElementById('payslip-month').textContent = now.toLocaleString('en', {month:'long', year:'numeric'});
       if (!employeeData) { content.innerHTML = '<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">No payslip yet</div><div class="empty-sub">Your HR admin hasn\'t run payroll yet</div></div>'; return; }
@@ -393,19 +408,24 @@
       const net = Math.round((basic - pifss) * 1000) / 1000;
       content.innerHTML = `<div style="max-width:480px;"><div style="background:#fff3cd;border-radius:10px;padding:10px 14px;font-size:12px;color:#856404;margin-bottom:16px;">⏳ Estimated — admin hasn't published payroll yet</div><div class="payslip-row"><span style="font-weight:700;">Basic Salary</span><span style="font-weight:700;">KWD ${basic.toFixed(3)}</span></div>${pifss > 0 ? `<div class="payslip-row"><span style="color:#E8472A;">PIFSS (8%)</span><span style="color:#E8472A;">- KWD ${pifss.toFixed(3)}</span></div>` : ''}<div class="payslip-row" style="margin-top:8px;padding-top:16px;border-top:2px solid #1a1a2e;font-weight:800;font-size:16px;"><span>Estimated Net</span><span style="color:#E8472A;">KWD ${net.toFixed(3)}</span></div></div>`;
     }
+
     async function loadProfile() {
-      if (!employeeData && currentUser.employee_id) { const d = await api(`/api/employees/${currentUser.employee_id}`); if (!d.error) employeeData = d.employee || d; }
+      if (!employeeData && currentUser && currentUser.employee_id) { const d = await api(`/api/employees/${currentUser.employee_id}`); if (!d.error) employeeData = d.employee || d; }
       const content = document.getElementById('profile-content');
       if (!employeeData) { content.innerHTML = `<div class="empty-state"><div class="empty-icon">👤</div><div class="empty-text">Profile not found</div></div>`; return; }
       const e = employeeData;
       content.innerHTML = `<div style="display:flex;align-items:center;gap:20px;margin-bottom:28px;"><div style="width:72px;height:72px;background:#E8472A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;color:white;font-weight:800;">${(e.first_name_en||'?').charAt(0)}</div><div><div style="font-size:22px;font-weight:800;color:#1a1a2e;">${e.first_name_en||''} ${e.last_name_en||''}</div><div style="font-size:14px;color:#888;margin-top:2px;">${e.job_title_en||'Employee'}${e.department?' · '+e.department:''}</div></div></div><div class="profile-grid"><div><div class="profile-item-label">Civil ID</div><div class="profile-item-value">${e.civil_id||'—'}</div></div><div><div class="profile-item-label">Nationality</div><div class="profile-item-value">${e.nationality||'—'}</div></div><div><div class="profile-item-label">Work Email</div><div class="profile-item-value">${e.work_email||currentUser.email||'—'}</div></div><div><div class="profile-item-label">Phone</div><div class="profile-item-value">${e.phone||e.mobile||'—'}</div></div><div><div class="profile-item-label">Department</div><div class="profile-item-value">${e.department||'—'}</div></div><div><div class="profile-item-label">Contract Type</div><div class="profile-item-value">${(e.contract_type||e.employment_type||'—').replace(/_/g,' ')}</div></div><div><div class="profile-item-label">Start Date</div><div class="profile-item-value">${e.hire_date||'—'}</div></div><div><div class="profile-item-label">Status</div><div class="profile-item-value">${e.status==='active'||e.is_active?'🟢 Active':'🔴 Inactive'}</div></div>${e.first_name_ar?`<div><div class="profile-item-label">الاسم بالعربي</div><div class="profile-item-value">${e.first_name_ar} ${e.last_name_ar||''}</div></div>`:''}</div>`;
     }
+
     function logout() { localStorage.removeItem('ghaya_token'); localStorage.removeItem('ghaya_emp_page'); window.location.href = '/login.html'; }
+
     document.getElementById('leave-modal').addEventListener('click', function(e) { if (e.target === this) closeLeaveModal(); });
-init().finally(()=>{
-  const saved=localStorage.getItem('ghaya_page')||'dashboard';
-  showPage(saved);
-});
+
+    // Show saved page immediately — no waiting for init
+    const saved = localStorage.getItem('ghaya_emp_page') || 'dashboard';
+    showPage(saved);
+    // Init runs in background to populate user info & sidebar
+    init();
   </script>
 </body>
 </html>
