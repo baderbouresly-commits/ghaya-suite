@@ -1,4 +1,4 @@
-// /api/employees — list, create, update — self-contained
+// /api/employees — self-contained, no imports
 const enc = new TextEncoder();
 
 function parseB64u(str) {
@@ -31,87 +31,93 @@ export async function onRequest({request, env, params}) {
   const payload = await verifyJWT(token, env.JWT_SECRET);
   if (!payload) return json({error:'Token expired or invalid'}, 401);
 
-  const allowed = ['ghaya_admin','company_admin','manager'];
-  if (!allowed.includes(payload.role)) return json({error:'Forbidden'}, 403);
-
-  const parts = params.route || [];
-  const id = parts[0] || null;
+  const route = params.route || [];
+  const id = route[0] || null;
   const method = request.method;
-  const db = env.DB;
-  const company_id = payload.company_id;
 
-  // GET /api/employees
-  if (method === 'GET' && !id) {
-    let query, args;
+  // GET /api/employees — list
+  if (!id && method === 'GET') {
+    if (!['ghaya_admin','company_admin','manager'].includes(payload.role)) return json({error:'Forbidden'}, 403);
+    let q;
     if (payload.role === 'ghaya_admin') {
-      query = 'SELECT * FROM employees ORDER BY created_at DESC';
-      args = [];
+      q = await env.DB.prepare('SELECT * FROM employees ORDER BY created_at DESC').all();
     } else {
-      if (!company_id) return json({error:'No company associated'}, 400);
-      query = 'SELECT * FROM employees WHERE company_id = ? ORDER BY created_at DESC';
-      args = [company_id];
+      q = await env.DB.prepare('SELECT * FROM employees WHERE company_id = ? ORDER BY created_at DESC').bind(payload.company_id).all();
     }
-    const result = await db.prepare(query).bind(...args).all();
-    return json({employees: result.results ?? []});
+    return json({employees: q.results || []});
   }
 
   // GET /api/employees/:id
-  if (method === 'GET' && id) {
-    const emp = await db.prepare('SELECT * FROM employees WHERE id = ?').bind(id).first();
-    if (!emp) return json({error:'Not found'}, 404);
-    if (payload.role !== 'ghaya_admin' && emp.company_id !== company_id) return json({error:'Forbidden'}, 403);
+  if (id && method === 'GET') {
+    const emp = await env.DB.prepare('SELECT * FROM employees WHERE id = ?').bind(id).first();
+    if (!emp) return json({error:'Employee not found'}, 404);
+
+    const isSelf = payload.employee_id === id;
+    const isAdmin = payload.role === 'ghaya_admin';
+    const isCompanyStaff = ['company_admin','manager'].includes(payload.role) && emp.company_id === payload.company_id;
+
+    if (!isSelf && !isAdmin && !isCompanyStaff) return json({error:'Forbidden'}, 403);
     return json({employee: emp});
   }
 
-  // POST /api/employees
-  if (method === 'POST') {
+  // POST /api/employees — create
+  if (!id && method === 'POST') {
+    if (!['ghaya_admin','company_admin','manager'].includes(payload.role)) return json({error:'Forbidden'}, 403);
     let body;
     try { body = await request.json(); } catch { return json({error:'Invalid JSON'}, 400); }
 
-    const coId = payload.role === 'ghaya_admin' ? (body.company_id || company_id) : company_id;
-    if (!coId) return json({error:'company_id required'}, 400);
-    if (!body.first_name_en || !body.last_name_en) return json({error:'first_name_en and last_name_en required'}, 400);
+    const { first_name_en, last_name_en, first_name_ar, last_name_ar,
+      civil_id, nationality, job_title_en, department, basic_salary,
+      employment_start_date, work_email, phone, contract_type, company_id: bodyCompanyId } = body;
 
-    const id = crypto.randomUUID();
-    await db.prepare(`
+    if (!first_name_en || !last_name_en) return json({error:'first_name_en and last_name_en are required'}, 400);
+
+    const company_id = payload.role === 'ghaya_admin' ? bodyCompanyId : payload.company_id;
+    if (!company_id) return json({error:'company_id required'}, 400);
+
+    const newId = crypto.randomUUID();
+    await env.DB.prepare(`
       INSERT INTO employees
         (id, company_id, first_name_en, last_name_en, first_name_ar, last_name_ar,
          civil_id, nationality, job_title_en, department, basic_salary,
          employment_start_date, work_email, phone, contract_type, is_active)
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
     `).bind(
-      id, coId,
-      body.first_name_en, body.last_name_en,
-      body.first_name_ar || null, body.last_name_ar || null,
-      body.civil_id || null, body.nationality || null,
-      body.job_title_en || null, body.department || null,
-      body.basic_salary || 0,
-      body.employment_start_date || null,
-      body.work_email || null, body.phone || null,
-      body.contract_type || 'full_time'
+      newId, company_id, first_name_en, last_name_en,
+      first_name_ar||null, last_name_ar||null, civil_id||null, nationality||null,
+      job_title_en||null, department||null,
+      basic_salary ? parseFloat(basic_salary) : null,
+      employment_start_date||null, work_email||null, phone||null,
+      contract_type||'full_time'
     ).run();
 
-    return json({success: true, employee_id: id}, 201);
+    const emp = await env.DB.prepare('SELECT * FROM employees WHERE id = ?').bind(newId).first();
+    return json({employee: emp, message:'Employee created'}, 201);
   }
 
-  // PUT /api/employees/:id
-  if (method === 'PUT' && id) {
+  // PUT /api/employees/:id — update
+  if (id && method === 'PUT') {
+    if (!['ghaya_admin','company_admin','manager'].includes(payload.role)) return json({error:'Forbidden'}, 403);
+    const emp = await env.DB.prepare('SELECT * FROM employees WHERE id = ?').bind(id).first();
+    if (!emp) return json({error:'Employee not found'}, 404);
+    if (payload.role !== 'ghaya_admin' && emp.company_id !== payload.company_id) return json({error:'Forbidden'}, 403);
+
     let body;
     try { body = await request.json(); } catch { return json({error:'Invalid JSON'}, 400); }
 
-    const emp = await db.prepare('SELECT company_id FROM employees WHERE id = ?').bind(id).first();
-    if (!emp) return json({error:'Not found'}, 404);
-    if (payload.role !== 'ghaya_admin' && emp.company_id !== company_id) return json({error:'Forbidden'}, 403);
-
-    const allowed_fields = ['first_name_en','last_name_en','first_name_ar','last_name_ar','civil_id','nationality','job_title_en','department','basic_salary','employment_start_date','work_email','phone','contract_type','is_active'];
-    const fields = [], values = [];
-    for (const key of allowed_fields) {
-      if (key in body) { fields.push(`${key} = ?`); values.push(body[key]); }
+    const allowed = ['first_name_en','last_name_en','first_name_ar','last_name_ar',
+      'job_title_en','department','basic_salary','work_email','phone',
+      'contract_type','is_active','nationality','civil_id','employment_start_date'];
+    const sets = [], vals = [];
+    for (const key of allowed) {
+      if (key in body) { sets.push(`${key} = ?`); vals.push(body[key]); }
     }
-    if (!fields.length) return json({error:'No fields to update'}, 400);
-    values.push(id);
-    await db.prepare(`UPDATE employees SET ${fields.join(', ')} WHERE id = ?`).bind(...values).run();
-    return json({success: true});
+    if (!sets.length) return json({error:'Nothing to update'}, 400);
+    sets.push("updated_at = datetime('now')");
+    vals.push(id);
+    await env.DB.prepare(`UPDATE employees SET ${sets.join(', ')} WHERE id = ?`).bind(...vals).run();
+    const updated = await env.DB.prepare('SELECT * FROM employees WHERE id = ?').bind(id).first();
+    return json({employee: updated, message:'Employee updated'});
   }
 
   return json({error:'Method not allowed'}, 405);
