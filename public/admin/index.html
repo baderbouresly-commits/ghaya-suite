@@ -50,7 +50,6 @@ body.ar .main{margin-left:0;margin-right:240px}
 .stat-icon{font-size:22px;margin-bottom:8px}
 .stat-label{font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;margin-bottom:6px}
 .stat-value{font-size:30px;font-weight:800;color:#1a1a2e;line-height:1}
-.stat-sub{font-size:11px;color:#888;margin-top:4px}
 .section-card{background:#fff;border-radius:12px;border:1px solid #e8e0d8;margin-bottom:24px;overflow:hidden}
 .section-header{padding:20px 24px;border-bottom:1px solid #f0ebe4;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .section-title{font-size:15px;font-weight:800;color:#1a1a2e}
@@ -121,7 +120,18 @@ select.form-input{cursor:pointer}
 .filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .filter-btn{padding:5px 12px;border-radius:20px;font-family:'Almarai',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #e8e0d8;background:#fff;color:#888;transition:all .2s}
 .filter-btn.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
-@media(max-width:768px){.sidebar{display:none}.main{margin-left:0!important;margin-right:0!important}.stats-grid{grid-template-columns:1fr 1fr}.content{padding:16px}.form-grid{grid-template-columns:1fr}}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px}
+.settings-col-title{font-size:13px;font-weight:800;color:#1a1a2e;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #E8472A}
+.tag-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.tag-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#faf6f1;border:1px solid #e8e0d8;border-radius:8px;font-size:13px}
+.tag-item-name{font-weight:700;color:#1a1a2e}
+.tag-item-ar{font-size:11px;color:#888;margin-top:2px}
+.tag-delete{background:none;border:none;color:#ccc;cursor:pointer;font-size:16px;padding:2px 6px;transition:color .2s}
+.tag-delete:hover{color:#E8472A}
+.add-tag-row{display:flex;gap:8px}
+.add-tag-input{flex:1;padding:8px 12px;border:1px solid #e8e0d8;border-radius:8px;font-family:'Almarai',sans-serif;font-size:13px;background:#fff}
+.add-tag-input:focus{outline:none;border-color:#E8472A}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0!important;margin-right:0!important}.stats-grid{grid-template-columns:1fr 1fr}.content{padding:16px}.form-grid{grid-template-columns:1fr}.settings-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -151,6 +161,10 @@ select.form-input{cursor:pointer}
     </div>
     <div class="nav-item" onclick="showPage('payroll')" id="nav-payroll">
       <span class="nav-icon">💰</span><span data-en="Payroll" data-ar="الرواتب">Payroll</span>
+    </div>
+    <div class="nav-section" style="margin-top:8px">SETTINGS</div>
+    <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
+      <span class="nav-icon">⚙️</span><span data-en="Settings" data-ar="الإعدادات">Settings</span>
     </div>
   </nav>
   <div class="sidebar-footer">
@@ -229,16 +243,44 @@ select.form-input{cursor:pointer}
     <!-- PAYROLL -->
     <div id="page-payroll" style="display:none">
       <div class="payroll-card">
-        <div class="payroll-title" data-en="ESTIMATED MONTHLY PAYROLL" data-ar="الرواتب الشهرية المقدرة">ESTIMATED MONTHLY PAYROLL</div>
+        <div class="payroll-title">ESTIMATED MONTHLY PAYROLL</div>
         <div class="payroll-amount" id="payroll-total">KWD 0.000</div>
         <div class="payroll-sub" id="payroll-sub">0 employees</div>
         <div class="payroll-actions">
-          <button class="btn btn-primary" onclick="runPayroll()">▶ <span data-en="Run Payroll" data-ar="تشغيل الرواتب">Run Payroll</span></button>
+          <button class="btn btn-primary" onclick="runPayroll()">▶ Run Payroll</button>
         </div>
       </div>
       <div class="section-card">
-        <div class="section-header"><div class="section-title" data-en="Payroll Breakdown" data-ar="تفاصيل الرواتب">Payroll Breakdown</div></div>
+        <div class="section-header"><div class="section-title">Payroll Breakdown</div></div>
         <div id="payroll-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+    <!-- SETTINGS -->
+    <div id="page-settings" style="display:none">
+      <div class="section-card">
+        <div class="section-header"><div class="section-title">Departments &amp; Job Titles</div><div class="section-sub">Manage your company structure</div></div>
+        <div class="settings-grid">
+          <!-- Departments -->
+          <div>
+            <div class="settings-col-title">🏢 Departments</div>
+            <div class="tag-list" id="dept-list"><div class="loading"><div class="spinner"></div></div></div>
+            <div class="add-tag-row">
+              <input class="add-tag-input" id="new-dept-en" placeholder="Name (EN)"/>
+              <input class="add-tag-input" id="new-dept-ar" placeholder="الاسم (AR)" dir="rtl"/>
+              <button class="btn btn-primary btn-sm" onclick="addDept()">+ Add</button>
+            </div>
+          </div>
+          <!-- Job Titles -->
+          <div>
+            <div class="settings-col-title">💼 Job Titles</div>
+            <div class="tag-list" id="jt-list"><div class="loading"><div class="spinner"></div></div></div>
+            <div class="add-tag-row">
+              <input class="add-tag-input" id="new-jt-en" placeholder="Title (EN)"/>
+              <input class="add-tag-input" id="new-jt-ar" placeholder="المسمى (AR)" dir="rtl"/>
+              <button class="btn btn-primary btn-sm" onclick="addJobTitle()">+ Add</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -271,8 +313,16 @@ select.form-input{cursor:pointer}
         </div>
       </div>
       <div class="form-grid">
-        <div class="form-row"><label class="form-label">Job Title (EN)</label><input class="form-input" id="emp-title-en" placeholder="Sales Associate"/></div>
-        <div class="form-row"><label class="form-label">Department</label><input class="form-input" id="emp-dept" placeholder="Sales"/></div>
+        <div class="form-row"><label class="form-label">Department</label>
+          <select class="form-input" id="emp-dept-id">
+            <option value="">— Select Department —</option>
+          </select>
+        </div>
+        <div class="form-row"><label class="form-label">Job Title</label>
+          <select class="form-input" id="emp-job-title-id">
+            <option value="">— Select Job Title —</option>
+          </select>
+        </div>
       </div>
       <div class="form-grid">
         <div class="form-row"><label class="form-label">Basic Salary (KWD)</label><input class="form-input" id="emp-salary" type="number" step="0.001" placeholder="350.000"/></div>
@@ -301,7 +351,10 @@ const API='/api';
 let token=localStorage.getItem('ghaya_token');
 let currentUser=null,currentLang=localStorage.getItem('ghaya_lang')||'en';
 let employeesData=[],leavesData=[],currentLeaveFilter='pending',editingEmpId=null;
+let deptsData=[],jobTitlesData=[];
+
 if(!token){window.location.href='/';}
+
 async function apicall(method,path,body){
   try{
     const res=await fetch(API+path,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:body?JSON.stringify(body):undefined});
@@ -309,6 +362,7 @@ async function apicall(method,path,body){
     return res.json();
   }catch(e){return null;}
 }
+
 async function init(){
   try{
     const me=await apicall('GET','/auth/me');
@@ -322,22 +376,33 @@ async function init(){
       if(co&&co.company)document.getElementById('company-name').textContent=currentLang==='ar'?(co.company.name_ar||co.company.name_en):co.company.name_en;
     }
   }catch(e){logout();return;}
+  // Pre-load departments and job titles
+  await loadDeptsAndTitles();
   setLang(currentLang,false);
   loadDashboard();
 }
+
+async function loadDeptsAndTitles(){
+  const [d,j]=await Promise.all([apicall('GET','/departments'),apicall('GET','/job-titles')]);
+  deptsData=d?.departments||[];
+  jobTitlesData=j?.job_titles||[];
+}
+
 function showPage(page){
-  ['dashboard','employees','leaves','payroll'].forEach(p=>{
+  ['dashboard','employees','leaves','payroll','settings'].forEach(p=>{
     document.getElementById('page-'+p).style.display=p===page?'':'none';
     const nav=document.getElementById('nav-'+p);
     if(nav)nav.classList.toggle('active',p===page);
   });
-  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},payroll:{en:'Payroll',ar:'الرواتب'}};
+  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},payroll:{en:'Payroll',ar:'الرواتب'},settings:{en:'Settings',ar:'الإعدادات'}};
   document.getElementById('page-title').textContent=titles[page]?.[currentLang]||titles[page]?.en;
   if(page==='dashboard')loadDashboard();
   if(page==='employees')loadEmployees();
   if(page==='leaves')loadLeaves();
   if(page==='payroll')loadPayroll();
+  if(page==='settings')renderSettings();
 }
+
 async function loadDashboard(){
   const[emps,leaves]=await Promise.all([apicall('GET','/employees'),apicall('GET','/leaves?status=pending')]);
   const employees=emps?.employees||[];
@@ -352,17 +417,22 @@ async function loadDashboard(){
   renderDashEmployees(employees.slice(0,5));
   renderDashLeaves(pendingLeaves.slice(0,3));
 }
+
+function getDeptName(id){return deptsData.find(d=>d.id===id)?.name_en||'—';}
+function getJobTitle(id){return jobTitlesData.find(j=>j.id===id)?.title_en||'—';}
+
 function renderDashEmployees(list){
   const el=document.getElementById('dash-employees');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees yet</div><div class="empty-sub">Add your first employee to get started</div></div>';return;}
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees yet</div></div>';return;}
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Title</th><th>Department</th><th>Salary (KWD)</th><th>Status</th></tr></thead><tbody>${list.map(e=>`
     <tr>
       <td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.nationality||''}</div></td>
-      <td>${e.job_title_en||'—'}</td><td>${e.department||'—'}</td>
+      <td>${getJobTitle(e.job_title_id)}</td><td>${getDeptName(e.department_id)}</td>
       <td style="font-weight:700">${parseFloat(e.basic_salary||0).toFixed(3)}</td>
       <td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td>
     </tr>`).join('')}</tbody></table></div>`;
 }
+
 function renderDashLeaves(list){
   const el=document.getElementById('dash-leaves');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">No pending leave requests</div></div>';return;}
@@ -376,17 +446,20 @@ function renderDashLeaves(list){
       </div>
     </div>`).join('');
 }
+
 async function loadEmployees(){
   document.getElementById('employees-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/employees');
   employeesData=data?.employees||[];
-  document.getElementById('emp-count').textContent=`${employeesData.length} ${currentLang==='ar'?'موظف':'employees'}`;
+  document.getElementById('emp-count').textContent=`${employeesData.length} employees`;
   renderEmployeesTable(employeesData);
 }
+
 function filterEmployees(){
   const q=document.getElementById('emp-search').value.toLowerCase();
-  renderEmployeesTable(employeesData.filter(e=>`${e.first_name_en} ${e.last_name_en} ${e.job_title_en||''} ${e.department||''}`.toLowerCase().includes(q)));
+  renderEmployeesTable(employeesData.filter(e=>`${e.first_name_en} ${e.last_name_en} ${getDeptName(e.department_id)} ${getJobTitle(e.job_title_id)}`.toLowerCase().includes(q)));
 }
+
 function renderEmployeesTable(list){
   const el=document.getElementById('employees-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees found</div><div class="empty-sub">Add your first employee using the button above</div></div>';return;}
@@ -394,7 +467,7 @@ function renderEmployeesTable(list){
     <tr>
       <td style="color:#888;font-size:12px">${i+1}</td>
       <td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></td>
-      <td><div>${e.job_title_en||'—'}</div><div style="font-size:11px;color:#888">${e.department||'—'}</div></td>
+      <td><div>${getJobTitle(e.job_title_id)}</div><div style="font-size:11px;color:#888">${getDeptName(e.department_id)}</div></td>
       <td style="font-size:12px">${e.nationality||'—'}</td>
       <td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td>
       <td style="font-size:12px;color:#888">${e.hire_date||'—'}</td>
@@ -402,18 +475,14 @@ function renderEmployeesTable(list){
       <td><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button></td>
     </tr>`).join('')}</tbody></table></div>`;
 }
+
 async function loadLeaves(){
   document.getElementById('leaves-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/leaves?status='+currentLeaveFilter);
   leavesData=data?.leaves||[];
   renderLeavesList(leavesData);
 }
-function filterLeaves(status,btn){
-  currentLeaveFilter=status;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  loadLeaves();
-}
+function filterLeaves(status,btn){currentLeaveFilter=status;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');loadLeaves();}
 function renderLeavesList(list){
   const el=document.getElementById('leaves-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div>';return;}
@@ -427,6 +496,7 @@ function renderLeavesList(list){
 }
 async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'approved'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
 async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'rejected'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
+
 async function loadPayroll(){
   document.getElementById('payroll-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/employees');
@@ -439,16 +509,75 @@ async function loadPayroll(){
     const basic=parseFloat(e.basic_salary||0);
     const pifss=e.nationality==='Kuwaiti'?basic*0.05:0;
     const net=basic-pifss;
-    return`<tr><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.job_title_en||''}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td>KWD ${basic.toFixed(3)}</td><td style="color:${pifss>0?'#c42a00':'#888'}">${pifss>0?'− KWD '+pifss.toFixed(3):'—'}</td><td style="font-weight:800;color:#1a7a42">KWD ${net.toFixed(3)}</td></tr>`;
+    return`<tr><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${getJobTitle(e.job_title_id)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td>KWD ${basic.toFixed(3)}</td><td style="color:${pifss>0?'#c42a00':'#888'}">${pifss>0?'− KWD '+pifss.toFixed(3):'—'}</td><td style="font-weight:800;color:#1a7a42">KWD ${net.toFixed(3)}</td></tr>`;
   }).join('')}</tbody></table></div>`;
 }
 function runPayroll(){showToast('Payroll processing — coming in next update!','');}
+
+// ── Settings ─────────────────────────────────────────────────────
+function renderSettings(){
+  renderDeptList();
+  renderJTList();
+}
+function renderDeptList(){
+  const el=document.getElementById('dept-list');
+  if(!deptsData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No departments yet</div>';return;}
+  el.innerHTML=deptsData.map(d=>`
+    <div class="tag-item">
+      <div><div class="tag-item-name">${d.name_en}</div><div class="tag-item-ar">${d.name_ar||''}</div></div>
+      <button class="tag-delete" onclick="deleteDept('${d.id}')">✕</button>
+    </div>`).join('');
+}
+function renderJTList(){
+  const el=document.getElementById('jt-list');
+  if(!jobTitlesData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No job titles yet</div>';return;}
+  el.innerHTML=jobTitlesData.map(j=>`
+    <div class="tag-item">
+      <div><div class="tag-item-name">${j.title_en}</div><div class="tag-item-ar">${j.title_ar||''}</div></div>
+      <button class="tag-delete" onclick="deleteJobTitle('${j.id}')">✕</button>
+    </div>`).join('');
+}
+async function addDept(){
+  const en=document.getElementById('new-dept-en').value.trim();
+  const ar=document.getElementById('new-dept-ar').value.trim();
+  if(!en){showToast('Enter department name','error');return;}
+  const res=await apicall('POST','/departments',{name_en:en,name_ar:ar});
+  if(res&&res.department){deptsData.push(res.department);renderDeptList();document.getElementById('new-dept-en').value='';document.getElementById('new-dept-ar').value='';showToast('Department added ✓','success');}
+  else showToast('Error adding department','error');
+}
+async function addJobTitle(){
+  const en=document.getElementById('new-jt-en').value.trim();
+  const ar=document.getElementById('new-jt-ar').value.trim();
+  if(!en){showToast('Enter job title','error');return;}
+  const res=await apicall('POST','/job-titles',{title_en:en,title_ar:ar});
+  if(res&&res.job_title){jobTitlesData.push(res.job_title);renderJTList();document.getElementById('new-jt-en').value='';document.getElementById('new-jt-ar').value='';showToast('Job title added ✓','success');}
+  else showToast('Error adding job title','error');
+}
+async function deleteDept(id){
+  const res=await apicall('DELETE','/departments/'+id);
+  if(res&&res.success){deptsData=deptsData.filter(d=>d.id!==id);renderDeptList();showToast('Deleted','success');}
+  else showToast('Error','error');
+}
+async function deleteJobTitle(id){
+  const res=await apicall('DELETE','/job-titles/'+id);
+  if(res&&res.success){jobTitlesData=jobTitlesData.filter(j=>j.id!==id);renderJTList();showToast('Deleted','success');}
+  else showToast('Error','error');
+}
+
+// ── Employee Modal ───────────────────────────────────────────────
+function populateDropdowns(){
+  const deptSel=document.getElementById('emp-dept-id');
+  const jtSel=document.getElementById('emp-job-title-id');
+  deptSel.innerHTML='<option value="">— Select Department —</option>'+deptsData.map(d=>`<option value="${d.id}">${d.name_en}</option>`).join('');
+  jtSel.innerHTML='<option value="">— Select Job Title —</option>'+jobTitlesData.map(j=>`<option value="${j.id}">${j.title_en}</option>`).join('');
+}
 function openAddEmployee(){
   editingEmpId=null;
   document.getElementById('modal-emp-title').textContent='Add Employee';
   document.getElementById('save-emp-btn').textContent='Add Employee';
-  ['emp-id','emp-first-en','emp-last-en','emp-first-ar','emp-last-ar','emp-civil-id','emp-title-en','emp-dept','emp-salary','emp-email','emp-phone','emp-password'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['emp-id','emp-first-en','emp-last-en','emp-first-ar','emp-last-ar','emp-civil-id','emp-salary','emp-email','emp-phone','emp-password'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('emp-start').value=new Date().toISOString().split('T')[0];
+  populateDropdowns();
   document.getElementById('modal-employee').classList.add('open');
 }
 function editEmployee(id){
@@ -463,18 +592,34 @@ function editEmployee(id){
   document.getElementById('emp-last-ar').value=emp.last_name_ar||'';
   document.getElementById('emp-civil-id').value=emp.civil_id||'';
   document.getElementById('emp-nationality').value=emp.nationality||'Kuwaiti';
-  document.getElementById('emp-title-en').value=emp.job_title_en||'';
-  document.getElementById('emp-dept').value=emp.department||'';
   document.getElementById('emp-salary').value=emp.basic_salary||'';
   document.getElementById('emp-start').value=emp.hire_date||'';
   document.getElementById('emp-email').value=emp.work_email||'';
   document.getElementById('emp-phone').value=emp.mobile||'';
   document.getElementById('emp-contract').value=emp.employment_type||'full_time';
   document.getElementById('emp-password').value='';
+  populateDropdowns();
+  document.getElementById('emp-dept-id').value=emp.department_id||'';
+  document.getElementById('emp-job-title-id').value=emp.job_title_id||'';
   document.getElementById('modal-employee').classList.add('open');
 }
 async function saveEmployee(){
-  const body={first_name_en:document.getElementById('emp-first-en').value.trim(),last_name_en:document.getElementById('emp-last-en').value.trim(),first_name_ar:document.getElementById('emp-first-ar').value.trim(),last_name_ar:document.getElementById('emp-last-ar').value.trim(),civil_id:document.getElementById('emp-civil-id').value.trim(),nationality:document.getElementById('emp-nationality').value,job_title_en:document.getElementById('emp-title-en').value.trim(),department:document.getElementById('emp-dept').value.trim(),basic_salary:parseFloat(document.getElementById('emp-salary').value)||0,employment_start_date:document.getElementById('emp-start').value,work_email:document.getElementById('emp-email').value.trim(),phone:document.getElementById('emp-phone').value.trim(),contract_type:document.getElementById('emp-contract').value,initial_password:document.getElementById('emp-password')?.value||''};
+  const body={
+    first_name_en:document.getElementById('emp-first-en').value.trim(),
+    last_name_en:document.getElementById('emp-last-en').value.trim(),
+    first_name_ar:document.getElementById('emp-first-ar').value.trim(),
+    last_name_ar:document.getElementById('emp-last-ar').value.trim(),
+    civil_id:document.getElementById('emp-civil-id').value.trim(),
+    nationality:document.getElementById('emp-nationality').value,
+    department_id:document.getElementById('emp-dept-id').value||null,
+    job_title_id:document.getElementById('emp-job-title-id').value||null,
+    basic_salary:parseFloat(document.getElementById('emp-salary').value)||0,
+    hire_date:document.getElementById('emp-start').value,
+    work_email:document.getElementById('emp-email').value.trim(),
+    mobile:document.getElementById('emp-phone').value.trim(),
+    employment_type:document.getElementById('emp-contract').value,
+    initial_password:document.getElementById('emp-password')?.value||'',
+  };
   if(!body.first_name_en||!body.last_name_en){showToast('First and last name required','error');return;}
   const res=editingEmpId?await apicall('PUT','/employees/'+editingEmpId,body):await apicall('POST','/employees',body);
   if(res&&!res.error){showToast(editingEmpId?'Employee updated ✓':'Employee added ✓','success');closeModal('modal-employee');loadEmployees();loadDashboard();}
