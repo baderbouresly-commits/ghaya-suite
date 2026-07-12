@@ -272,7 +272,7 @@ select.form-input{cursor:pointer}
   </label>
   <span class="info-icon" data-tip="Kuwaiti nationals: 8% deducted from salary + 11% employer cost. Non-Kuwaitis: exempt.">ℹ</span>
 </div>
-<button class="btn btn-primary" onclick="runPayroll()">▶ Run Payroll</button>
+
             </div>
           </div>
         </div>
@@ -506,7 +506,8 @@ async function loadPayroll(){
 async function runPayroll(){
   const month=parseInt(document.getElementById('payroll-month').value);
   const year=parseInt(document.getElementById('payroll-year').value);
-  const res=await apicall('POST','/payroll',{month,year});
+const apply_pifss=document.getElementById('pifss-toggle').checked;
+  const res=await apicall('POST','/payroll',{month,year,apply_pifss});
   if(!res||res.error){showToast(res?.error||'Error running payroll','error');return;}
   showToast(`✓ Payroll for ${MONTH_NAMES[month-1]} ${year} created`,'success');
   loadPayroll();
