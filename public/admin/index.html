@@ -415,6 +415,7 @@ async function loadDeptsAndTitles(){
   jobTitlesData=j?.job_titles||[];
 }
 function showPage(page){
+  history.replaceState(null,'','#'+page);
   ['dashboard','employees','leaves','payroll','settings'].forEach(p=>{
     document.getElementById('page-'+p).style.display=p===page?'':'none';
     const nav=document.getElementById('nav-'+p);
@@ -563,7 +564,10 @@ tip.style.top=(r.bottom+8)+'px';
   });
   icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
 });
-  init();
+init().then(()=>{
+  const h=location.hash.slice(1);
+  if(['dashboard','employees','leaves','payroll','settings'].includes(h))showPage(h);
+});
 </script>
 </body>
 </html>
