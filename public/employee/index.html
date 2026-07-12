@@ -499,37 +499,73 @@
     }
 
     async function loadPayslip() {
-      if (!employeeData && currentUser.employee_id) {
-        const d = await api(`/api/employees/${currentUser.employee_id}`);
-        if (!d.error) employeeData = d.employee || d;
-      }
-      const content = document.getElementById('payslip-content');
-      if (!employeeData) {
-        content.innerHTML = `<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">No payslip available</div><div class="empty-sub">Contact your HR administrator</div></div>`;
-        return;
-      }
-      const salary = parseFloat(employeeData.basic_salary || 0);
-      const isKuwaiti = (employeeData.nationality || '').toLowerCase() === 'kuwaiti';
-      const pifss = isKuwaiti ? salary * 0.05 : 0;
-      const net = salary - pifss;
-      const now = new Date();
-      document.getElementById('payslip-month').textContent = now.toLocaleString('en', {month:'long', year:'numeric'});
-      content.innerHTML = `
-        <div style="max-width:480px;">
-          <div class="payslip-row"><span>Employee</span><span style="font-weight:700;">${employeeData.first_name_en || ''} ${employeeData.last_name_en || ''}</span></div>
-          <div class="payslip-row"><span>Job Title</span><span>${employeeData.job_title_en || '—'}</span></div>
-          <div class="payslip-row"><span>Department</span><span>${employeeData.department || '—'}</span></div>
-          <div style="height:16px;"></div>
-          <div class="payslip-row"><span style="font-weight:700;">Basic Salary</span><span style="font-weight:700;">KWD ${salary.toFixed(3)}</span></div>
-          ${isKuwaiti ? `<div class="payslip-row"><span style="color:#E8472A;">PIFSS Deduction (5%)</span><span style="color:#E8472A;">- KWD ${pifss.toFixed(3)}</span></div>` : ''}
-          <div class="payslip-row" style="margin-top:8px;padding-top:16px;border-top:2px solid #1a1a2e;font-weight:800;font-size:16px;">
-            <span>Net Pay</span><span style="color:#E8472A;">KWD ${net.toFixed(3)}</span>
-          </div>
-          <div style="margin-top:20px;padding:12px 16px;background:#f9f9f9;border-radius:10px;font-size:12px;color:#888;">
-            ${isKuwaiti ? '✓ PIFSS 5% employee contribution applied (Kuwaiti national)' : '✓ No PIFSS deduction (non-Kuwaiti national)'}
-          </div>
-        </div>`;
-    }
+  const content = document.getElementById('payslip-content');
+  content.innerHTML = '<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">Loading...</div></div>';
+
+  // Try to get published payslip from DB
+  const data = await api('/api/payroll');
+  const payslips = data?.payslips || [];
+
+  if (payslips.length > 0) {
+    const p = payslips[0]; // latest
+    const monthName = ['January','February','March','April','May','June','July','August','September','October','November','December'][p.period_month - 1];
+    document.getElementById('payslip-month').textContent = `${monthName} ${p.period_year}`;
+    content.innerHTML = `
+      <div style="max-width:480px;">
+        <div class="payslip-row"><span>Period</span><span style="font-weight:700;">${monthName} ${p.period_year}</span></div>
+        <div style="height:12px;"></div>
+        <div class="payslip-row"><span style="font-weight:700;">Basic Salary</span><span style="font-weight:700;">KWD ${(p.basic_salary||0).toFixed(3)}</span></div>
+        ${p.pifss_employee > 0 ? `<div class="payslip-row"><span style="color:#E8472A;">PIFSS Deduction (8%)</span><span style="color:#E8472A;">- KWD ${p.pifss_employee.toFixed(3)}</span></div>` : ''}
+        <div class="payslip-row" style="margin-top:8px;padding-top:16px;border-top:2px solid #1a1a2e;font-weight:800;font-size:16px;">
+          <span>Net Pay</span><span style="color:#E8472A;">KWD ${(p.net_salary||0).toFixed(3)}</span>
+        </div>
+        <div style="margin-top:20px;padding:12px 16px;background:#f9f9f9;border-radius:10px;font-size:12px;color:#888;">
+          ${p.pifss_employee > 0
+            ? '✓ PIFSS 8% employee contribution deducted (Kuwaiti national)<br>✓ Company also contributes 11% PIFSS on your behalf'
+            : '✓ No PIFSS deduction (non-Kuwaiti national)'}
+        </div>
+        ${payslips.length > 1 ? `<div style="margin-top:16px;font-size:13px;color:#888;font-weight:700;">Previous payslips</div>
+        <div style="margin-top:8px;">
+          ${payslips.slice(1).map(ps => {
+            const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][ps.period_month-1];
+            return `<div class="payslip-row"><span>${mn} ${ps.period_year}</span><span>KWD ${(ps.net_salary||0).toFixed(3)}</span></div>`;
+          }).join('')}
+        </div>` : ''}
+      </div>`;
+    return;
+  }
+
+  // No payslips yet — show estimate from employee data
+  if (!employeeData && currentUser.employee_id) {
+    const d = await api(`/api/employees/${currentUser.employee_id}`);
+    if (!d.error) employeeData = d.employee || d;
+  }
+
+  const now = new Date();
+  document.getElementById('payslip-month').textContent = now.toLocaleString('en', {month:'long', year:'numeric'});
+
+  if (!employeeData) {
+    content.innerHTML = '<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">No payslip available yet</div><div class="empty-sub">Your HR admin hasn\'t run payroll yet</div></div>';
+    return;
+  }
+
+  const basic = parseFloat(employeeData.basic_salary || 0);
+  const isKuwaiti = (employeeData.nationality || '').toLowerCase() === 'kuwaiti';
+  const pifss = isKuwaiti ? Math.round(basic * 0.08 * 1000) / 1000 : 0;
+  const net = Math.round((basic - pifss) * 1000) / 1000;
+
+  content.innerHTML = `
+    <div style="max-width:480px;">
+      <div style="background:#fff3cd;border-radius:10px;padding:10px 14px;font-size:12px;color:#856404;margin-bottom:16px;">
+        ⏳ Estimated payslip — your admin hasn't published payroll yet
+      </div>
+      <div class="payslip-row"><span style="font-weight:700;">Basic Salary</span><span style="font-weight:700;">KWD ${basic.toFixed(3)}</span></div>
+      ${pifss > 0 ? `<div class="payslip-row"><span style="color:#E8472A;">PIFSS (8%)</span><span style="color:#E8472A;">- KWD ${pifss.toFixed(3)}</span></div>` : ''}
+      <div class="payslip-row" style="margin-top:8px;padding-top:16px;border-top:2px solid #1a1a2e;font-weight:800;font-size:16px;">
+        <span>Estimated Net</span><span style="color:#E8472A;">KWD ${net.toFixed(3)}</span>
+      </div>
+    </div>`;
+}
 
     async function loadProfile() {
       if (!employeeData && currentUser.employee_id) {
