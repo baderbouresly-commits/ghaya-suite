@@ -154,7 +154,7 @@ export async function onRequestGet({ request, env }) {
     ]);
 
     const { results: recentCompanies } = await db.prepare(
-      "SELECT id, name_en, subscription_tier, managed_by_ghaya, created_at FROM companies ORDER BY created_at DESC LIMIT 10"
+      "SELECT id, name_en, name_ar, subscription_tier, subscription_active, managed_by_ghaya, created_at FROM companies ORDER BY created_at DESC LIMIT 10"
     ).all();
 
     const { results: pendingLeaves } = await db.prepare(`
