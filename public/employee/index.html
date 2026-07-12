@@ -298,7 +298,6 @@ function showPage(page, navEl) {
       if (!['employee', 'manager', 'company_admin'].includes(currentUser.role)) { alert('Access denied.'); logout(); return; }
       document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
       document.getElementById('user-role').textContent = currentUser.role.replace(/_/g, ' ');
-      await loadDashboard();
     }
 
     async function loadDashboard() {
@@ -447,6 +446,7 @@ function showPage(page, navEl) {
 init().then(()=>{
   const h=location.hash.slice(1);
   if(['dashboard','leaves','payslips','profile'].includes(h))showPage(h);
+  else showPage('dashboard');
 });
   </script>
 </body>
