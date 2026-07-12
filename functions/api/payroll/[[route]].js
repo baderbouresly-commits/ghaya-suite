@@ -95,11 +95,12 @@ export async function onRequest({ request, env, params }) {
 
     // Calculate
     let totalGross = 0, totalNet = 0, totalPifssEmp = 0, totalPifssEmpr = 0;
+const apply_pifss = body.apply_pifss !== false;
     const calcs = employees.map(emp => {
       const basic    = parseFloat(emp.basic_salary || 0);
       const kuwaiti  = (emp.nationality || '').toLowerCase() === 'kuwaiti';
-      const pifssE   = kuwaiti ? round3(basic * PIFSS_EMP)  : 0;
-      const pifssEr  = kuwaiti ? round3(basic * PIFSS_EMPR) : 0;
+      const pifssE   = (kuwaiti && apply_pifss) ? round3(basic * PIFSS_EMP)  : 0;
+      const pifssEr  = (kuwaiti && apply_pifss) ? round3(basic * PIFSS_EMPR) : 0;
       const net      = round3(basic - pifssE);
       totalGross    += basic;
       totalNet      += net;
