@@ -1,6 +1,11 @@
 // /api/employees — self-contained, no imports
 const enc = new TextEncoder();
 
+function b64u(data) {
+  return btoa(String.fromCharCode(...new Uint8Array(data)))
+    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
 function parseB64u(str) {
   str = str.replace(/-/g,'+').replace(/_/g,'/');
   while (str.length % 4) str += '=';
@@ -18,6 +23,13 @@ async function verifyJWT(token, secret) {
     if (payload.exp < Math.floor(Date.now()/1000)) return null;
     return payload;
   } catch { return null; }
+}
+
+async function hashPassword(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const km = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({name:'PBKDF2', salt, hash:'SHA-256', iterations:100000}, km, 256);
+  return `pbkdf2:${b64u(salt)}:${b64u(bits)}`;
 }
 
 function json(data, status=200) {
@@ -64,21 +76,18 @@ export async function onRequest({request, env, params}) {
     let body;
     try { body = await request.json(); } catch { return json({error:'Invalid JSON'}, 400); }
 
-    const {
-      first_name_en, last_name_en, first_name_ar, last_name_ar,
+    const { first_name_en, last_name_en, first_name_ar, last_name_ar,
       civil_id, nationality, job_title_en, department, basic_salary,
       employment_start_date, work_email, phone, contract_type,
-      company_id: bodyCompanyId
-    } = body;
+      initial_password, company_id: bodyCompanyId } = body;
 
     if (!first_name_en || !last_name_en) return json({error:'First and last name required'}, 400);
     const company_id = payload.role === 'ghaya_admin' ? bodyCompanyId : payload.company_id;
     if (!company_id) return json({error:'company_id required'}, 400);
 
-    // Determine is_kuwaiti from nationality
     const isKuwaiti = (nationality||'').toLowerCase() === 'kuwaiti' ? 1 : 0;
-
     const newId = crypto.randomUUID();
+
     await env.DB.prepare(`
       INSERT INTO employees
         (id, company_id, first_name_en, last_name_en, first_name_ar, last_name_ar,
@@ -93,11 +102,24 @@ export async function onRequest({request, env, params}) {
       job_title_en||null, department||null,
       basic_salary ? parseFloat(basic_salary) : 0,
       employment_start_date||null,
-      work_email||null,
-      phone||null,
+      work_email||null, phone||null,
       contract_type||'full_time',
       'active'
     ).run();
+
+    // Create user account if password + email provided
+    if (initial_password && work_email) {
+      try {
+        const passwordHash = await hashPassword(initial_password);
+        const userId = crypto.randomUUID();
+        await env.DB.prepare(`
+          INSERT INTO users (id, company_id, email, password_hash, role, employee_id, is_active)
+          VALUES (?,?,?,?,?,?,1)
+        `).bind(userId, company_id, work_email.toLowerCase().trim(), passwordHash, 'employee', newId).run();
+      } catch(e) {
+        // User creation failed (e.g. duplicate email) but employee was created
+      }
+    }
 
     const emp = await env.DB.prepare('SELECT * FROM employees WHERE id = ?').bind(newId).first();
     return json({employee: emp, message:'Employee created'}, 201);
@@ -119,14 +141,13 @@ export async function onRequest({request, env, params}) {
       job_title_en:'job_title_en', department:'department',
       basic_salary:'basic_salary', work_email:'work_email',
       phone:'mobile', contract_type:'employment_type',
-      is_active: null, // handled below
       nationality:'nationality', civil_id:'civil_id',
       employment_start_date:'hire_date', status:'status'
     };
 
     const sets = [], vals = [];
     for (const [inputKey, dbKey] of Object.entries(fieldMap)) {
-      if (inputKey in body && dbKey) { sets.push(`${dbKey} = ?`); vals.push(body[inputKey]); }
+      if (inputKey in body) { sets.push(`${dbKey} = ?`); vals.push(body[inputKey]); }
     }
     if ('is_active' in body) { sets.push('status = ?'); vals.push(body.is_active ? 'active' : 'inactive'); }
     if (!sets.length) return json({error:'Nothing to update'}, 400);
