@@ -272,7 +272,8 @@
       Object.entries(map).forEach(([id, key]) => { const el = document.getElementById(id); if (el) el.textContent = tx[key]; });
     }
 
-    function showPage(page, navEl) {
+function showPage(page, navEl) {
+  history.replaceState(null,'','#'+page);
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       document.getElementById('page-' + page).classList.add('active');
@@ -443,7 +444,10 @@
 
     function logout() { localStorage.removeItem('ghaya_token'); window.location.href = '/login.html'; }
     document.getElementById('leave-modal').addEventListener('click', function(e) { if (e.target === this) closeLeaveModal(); });
-    init();
+init().then(()=>{
+  const h=location.hash.slice(1);
+  if(['dashboard','leaves','payslips','profile'].includes(h))showPage(h);
+});
   </script>
 </body>
 </html>
