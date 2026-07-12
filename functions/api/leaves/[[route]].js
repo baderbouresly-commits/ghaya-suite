@@ -1,116 +1,152 @@
-// /api/leaves — list, create, update status — self-contained
-const enc = new TextEncoder();
+// /api/leaves/* — Leave requests & balances
+import { requireAuth, json, error } from '../_lib/auth.js';
 
-function parseB64u(str) {
-  str = str.replace(/-/g,'+').replace(/_/g,'/');
-  while (str.length % 4) str += '=';
-  return Uint8Array.from(atob(str), c => c.charCodeAt(0));
-}
+export async function onRequest({ request, env, params }) {
+  const result = await requireAuth(request, env);
+  if (result.error) return error(result.error, result.status);
 
-async function verifyJWT(token, secret) {
-  try {
-    const [h, b, sig] = token.split('.');
-    if (!h || !b || !sig) return null;
-    const key = await crypto.subtle.importKey('raw', enc.encode(secret), {name:'HMAC',hash:'SHA-256'}, false, ['verify']);
-    const valid = await crypto.subtle.verify('HMAC', key, parseB64u(sig), enc.encode(`${h}.${b}`));
-    if (!valid) return null;
-    const payload = JSON.parse(new TextDecoder().decode(parseB64u(b)));
-    if (payload.exp < Math.floor(Date.now()/1000)) return null;
-    return payload;
-  } catch { return null; }
-}
-
-function json(data, status=200) {
-  return new Response(JSON.stringify(data), {status, headers:{'Content-Type':'application/json'}});
-}
-
-export async function onRequest({request, env, params}) {
-  const auth = request.headers.get('Authorization') || '';
-  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
-  if (!token) return json({error:'Unauthorized'}, 401);
-  const payload = await verifyJWT(token, env.JWT_SECRET);
-  if (!payload) return json({error:'Token expired or invalid'}, 401);
-
-  const parts = params.route || [];
-  const id = parts[0] || null;
-  const method = request.method;
+  const { user } = result;
   const db = env.DB;
-  const company_id = payload.company_id;
+  const method = request.method;
   const url = new URL(request.url);
-  const statusFilter = url.searchParams.get('status') || 'all';
+  const route = Array.isArray(params.route) ? params.route : (params.route ? [params.route] : []);
+  const subResource = route[0]; // 'request', 'balance', 'types', or request ID
 
-  // GET /api/leaves
-  if (method === 'GET' && !id) {
-    let query, args;
-    if (payload.role === 'ghaya_admin') {
-      query = statusFilter === 'all'
-        ? 'SELECT l.*, e.first_name_en || " " || e.last_name_en as employee_name FROM leave_requests l LEFT JOIN employees e ON e.id = l.employee_id ORDER BY l.created_at DESC'
-        : 'SELECT l.*, e.first_name_en || " " || e.last_name_en as employee_name FROM leave_requests l LEFT JOIN employees e ON e.id = l.employee_id WHERE l.status = ? ORDER BY l.created_at DESC';
-      args = statusFilter === 'all' ? [] : [statusFilter];
-    } else if (payload.role === 'employee') {
-      query = statusFilter === 'all'
-        ? 'SELECT l.*, e.first_name_en || " " || e.last_name_en as employee_name FROM leave_requests l LEFT JOIN employees e ON e.id = l.employee_id WHERE l.employee_id = ? ORDER BY l.created_at DESC'
-        : 'SELECT l.*, e.first_name_en || " " || e.last_name_en as employee_name FROM leave_requests l LEFT JOIN employees e ON e.id = l.employee_id WHERE l.employee_id = ? AND l.status = ? ORDER BY l.created_at DESC';
-      args = statusFilter === 'all' ? [payload.employee_id] : [payload.employee_id, statusFilter];
+  const companyId = user.role === 'ghaya_admin'
+    ? url.searchParams.get('company_id')
+    : user.company_id;
+  if (!companyId) return error('company_id required');
+
+  // ── GET /api/leaves/types ──────────────────
+  if (method === 'GET' && subResource === 'types') {
+    const { results } = await db.prepare(
+      'SELECT * FROM leave_types WHERE company_id = ? AND is_active = 1 ORDER BY name_en'
+    ).bind(companyId).all();
+    return json({ leave_types: results });
+  }
+
+  // ── GET /api/leaves/balance?employee_id=&year= ──
+  if (method === 'GET' && subResource === 'balance') {
+    const empId = url.searchParams.get('employee_id') || user.employee_id;
+    const year = url.searchParams.get('year') || new Date().getFullYear();
+    if (user.role === 'employee' && empId !== user.employee_id) return error('Forbidden', 403);
+    const { results } = await db.prepare(`
+      SELECT lb.*, lt.name_en as type_name, lt.name_ar as type_name_ar, lt.is_paid
+      FROM leave_balances lb
+      JOIN leave_types lt ON lt.id = lb.leave_type_id
+      WHERE lb.employee_id = ? AND lb.year = ?
+    `).bind(empId, year).all();
+    return json({ balances: results, year: parseInt(year) });
+  }
+
+  // ── GET /api/leaves — list requests ────────
+  if (method === 'GET' && !subResource) {
+    const empId = url.searchParams.get('employee_id');
+    const status = url.searchParams.get('status');
+    let query, binds;
+
+    if (user.role === 'employee') {
+      query = `SELECT lr.*, lt.name_en as type_name, lt.name_ar as type_name_ar
+               FROM leave_requests lr JOIN leave_types lt ON lt.id = lr.leave_type_id
+               WHERE lr.employee_id = ? AND lr.company_id = ? ORDER BY lr.created_at DESC`;
+      binds = [user.employee_id, companyId];
+    } else if (empId) {
+      query = `SELECT lr.*, lt.name_en as type_name, e.first_name_en, e.last_name_en
+               FROM leave_requests lr JOIN leave_types lt ON lt.id = lr.leave_type_id
+               JOIN employees e ON e.id = lr.employee_id
+               WHERE lr.employee_id = ? AND lr.company_id = ? ORDER BY lr.created_at DESC`;
+      binds = [empId, companyId];
     } else {
-      if (!company_id) return json({error:'No company'}, 400);
-      query = statusFilter === 'all'
-        ? 'SELECT l.*, e.first_name_en || " " || e.last_name_en as employee_name FROM leave_requests l LEFT JOIN employees e ON e.id = l.employee_id WHERE e.company_id = ? ORDER BY l.created_at DESC'
-        : 'SELECT l.*, e.first_name_en || " " || e.last_name_en as employee_name FROM leave_requests l LEFT JOIN employees e ON e.id = l.employee_id WHERE e.company_id = ? AND l.status = ? ORDER BY l.created_at DESC';
-      args = statusFilter === 'all' ? [company_id] : [company_id, statusFilter];
+      const statusClause = status ? `AND lr.status = '${status.replace(/'/g,"''")}' ` : '';
+      query = `SELECT lr.*, lt.name_en as type_name,
+               e.first_name_en || ' ' || e.last_name_en as employee_name
+               FROM leave_requests lr
+               JOIN leave_types lt ON lt.id = lr.leave_type_id
+               JOIN employees e ON e.id = lr.employee_id
+               WHERE lr.company_id = ? ${statusClause}
+               ORDER BY lr.created_at DESC LIMIT 100`;
+      binds = [companyId];
     }
-    const result = await db.prepare(query).bind(...args).all();
-    return json({leaves: result.results ?? []});
+    const { results } = await db.prepare(query).bind(...binds).all();
+    return json({ requests: results, total: results.length });
   }
 
-  // GET /api/leaves/:id
-  if (method === 'GET' && id) {
-    const leave = await db.prepare(
-      'SELECT l.*, e.first_name_en || " " || e.last_name_en as employee_name FROM leave_requests l LEFT JOIN employees e ON e.id = l.employee_id WHERE l.id = ?'
-    ).bind(id).first();
-    if (!leave) return json({error:'Not found'}, 404);
-    return json({leave});
-  }
-
-  // POST /api/leaves — employee submits leave request
+  // ── POST /api/leaves — submit leave request ──
   if (method === 'POST') {
     let body;
-    try { body = await request.json(); } catch { return json({error:'Invalid JSON'}, 400); }
+    try { body = await request.json(); } catch { return error('Invalid JSON'); }
 
-    const emp_id = payload.employee_id || body.employee_id;
-    if (!emp_id) return json({error:'employee_id required'}, 400);
-    if (!body.leave_type || !body.start_date || !body.end_date) return json({error:'leave_type, start_date, end_date required'}, 400);
+    const { employee_id, leave_type_id, start_date, end_date, reason } = body;
+    const empId = user.role === 'employee' ? user.employee_id : employee_id;
+    if (!empId || !leave_type_id || !start_date || !end_date) {
+      return error('employee_id, leave_type_id, start_date, end_date required');
+    }
 
-    const start = new Date(body.start_date);
-    const end = new Date(body.end_date);
-    const days = Math.ceil((end - start) / (1000*60*60*24)) + 1;
+    // Calculate days count (simple calendar days for now)
+    const start = new Date(start_date);
+    const end = new Date(end_date);
+    if (end < start) return error('end_date must be after start_date');
+    const days = Math.round((end - start) / (1000*60*60*24)) + 1;
 
-    const newId = crypto.randomUUID();
+    // Check balance
+    const year = start.getFullYear();
+    const balance = await db.prepare(
+      'SELECT * FROM leave_balances WHERE employee_id = ? AND leave_type_id = ? AND year = ?'
+    ).bind(empId, leave_type_id, year).first();
+
+    if (balance) {
+      const available = balance.entitled_days - balance.used_days - balance.pending_days;
+      if (days > available) return error(`Insufficient leave balance. Available: ${available} days`);
+    }
+
+    const id = crypto.randomUUID();
     await db.prepare(`
-      INSERT INTO leave_requests (id, employee_id, leave_type, start_date, end_date, days_requested, reason, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
-    `).bind(newId, emp_id, body.leave_type, body.start_date, body.end_date, days, body.reason || null).run();
+      INSERT INTO leave_requests (id, company_id, employee_id, leave_type_id, start_date, end_date, days_count, reason, status)
+      VALUES (?,?,?,?,?,?,?,?,'pending')
+    `).bind(id, companyId, empId, leave_type_id, start_date, end_date, days, reason || null).run();
 
-    return json({success: true, leave_id: newId, days_requested: days}, 201);
+    // Update pending balance
+    if (balance) {
+      await db.prepare(
+        'UPDATE leave_balances SET pending_days = pending_days + ? WHERE employee_id = ? AND leave_type_id = ? AND year = ?'
+      ).bind(days, empId, leave_type_id, year).run();
+    }
+
+    return json({ request_id: id, days_count: days, message: 'Leave request submitted' }, 201);
   }
 
-  // PUT /api/leaves/:id — approve or reject
-  if (method === 'PUT' && id) {
+  // ── PUT /api/leaves/:id — approve/reject ──
+  if (method === 'PUT' && subResource) {
+    if (!['ghaya_admin','company_admin','manager'].includes(user.role)) return error('Forbidden', 403);
     let body;
-    try { body = await request.json(); } catch { return json({error:'Invalid JSON'}, 400); }
+    try { body = await request.json(); } catch { return error('Invalid JSON'); }
 
-    const allowed = ['ghaya_admin','company_admin','manager'];
-    if (!allowed.includes(payload.role)) return json({error:'Forbidden'}, 403);
+    const { action, rejection_reason } = body;
+    if (!['approve','reject','cancel'].includes(action)) return error('action must be approve, reject, or cancel');
 
-    const status = body.status || body.action;
-    if (!['approved','rejected'].includes(status)) return json({error:'status must be approved or rejected'}, 400);
+    const lr = await db.prepare('SELECT * FROM leave_requests WHERE id = ? AND company_id = ?').bind(subResource, companyId).first();
+    if (!lr) return error('Leave request not found', 404);
+    if (lr.status !== 'pending') return error(`Cannot ${action} a ${lr.status} request`);
 
-    await db.prepare(
-      "UPDATE leave_requests SET status = ?, reviewed_by = ?, reviewed_at = datetime('now') WHERE id = ?"
-    ).bind(status, payload.sub, id).run();
+    const newStatus = action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'cancelled';
+    await db.prepare(`
+      UPDATE leave_requests SET status = ?, approved_by = ?, approved_at = datetime('now'), rejection_reason = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(newStatus, user.sub, rejection_reason || null, subResource).run();
 
-    return json({success: true, status});
+    // Update leave balances
+    if (action === 'approve') {
+      await db.prepare(
+        "UPDATE leave_balances SET pending_days = MAX(0, pending_days - ?), used_days = used_days + ? WHERE employee_id = ? AND leave_type_id = ? AND year = ?"
+      ).bind(lr.days_count, lr.days_count, lr.employee_id, lr.leave_type_id, new Date(lr.start_date).getFullYear()).run();
+    } else {
+      await db.prepare(
+        "UPDATE leave_balances SET pending_days = MAX(0, pending_days - ?) WHERE employee_id = ? AND leave_type_id = ? AND year = ?"
+      ).bind(lr.days_count, lr.employee_id, lr.leave_type_id, new Date(lr.start_date).getFullYear()).run();
+    }
+
+    return json({ message: `Leave request ${newStatus}` });
   }
 
-  return json({error:'Method not allowed'}, 405);
+  return error('Not found', 404);
 }
