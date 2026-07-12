@@ -100,11 +100,15 @@ const leave_type_id = body.leave_type_id || body.leave_type;
       if (days > available) return error(`Insufficient leave balance. Available: ${available} days`);
     }
 
-    const id = crypto.randomUUID();
-    await db.prepare(`
-      INSERT INTO leave_requests (id, company_id, employee_id, leave_type_id, start_date, end_date, days_count, reason, status)
-      VALUES (?,?,?,?,?,?,?,?,'pending')
-    `).bind(id, companyId, empId, leave_type_id, start_date, end_date, days, reason || null).run();
+const id = crypto.randomUUID();
+    try {
+      await db.prepare(`
+        INSERT INTO leave_requests (id, company_id, employee_id, leave_type_id, start_date, end_date, days_count, reason, status)
+        VALUES (?,?,?,?,?,?,?,?,'pending')
+      `).bind(id, companyId, empId, leave_type_id, start_date, end_date, days, reason || null).run();
+    } catch(e) {
+      return error(`DB error: ${e.message} | cid=${companyId} eid=${empId} ltid=${leave_type_id}`, 500);
+    }
 
     // Update pending balance
     if (balance) {
