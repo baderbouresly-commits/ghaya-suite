@@ -407,7 +407,6 @@ async function init(){
   }catch(e){logout();return;}
   await loadDeptsAndTitles();
   setLang(currentLang,false);
-  loadDashboard();
 }
 async function loadDeptsAndTitles(){
   const [d,j]=await Promise.all([apicall('GET','/departments'),apicall('GET','/job-titles')]);
@@ -567,6 +566,7 @@ tip.style.top=(r.bottom+8)+'px';
 init().then(()=>{
   const h=location.hash.slice(1);
   if(['dashboard','employees','leaves','payroll','settings'].includes(h))showPage(h);
+  else showPage('dashboard');
 });
 </script>
 </body>
