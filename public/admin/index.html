@@ -134,9 +134,7 @@ select.form-input{cursor:pointer}
 .toggle-wrap input:checked+.toggle-slider{background:#1a7a42}
 .toggle-wrap input:checked+.toggle-slider::after{left:19px}
 .info-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#e8e0d8;color:#555;font-size:11px;font-weight:800;cursor:help;position:relative}
-.info-icon::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:400;width:210px;line-height:1.5;z-index:999;opacity:0;pointer-events:none;transition:opacity .2s}
-.info-icon::before{content:'';position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1a1a2e;opacity:0;pointer-events:none;transition:opacity .2s}
-.info-icon:hover::after,.info-icon:hover::before{opacity:1}
+  
 </style>
 </head>
 <body>
@@ -554,7 +552,18 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 function setLang(lang,save=true){currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);document.documentElement.lang=lang;document.body.classList.toggle('ar',lang==='ar');document.getElementById('btn-en').classList.toggle('active',lang==='en');document.getElementById('btn-ar').classList.toggle('active',lang==='ar');document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.dataset[lang]||el.dataset.en;});}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3000);}
 function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem('ghaya_user');window.location.href='/';}
-init();
+document.querySelectorAll('.info-icon').forEach(icon=>{
+  icon.addEventListener('mouseenter',function(){
+    const tip=document.createElement('div');
+    tip.id='gtip';tip.style.cssText='position:fixed;background:#1a1a2e;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;line-height:1.5;width:210px;z-index:9999;pointer-events:none';
+    tip.textContent=this.dataset.tip;document.body.appendChild(tip);
+    const r=this.getBoundingClientRect();
+    tip.style.left=(r.left+r.width/2-105)+'px';
+    tip.style.top=(r.top-tip.offsetHeight-8)+'px';
+  });
+  icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
+});
+  init();
 </script>
 </body>
 </html>
