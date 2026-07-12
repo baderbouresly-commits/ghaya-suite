@@ -51,6 +51,7 @@
     .badge-pending { background: #FFF3CD; color: #856404; }
     .badge-approved { background: #D1FAE5; color: #065F46; }
     .badge-rejected { background: #FEE2E2; color: #991B1B; }
+    .badge-cancelled { background: #F3F4F6; color: #6B7280; }
     .leave-balance { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
     .balance-item { text-align: center; padding: 20px; background: #f9f9f9; border-radius: 12px; }
     .balance-num { font-size: 36px; font-weight: 800; color: #E8472A; }
@@ -86,6 +87,11 @@
     .alert { padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; font-size: 14px; }
     .alert-error { background: #FEE2E2; color: #991B1B; }
     .alert-success { background: #D1FAE5; color: #065F46; }
+    .action-btn { border: none; border-radius: 6px; padding: 5px 12px; cursor: pointer; font-size: 12px; font-weight: 700; font-family: 'Almarai', sans-serif; }
+    .action-btn-edit { background: #f0f0f0; color: #333; margin-right: 4px; }
+    .action-btn-edit:hover { background: #e0e0e0; }
+    .action-btn-cancel { background: #FEE2E2; color: #991B1B; }
+    .action-btn-cancel:hover { background: #fecaca; }
   </style>
 </head>
 <body>
@@ -170,9 +176,9 @@
           <div class="card-title" id="title-quick-actions">Quick Actions</div>
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          <button class="btn btn-primary" onclick="showPage('leaves', document.querySelector('.nav-item:nth-child(2)')); openLeaveModal()">🌴 Request Leave</button>
-          <button class="btn btn-secondary" onclick="showPage('payslips', document.querySelector('.nav-item:nth-child(3)'))">💰 View Payslip</button>
-          <button class="btn btn-secondary" onclick="showPage('profile', document.querySelector('.nav-item:nth-child(4)'))">👤 My Profile</button>
+          <button class="btn btn-primary" onclick="showPage('leaves', document.querySelectorAll('.nav-item')[1]); openLeaveModal()">🌴 Request Leave</button>
+          <button class="btn btn-secondary" onclick="showPage('payslips', document.querySelectorAll('.nav-item')[2])">💰 View Payslip</button>
+          <button class="btn btn-secondary" onclick="showPage('profile', document.querySelectorAll('.nav-item')[3])">👤 My Profile</button>
         </div>
       </div>
       <div class="card">
@@ -229,10 +235,11 @@
               <th id="th-end">End</th>
               <th id="th-days">Days</th>
               <th id="th-status">Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="leaves-tbody">
-            <tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🌴</div><div class="empty-text">No requests yet</div></div></td></tr>
+            <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🌴</div><div class="empty-text">No requests yet</div></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -309,105 +316,10 @@
     let token = localStorage.getItem('ghaya_token');
     let currentUser = null;
     let employeeData = null;
+    let editingLeaveId = null;
     let lang = 'en';
 
-    const i18n = {
-      en: {
-        appName:'Ghaya غاية', portalSub:'EMPLOYEE PORTAL',
-        navOverview:'OVERVIEW', navDashboard:'Dashboard', navHR:'MY HR',
-        navLeaves:'My Leaves', navPayslips:'My Payslips', navProfile:'My Profile', navLogout:'Sign Out',
-        titleDashboard:'Dashboard', subDashboard:'Welcome back!',
-        lblRemaining:'Annual Leave Remaining', lblPending:'Pending Requests',
-        lblTaken:'Days Taken This Year', lblSalary:'Basic Salary (KWD)',
-        titleQuick:'Quick Actions', titleRecentLeaves:'Recent Leave Requests',
-        titleLeaves:'My Leaves', subLeaves:'View and manage your leave requests',
-        titleBalance:'Leave Balance', lblBalRemaining:'Days Remaining',
-        lblBalTaken:'Taken This Year', lblBalPending:'Pending Days',
-        titleHistory:'Leave History', thType:'Type', thStart:'Start', thEnd:'End', thDays:'Days', thStatus:'Status',
-        titlePayslips:'My Payslips', subPayslips:'Monthly salary breakdown',
-        titleProfile:'My Profile', subProfile:'Your personal information',
-        modalLeave:'Request Leave', lblLeaveType:'Leave Type',
-        lblStart:'Start Date', lblEnd:'End Date', lblReason:'Reason (optional)',
-        btnCancel:'Cancel', btnSubmit:'Submit Request', btnRequest:'Request Leave',
-      },
-      ar: {
-        appName:'غاية Ghaya', portalSub:'بوابة الموظف',
-        navOverview:'نظرة عامة', navDashboard:'الرئيسية', navHR:'الموارد البشرية',
-        navLeaves:'إجازاتي', navPayslips:'كشوف الراتب', navProfile:'ملفي', navLogout:'تسجيل الخروج',
-        titleDashboard:'الرئيسية', subDashboard:'أهلاً بك!',
-        lblRemaining:'رصيد الإجازة السنوية', lblPending:'الطلبات المعلقة',
-        lblTaken:'الأيام المستخدمة هذا العام', lblSalary:'الراتب الأساسي (د.ك)',
-        titleQuick:'إجراءات سريعة', titleRecentLeaves:'آخر طلبات الإجازة',
-        titleLeaves:'إجازاتي', subLeaves:'عرض وإدارة طلبات الإجازة',
-        titleBalance:'رصيد الإجازة', lblBalRemaining:'الأيام المتبقية',
-        lblBalTaken:'الأيام المستخدمة', lblBalPending:'الأيام قيد المراجعة',
-        titleHistory:'سجل الإجازات', thType:'النوع', thStart:'البداية', thEnd:'النهاية', thDays:'الأيام', thStatus:'الحالة',
-        titlePayslips:'كشوف الراتب', subPayslips:'تفصيل الراتب الشهري',
-        titleProfile:'ملفي الشخصي', subProfile:'بياناتك الشخصية',
-        modalLeave:'طلب إجازة', lblLeaveType:'نوع الإجازة',
-        lblStart:'تاريخ البداية', lblEnd:'تاريخ النهاية', lblReason:'السبب (اختياري)',
-        btnCancel:'إلغاء', btnSubmit:'إرسال الطلب', btnRequest:'طلب إجازة',
-      }
-    };
-
-    function setLang(l) {
-      lang = l;
-      document.body.classList.toggle('rtl', l === 'ar');
-      document.getElementById('btn-en').classList.toggle('active', l === 'en');
-      document.getElementById('btn-ar').classList.toggle('active', l === 'ar');
-      const tx = i18n[l];
-      document.getElementById('app-name').textContent = tx.appName;
-      document.getElementById('portal-sub').textContent = tx.portalSub;
-      document.getElementById('nav-lbl-overview').textContent = tx.navOverview;
-      document.getElementById('nav-dashboard').textContent = tx.navDashboard;
-      document.getElementById('nav-lbl-hr').textContent = tx.navHR;
-      document.getElementById('nav-leaves').textContent = tx.navLeaves;
-      document.getElementById('nav-payslips').textContent = tx.navPayslips;
-      document.getElementById('nav-profile').textContent = tx.navProfile;
-      document.getElementById('nav-logout').textContent = tx.navLogout;
-      document.getElementById('title-dashboard').textContent = tx.titleDashboard;
-      document.getElementById('sub-dashboard').textContent = tx.subDashboard;
-      document.getElementById('lbl-stat-remaining').textContent = tx.lblRemaining;
-      document.getElementById('lbl-stat-pending').textContent = tx.lblPending;
-      document.getElementById('lbl-stat-taken').textContent = tx.lblTaken;
-      document.getElementById('lbl-stat-salary').textContent = tx.lblSalary;
-      document.getElementById('title-quick-actions').textContent = tx.titleQuick;
-      document.getElementById('title-recent-leaves').textContent = tx.titleRecentLeaves;
-      document.getElementById('title-leaves').textContent = tx.titleLeaves;
-      document.getElementById('sub-leaves').textContent = tx.subLeaves;
-      document.getElementById('title-balance').textContent = tx.titleBalance;
-      document.getElementById('lbl-bal-remaining').textContent = tx.lblBalRemaining;
-      document.getElementById('lbl-bal-taken').textContent = tx.lblBalTaken;
-      document.getElementById('lbl-bal-pending').textContent = tx.lblBalPending;
-      document.getElementById('title-history').textContent = tx.titleHistory;
-      document.getElementById('th-type').textContent = tx.thType;
-      document.getElementById('th-start').textContent = tx.thStart;
-      document.getElementById('th-end').textContent = tx.thEnd;
-      document.getElementById('th-days').textContent = tx.thDays;
-      document.getElementById('th-status').textContent = tx.thStatus;
-      document.getElementById('title-payslips').textContent = tx.titlePayslips;
-      document.getElementById('sub-payslips').textContent = tx.subPayslips;
-      document.getElementById('title-profile').textContent = tx.titleProfile;
-      document.getElementById('sub-profile').textContent = tx.subProfile;
-      document.getElementById('modal-leave-title').textContent = tx.modalLeave;
-      document.getElementById('lbl-leave-type').textContent = tx.lblLeaveType;
-      document.getElementById('lbl-start').textContent = tx.lblStart;
-      document.getElementById('lbl-end').textContent = tx.lblEnd;
-      document.getElementById('lbl-reason').textContent = tx.lblReason;
-      document.getElementById('btn-cancel').textContent = tx.btnCancel;
-      document.getElementById('btn-submit').textContent = tx.btnSubmit;
-      document.getElementById('btn-request-leave').textContent = tx.btnRequest;
-    }
-
-    function showPage(page, navEl) {
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      document.getElementById('page-' + page).classList.add('active');
-      if (navEl) navEl.classList.add('active');
-      if (page === 'leaves') loadLeaves('all');
-      if (page === 'payslips') loadPayslip();
-      if (page === 'profile') loadProfile();
-    }
+    if (!token) { window.location.href = '/login.html'; }
 
     async function api(path, opts = {}) {
       const res = await fetch(path, {
@@ -436,7 +348,6 @@
     }
 
     async function loadDashboard() {
-      // Load employee profile
       if (currentUser.employee_id) {
         const d = await api(`/api/employees/${currentUser.employee_id}`);
         if (!d.error) {
@@ -445,15 +356,14 @@
         }
       }
 
-      // Load leaves for stats
       const ldata = await api('/api/leaves');
       if (!ldata.error) {
-        const leaves = ldata.leaves || ldata.data || [];
+        const leaves = ldata.leaves || ldata.requests || [];
         const year = new Date().getFullYear().toString();
         const yearLeaves = leaves.filter(l => (l.start_date || '').startsWith(year));
-        const approvedDays = yearLeaves.filter(l => l.status === 'approved').reduce((s, l) => s + (parseInt(l.days_requested) || 0), 0);
+        const approvedDays = yearLeaves.filter(l => l.status === 'approved').reduce((s, l) => s + (parseFloat(l.days_count || l.days_requested) || 0), 0);
         const pendingCount = leaves.filter(l => l.status === 'pending').length;
-        const pendingDays = leaves.filter(l => l.status === 'pending').reduce((s, l) => s + (parseInt(l.days_requested) || 0), 0);
+        const pendingDays = leaves.filter(l => l.status === 'pending').reduce((s, l) => s + (parseFloat(l.days_count || l.days_requested) || 0), 0);
         const remaining = 30 - approvedDays;
 
         document.getElementById('stat-remaining').textContent = remaining;
@@ -470,10 +380,10 @@
               <thead><tr><th>Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th></tr></thead>
               <tbody>${recent.map(l => `
                 <tr>
-                  <td>${cap(l.leave_type || l.type || '—')}</td>
+                  <td>${l.leave_type || l.type_name || '—'}</td>
                   <td>${l.start_date || '—'}</td>
                   <td>${l.end_date || '—'}</td>
-                  <td>${l.days_requested || '—'}</td>
+                  <td>${l.days_count || l.days_requested || '—'}</td>
                   <td><span class="badge badge-${l.status}">${l.status}</span></td>
                 </tr>`).join('')}
               </tbody>
@@ -482,24 +392,39 @@
       }
     }
 
+    function showPage(page, navEl) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      if (navEl) navEl.classList.add('active');
+      if (page === 'leaves') loadLeaves('all');
+      if (page === 'payslips') loadPayslip();
+      if (page === 'profile') loadProfile();
+    }
+
     function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'; }
 
     async function loadLeaves(status) {
       const url = (!status || status === 'all') ? '/api/leaves' : `/api/leaves?status=${status}`;
       const data = await api(url);
-      const leaves = data.leaves || data.data || [];
+      const leaves = data.leaves || data.requests || [];
+      window._leavesCache = leaves;
       const tbody = document.getElementById('leaves-tbody');
       if (!leaves.length) {
-        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div></td></tr>`;
         return;
       }
-      tbody.innerHTML = leaves.map(l => `
+      tbody.innerHTML = leaves.map((l, i) => `
         <tr>
-          <td>${cap(l.leave_type || l.type || '—')}</td>
+          <td>${l.leave_type || l.type_name || '—'}</td>
           <td>${l.start_date || '—'}</td>
           <td>${l.end_date || '—'}</td>
-          <td>${l.days_requested || '—'}</td>
+          <td>${l.days_count || l.days_requested || '—'}</td>
           <td><span class="badge badge-${l.status}">${l.status}</span></td>
+          <td>${l.status === 'pending' ? `
+            <button class="action-btn action-btn-edit" onclick="editLeaveModal(window._leavesCache[${i}])">Edit</button>
+            <button class="action-btn action-btn-cancel" onclick="cancelLeave('${l.id}')">Cancel</button>
+          ` : '—'}</td>
         </tr>`).join('');
     }
 
@@ -509,6 +434,68 @@
         btn.className = 'btn btn-sm ' + (s === status ? 'btn-primary' : 'btn-secondary');
       });
       loadLeaves(status);
+    }
+
+    function openLeaveModal() {
+      editingLeaveId = null;
+      document.getElementById('modal-leave-title').textContent = 'Request Leave';
+      document.getElementById('btn-submit').textContent = 'Submit Request';
+      document.getElementById('leave-alert').innerHTML = '';
+      document.getElementById('leave-reason').value = '';
+      document.getElementById('leave-type').value = 'annual';
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('leave-start').value = today;
+      document.getElementById('leave-end').value = today;
+      document.getElementById('leave-modal').classList.add('open');
+    }
+
+    function editLeaveModal(l) {
+      editingLeaveId = l.id;
+      document.getElementById('modal-leave-title').textContent = 'Edit Leave Request';
+      document.getElementById('btn-submit').textContent = 'Save Changes';
+      document.getElementById('leave-alert').innerHTML = '';
+      document.getElementById('leave-reason').value = l.reason || '';
+      document.getElementById('leave-start').value = l.start_date || '';
+      document.getElementById('leave-end').value = l.end_date || '';
+      document.getElementById('leave-modal').classList.add('open');
+    }
+
+    function closeLeaveModal() { document.getElementById('leave-modal').classList.remove('open'); }
+
+    async function cancelLeave(id) {
+      if (!confirm('Cancel this leave request?')) return;
+      const data = await api('/api/leaves/' + id, { method: 'PUT', body: JSON.stringify({ action: 'cancel' }) });
+      if (data?.error) { alert(data.error); return; }
+      await loadDashboard();
+      loadLeaves('all');
+    }
+
+    async function submitLeave() {
+      const alertEl = document.getElementById('leave-alert');
+      const start = document.getElementById('leave-start').value;
+      const end = document.getElementById('leave-end').value;
+      const type = document.getElementById('leave-type').value;
+      const reason = document.getElementById('leave-reason').value;
+      if (!start || !end) { alertEl.innerHTML = '<div class="alert alert-error">Please select dates.</div>'; return; }
+      if (end < start) { alertEl.innerHTML = '<div class="alert alert-error">End date must be after start date.</div>'; return; }
+
+      let data;
+      if (editingLeaveId) {
+        data = await api('/api/leaves/' + editingLeaveId, {
+          method: 'PUT',
+          body: JSON.stringify({ action: 'edit', start_date: start, end_date: end, reason })
+        });
+      } else {
+        data = await api('/api/leaves', {
+          method: 'POST',
+          body: JSON.stringify({ leave_type: type, start_date: start, end_date: end, reason })
+        });
+      }
+
+      if (data?.error) { alertEl.innerHTML = `<div class="alert alert-error">${data.error}</div>`; return; }
+      closeLeaveModal();
+      await loadDashboard();
+      if (document.getElementById('page-leaves').classList.contains('active')) loadLeaves('all');
     }
 
     async function loadPayslip() {
@@ -572,34 +559,14 @@
           <div><div class="profile-item-label">Contract Type</div><div class="profile-item-value">${cap(e.contract_type||'—')}</div></div>
           <div><div class="profile-item-label">Start Date</div><div class="profile-item-value">${e.employment_start_date||'—'}</div></div>
           <div><div class="profile-item-label">Status</div><div class="profile-item-value">${e.is_active ? '🟢 Active' : '🔴 Inactive'}</div></div>
-          ${e.first_name_ar ? `<div><div class="profile-item-label">الاسم بالعربي</div><div class="profile-item-value">${e.first_name_ar} ${e.last_name_ar||''}</div></div>` : ''}
         </div>`;
     }
 
-    function openLeaveModal() {
-      document.getElementById('leave-modal').classList.add('open');
-      document.getElementById('leave-alert').innerHTML = '';
-      document.getElementById('leave-reason').value = '';
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('leave-start').value = today;
-      document.getElementById('leave-end').value = today;
-    }
-
-    function closeLeaveModal() { document.getElementById('leave-modal').classList.remove('open'); }
-
-    async function submitLeave() {
-      const alertEl = document.getElementById('leave-alert');
-      const start = document.getElementById('leave-start').value;
-      const end = document.getElementById('leave-end').value;
-      const type = document.getElementById('leave-type').value;
-      const reason = document.getElementById('leave-reason').value;
-      if (!start || !end) { alertEl.innerHTML = '<div class="alert alert-error">Please select dates.</div>'; return; }
-      if (end < start) { alertEl.innerHTML = '<div class="alert alert-error">End date must be after start date.</div>'; return; }
-      const data = await api('/api/leaves', { method: 'POST', body: JSON.stringify({ leave_type: type, start_date: start, end_date: end, reason }) });
-      if (data.error) { alertEl.innerHTML = `<div class="alert alert-error">${data.error}</div>`; return; }
-      closeLeaveModal();
-      await loadDashboard();
-      if (document.getElementById('page-leaves').classList.contains('active')) loadLeaves('all');
+    function setLang(l) {
+      lang = l;
+      document.getElementById('btn-en').classList.toggle('active', l === 'en');
+      document.getElementById('btn-ar').classList.toggle('active', l === 'ar');
+      document.body.classList.toggle('rtl', l === 'ar');
     }
 
     function logout() { localStorage.removeItem('ghaya_token'); window.location.href = '/login.html'; }
