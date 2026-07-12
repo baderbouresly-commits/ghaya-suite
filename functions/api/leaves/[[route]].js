@@ -76,7 +76,8 @@ export async function onRequest({ request, env, params }) {
     let body;
     try { body = await request.json(); } catch { return error('Invalid JSON'); }
 
-    const { employee_id, leave_type_id, start_date, end_date, reason } = body;
+const { employee_id, start_date, end_date, reason } = body;
+const leave_type_id = body.leave_type_id || body.leave_type;
     const empId = user.role === 'employee' ? user.employee_id : employee_id;
     if (!empId || !leave_type_id || !start_date || !end_date) {
       return error('employee_id, leave_type_id, start_date, end_date required');
