@@ -132,32 +132,63 @@ export async function onRequest({ request, env, params }) {
     return json({ request_id: id, days_count: days, message: 'Leave request submitted' }, 201);
   }
 
-  // ── PUT /api/leaves/:id — approve/reject ──
+  // ── PUT /api/leaves/:id — approve / reject / cancel / edit ──
   if (method === 'PUT' && subResource) {
-    if (!['ghaya_admin','company_admin','manager'].includes(user.role)) return error('Forbidden', 403);
     let body;
     try { body = await request.json(); } catch { return error('Invalid JSON'); }
 
-    const { action, rejection_reason } = body;
-    if (!['approve','reject','cancel'].includes(action)) return error('action must be approve, reject, or cancel');
+    const { action, rejection_reason, start_date, end_date, reason } = body;
+    if (!['approve','reject','cancel','edit'].includes(action)) {
+      return error('action must be approve, reject, cancel, or edit');
+    }
 
-    const lr = await db.prepare('SELECT * FROM leave_requests WHERE id = ? AND company_id = ?').bind(subResource, companyId).first();
+    const lr = await db.prepare(
+      'SELECT * FROM leave_requests WHERE id = ? AND company_id = ?'
+    ).bind(subResource, companyId).first();
     if (!lr) return error('Leave request not found', 404);
+
+    // Role check
+    if (user.role === 'employee') {
+      if (!['cancel','edit'].includes(action)) return error('Employees can only cancel or edit their own requests', 403);
+      if (lr.employee_id !== user.employee_id) return error('Forbidden', 403);
+    } else if (!['ghaya_admin','company_admin','manager'].includes(user.role)) {
+      return error('Forbidden', 403);
+    }
+
     if (lr.status !== 'pending') return error(`Cannot ${action} a ${lr.status} request`);
 
+    // ── Edit dates ──
+    if (action === 'edit') {
+      if (!start_date || !end_date) return error('start_date and end_date required');
+      const s = new Date(start_date), e = new Date(end_date);
+      if (e < s) return error('end_date must be after start_date');
+      const newDays = Math.round((e - s) / (1000*60*60*24)) + 1;
+      const diff = newDays - lr.days_count;
+      if (diff !== 0) {
+        await db.prepare(
+          "UPDATE leave_balances SET pending_days = MAX(0, pending_days + ?) WHERE employee_id = ? AND leave_type_id = ? AND year = ?"
+        ).bind(diff, lr.employee_id, lr.leave_type_id, new Date(start_date).getFullYear()).run();
+      }
+      await db.prepare(
+        "UPDATE leave_requests SET start_date=?, end_date=?, days_count=?, reason=?, updated_at=datetime('now') WHERE id=?"
+      ).bind(start_date, end_date, newDays, reason ?? lr.reason, subResource).run();
+      return json({ message: 'Leave request updated', days_count: newDays });
+    }
+
+    // ── Approve / Reject / Cancel ──
     const newStatus = action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'cancelled';
     await db.prepare(`
-      UPDATE leave_requests SET status = ?, approved_by = ?, approved_at = datetime('now'), rejection_reason = ?, updated_at = datetime('now')
-      WHERE id = ?
+      UPDATE leave_requests SET status=?, approved_by=?, approved_at=datetime('now'), rejection_reason=?, updated_at=datetime('now')
+      WHERE id=?
     `).bind(newStatus, user.sub, rejection_reason || null, subResource).run();
 
     if (action === 'approve') {
       await db.prepare(
-        "UPDATE leave_balances SET pending_days = MAX(0, pending_days - ?), used_days = used_days + ? WHERE employee_id = ? AND leave_type_id = ? AND year = ?"
+        "UPDATE leave_balances SET pending_days=MAX(0,pending_days-?), used_days=used_days+? WHERE employee_id=? AND leave_type_id=? AND year=?"
       ).bind(lr.days_count, lr.days_count, lr.employee_id, lr.leave_type_id, new Date(lr.start_date).getFullYear()).run();
     } else {
       await db.prepare(
-        "UPDATE leave_balances SET pending_days = MAX(0, pending_days - ?) WHERE employee_id = ? AND leave_type_id = ? AND year = ?"
+        "UPDATE leave_balances SET pending_days=MAX(0,pending_days-?) WHERE employee_id=? AND leave_type_id=? AND year=?"
       ).bind(lr.days_count, lr.employee_id, lr.leave_type_id, new Date(lr.start_date).getFullYear()).run();
     }
 
