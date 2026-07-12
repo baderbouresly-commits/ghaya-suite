@@ -125,7 +125,6 @@ select.form-input{cursor:pointer}
 </style>
 </head>
 <body>
-
 <div class="sidebar">
   <div class="sidebar-logo">
     <div class="logo-row">
@@ -165,7 +164,6 @@ select.form-input{cursor:pointer}
     </div>
   </div>
 </div>
-
 <div class="main">
   <div class="topbar">
     <div class="page-title" id="page-title">Dashboard</div>
@@ -177,7 +175,6 @@ select.form-input{cursor:pointer}
     </div>
   </div>
   <div class="content">
-
     <!-- DASHBOARD -->
     <div id="page-dashboard">
       <div class="stats-grid">
@@ -201,7 +198,6 @@ select.form-input{cursor:pointer}
         <div id="dash-leaves"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
-
     <!-- EMPLOYEES -->
     <div id="page-employees" style="display:none">
       <div class="section-card">
@@ -215,7 +211,6 @@ select.form-input{cursor:pointer}
         <div id="employees-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
-
     <!-- LEAVES -->
     <div id="page-leaves" style="display:none">
       <div class="section-card">
@@ -231,7 +226,6 @@ select.form-input{cursor:pointer}
         <div id="leaves-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
-
     <!-- PAYROLL -->
     <div id="page-payroll" style="display:none">
       <div class="payroll-card">
@@ -247,10 +241,8 @@ select.form-input{cursor:pointer}
         <div id="payroll-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
-
   </div>
 </div>
-
 <!-- Add/Edit Employee Modal -->
 <div class="modal-overlay" id="modal-employee">
   <div class="modal">
@@ -295,6 +287,7 @@ select.form-input{cursor:pointer}
           <option value="full_time">Full Time</option><option value="part_time">Part Time</option><option value="contract">Contract</option>
         </select>
       </div>
+      <div class="form-row"><label class="form-label">Login Password</label><input class="form-input" id="emp-password" type="password" placeholder="Employee portal login password"/></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-employee')">Cancel</button>
@@ -302,17 +295,13 @@ select.form-input{cursor:pointer}
     </div>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
-
 <script>
 const API='/api';
 let token=localStorage.getItem('ghaya_token');
 let currentUser=null,currentLang=localStorage.getItem('ghaya_lang')||'en';
 let employeesData=[],leavesData=[],currentLeaveFilter='pending',editingEmpId=null;
-
 if(!token){window.location.href='/';}
-
 async function apicall(method,path,body){
   try{
     const res=await fetch(API+path,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:body?JSON.stringify(body):undefined});
@@ -320,7 +309,6 @@ async function apicall(method,path,body){
     return res.json();
   }catch(e){return null;}
 }
-
 async function init(){
   try{
     const me=await apicall('GET','/auth/me');
@@ -337,7 +325,6 @@ async function init(){
   setLang(currentLang,false);
   loadDashboard();
 }
-
 function showPage(page){
   ['dashboard','employees','leaves','payroll'].forEach(p=>{
     document.getElementById('page-'+p).style.display=p===page?'':'none';
@@ -351,12 +338,11 @@ function showPage(page){
   if(page==='leaves')loadLeaves();
   if(page==='payroll')loadPayroll();
 }
-
 async function loadDashboard(){
   const[emps,leaves]=await Promise.all([apicall('GET','/employees'),apicall('GET','/leaves?status=pending')]);
   const employees=emps?.employees||[];
   const pendingLeaves=leaves?.leaves||[];
-  const active=employees.filter(e=>e.is_active);
+  const active=employees.filter(e=>e.status==='active');
   const totalSalary=active.reduce((s,e)=>s+(parseFloat(e.basic_salary)||0),0);
   document.getElementById('s-total').textContent=employees.length;
   document.getElementById('s-active').textContent=active.length;
@@ -366,7 +352,6 @@ async function loadDashboard(){
   renderDashEmployees(employees.slice(0,5));
   renderDashLeaves(pendingLeaves.slice(0,3));
 }
-
 function renderDashEmployees(list){
   const el=document.getElementById('dash-employees');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees yet</div><div class="empty-sub">Add your first employee to get started</div></div>';return;}
@@ -375,10 +360,9 @@ function renderDashEmployees(list){
       <td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.nationality||''}</div></td>
       <td>${e.job_title_en||'—'}</td><td>${e.department||'—'}</td>
       <td style="font-weight:700">${parseFloat(e.basic_salary||0).toFixed(3)}</td>
-      <td><span class="badge ${e.is_active?'badge-green':'badge-gray'}">${e.is_active?'Active':'Inactive'}</span></td>
+      <td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td>
     </tr>`).join('')}</tbody></table></div>`;
 }
-
 function renderDashLeaves(list){
   const el=document.getElementById('dash-leaves');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">No pending leave requests</div></div>';return;}
@@ -392,7 +376,6 @@ function renderDashLeaves(list){
       </div>
     </div>`).join('');
 }
-
 async function loadEmployees(){
   document.getElementById('employees-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/employees');
@@ -400,12 +383,10 @@ async function loadEmployees(){
   document.getElementById('emp-count').textContent=`${employeesData.length} ${currentLang==='ar'?'موظف':'employees'}`;
   renderEmployeesTable(employeesData);
 }
-
 function filterEmployees(){
   const q=document.getElementById('emp-search').value.toLowerCase();
   renderEmployeesTable(employeesData.filter(e=>`${e.first_name_en} ${e.last_name_en} ${e.job_title_en||''} ${e.department||''}`.toLowerCase().includes(q)));
 }
-
 function renderEmployeesTable(list){
   const el=document.getElementById('employees-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees found</div><div class="empty-sub">Add your first employee using the button above</div></div>';return;}
@@ -416,26 +397,23 @@ function renderEmployeesTable(list){
       <td><div>${e.job_title_en||'—'}</div><div style="font-size:11px;color:#888">${e.department||'—'}</div></td>
       <td style="font-size:12px">${e.nationality||'—'}</td>
       <td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td>
-      <td style="font-size:12px;color:#888">${e.employment_start_date||'—'}</td>
-      <td><span class="badge ${e.is_active?'badge-green':'badge-gray'}">${e.is_active?'Active':'Inactive'}</span></td>
+      <td style="font-size:12px;color:#888">${e.hire_date||'—'}</td>
+      <td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td>
       <td><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button></td>
     </tr>`).join('')}</tbody></table></div>`;
 }
-
 async function loadLeaves(){
   document.getElementById('leaves-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/leaves?status='+currentLeaveFilter);
   leavesData=data?.leaves||[];
   renderLeavesList(leavesData);
 }
-
 function filterLeaves(status,btn){
   currentLeaveFilter=status;
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   loadLeaves();
 }
-
 function renderLeavesList(list){
   const el=document.getElementById('leaves-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div>';return;}
@@ -447,14 +425,12 @@ function renderLeavesList(list){
       ${l.status==='pending'?`<div class="leave-actions"><button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕ Reject</button></div>`:''}
     </div>`).join('');
 }
-
 async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'approved'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
 async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'rejected'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
-
 async function loadPayroll(){
   document.getElementById('payroll-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/employees');
-  const employees=(data?.employees||[]).filter(e=>e.is_active);
+  const employees=(data?.employees||[]).filter(e=>e.status==='active');
   let total=employees.reduce((s,e)=>s+(parseFloat(e.basic_salary)||0),0);
   document.getElementById('payroll-total').textContent='KWD '+total.toFixed(3);
   document.getElementById('payroll-sub').textContent=`${employees.length} active employees · PIFSS deductions apply for Kuwaitis`;
@@ -466,18 +442,15 @@ async function loadPayroll(){
     return`<tr><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.job_title_en||''}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td>KWD ${basic.toFixed(3)}</td><td style="color:${pifss>0?'#c42a00':'#888'}">${pifss>0?'− KWD '+pifss.toFixed(3):'—'}</td><td style="font-weight:800;color:#1a7a42">KWD ${net.toFixed(3)}</td></tr>`;
   }).join('')}</tbody></table></div>`;
 }
-
 function runPayroll(){showToast('Payroll processing — coming in next update!','');}
-
 function openAddEmployee(){
   editingEmpId=null;
   document.getElementById('modal-emp-title').textContent='Add Employee';
   document.getElementById('save-emp-btn').textContent='Add Employee';
-  ['emp-id','emp-first-en','emp-last-en','emp-first-ar','emp-last-ar','emp-civil-id','emp-title-en','emp-dept','emp-salary','emp-email','emp-phone'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['emp-id','emp-first-en','emp-last-en','emp-first-ar','emp-last-ar','emp-civil-id','emp-title-en','emp-dept','emp-salary','emp-email','emp-phone','emp-password'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('emp-start').value=new Date().toISOString().split('T')[0];
   document.getElementById('modal-employee').classList.add('open');
 }
-
 function editEmployee(id){
   const emp=employeesData.find(e=>e.id===id);if(!emp)return;
   editingEmpId=id;
@@ -493,23 +466,21 @@ function editEmployee(id){
   document.getElementById('emp-title-en').value=emp.job_title_en||'';
   document.getElementById('emp-dept').value=emp.department||'';
   document.getElementById('emp-salary').value=emp.basic_salary||'';
-  document.getElementById('emp-start').value=emp.employment_start_date||'';
+  document.getElementById('emp-start').value=emp.hire_date||'';
   document.getElementById('emp-email').value=emp.work_email||'';
-  document.getElementById('emp-phone').value=emp.phone||'';
-  document.getElementById('emp-contract').value=emp.contract_type||'full_time';
+  document.getElementById('emp-phone').value=emp.mobile||'';
+  document.getElementById('emp-contract').value=emp.employment_type||'full_time';
+  document.getElementById('emp-password').value='';
   document.getElementById('modal-employee').classList.add('open');
 }
-
 async function saveEmployee(){
-  const body={first_name_en:document.getElementById('emp-first-en').value.trim(),last_name_en:document.getElementById('emp-last-en').value.trim(),first_name_ar:document.getElementById('emp-first-ar').value.trim(),last_name_ar:document.getElementById('emp-last-ar').value.trim(),civil_id:document.getElementById('emp-civil-id').value.trim(),nationality:document.getElementById('emp-nationality').value,job_title_en:document.getElementById('emp-title-en').value.trim(),department:document.getElementById('emp-dept').value.trim(),basic_salary:parseFloat(document.getElementById('emp-salary').value)||0,employment_start_date:document.getElementById('emp-start').value,work_email:document.getElementById('emp-email').value.trim(),phone:document.getElementById('emp-phone').value.trim(),contract_type:document.getElementById('emp-contract').value};
+  const body={first_name_en:document.getElementById('emp-first-en').value.trim(),last_name_en:document.getElementById('emp-last-en').value.trim(),first_name_ar:document.getElementById('emp-first-ar').value.trim(),last_name_ar:document.getElementById('emp-last-ar').value.trim(),civil_id:document.getElementById('emp-civil-id').value.trim(),nationality:document.getElementById('emp-nationality').value,job_title_en:document.getElementById('emp-title-en').value.trim(),department:document.getElementById('emp-dept').value.trim(),basic_salary:parseFloat(document.getElementById('emp-salary').value)||0,employment_start_date:document.getElementById('emp-start').value,work_email:document.getElementById('emp-email').value.trim(),phone:document.getElementById('emp-phone').value.trim(),contract_type:document.getElementById('emp-contract').value,initial_password:document.getElementById('emp-password')?.value||''};
   if(!body.first_name_en||!body.last_name_en){showToast('First and last name required','error');return;}
   const res=editingEmpId?await apicall('PUT','/employees/'+editingEmpId,body):await apicall('POST','/employees',body);
   if(res&&!res.error){showToast(editingEmpId?'Employee updated ✓':'Employee added ✓','success');closeModal('modal-employee');loadEmployees();loadDashboard();}
   else showToast(res?.error||'Error saving employee','error');
 }
-
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-
 function setLang(lang,save=true){
   currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);
   document.documentElement.lang=lang;document.body.classList.toggle('ar',lang==='ar');
@@ -517,10 +488,8 @@ function setLang(lang,save=true){
   document.getElementById('btn-ar').classList.toggle('active',lang==='ar');
   document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.dataset[lang]||el.dataset.en;});
 }
-
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3000);}
 function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem('ghaya_user');window.location.href='/';}
-
 init();
 </script>
 </body>
