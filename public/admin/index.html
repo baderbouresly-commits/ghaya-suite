@@ -264,7 +264,15 @@ select.form-input{cursor:pointer}
                 <option value="11">November</option><option value="12">December</option>
               </select>
               <select class="search-bar" id="payroll-year" style="width:90px;"></select>
-              <button class="btn btn-primary" onclick="runPayroll()">▶ Run Payroll</button>
+<div style="display:flex;align-items:center;gap:6px;padding:0 10px;border-left:1px solid #e8e0d8;">
+  <span style="font-size:12px;font-weight:700;color:#555;">PIFSS</span>
+  <label class="toggle-wrap">
+    <input type="checkbox" id="pifss-toggle" checked>
+    <span class="toggle-slider"></span>
+  </label>
+  <span class="info-icon" data-tip="Kuwaiti nationals: 8% deducted from salary + 11% employer cost. Non-Kuwaitis: exempt.">ℹ</span>
+</div>
+<button class="btn btn-primary" onclick="runPayroll()">▶ Run Payroll</button>
             </div>
           </div>
         </div>
