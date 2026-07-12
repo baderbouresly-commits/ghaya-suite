@@ -132,7 +132,7 @@ select.form-input{cursor:pointer}
 .toggle-slider::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:.3s}
 .toggle-wrap input:checked+.toggle-slider{background:#1a7a42}
 .toggle-wrap input:checked+.toggle-slider::after{left:19px}
-.info-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#e8e0d8;color:#555;font-size:11px;font-weight:800;cursor:help;position:relative}
+.info-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#e8e0d8;color:#555;font-size:11px;font-weight:800;cursor:help}
 @media(max-width:768px){.sidebar{display:none}.main{margin-left:0!important;margin-right:0!important}.stats-grid{grid-template-columns:1fr 1fr}.content{padding:16px}.form-grid{grid-template-columns:1fr}.settings-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -150,7 +150,7 @@ select.form-input{cursor:pointer}
   </div>
   <nav class="nav">
     <div class="nav-section">OVERVIEW</div>
-    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+    <div class="nav-item" onclick="showPage('dashboard')" id="nav-dashboard">
       <span class="nav-icon">📊</span><span data-en="Dashboard" data-ar="لوحة التحكم">Dashboard</span>
     </div>
     <div class="nav-section" style="margin-top:8px">HR MANAGEMENT</div>
@@ -378,6 +378,7 @@ let currentUser=null,currentLang=localStorage.getItem('ghaya_lang')||'en';
 let employeesData=[],leavesData=[],currentLeaveFilter='pending',editingEmpId=null;
 let deptsData=[],jobTitlesData=[];
 if(!token){window.location.href='/';}
+
 async function apicall(method,path,body){
   try{
     const res=await fetch(API+path,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:body?JSON.stringify(body):undefined});
@@ -385,6 +386,7 @@ async function apicall(method,path,body){
     return await res.json();
   }catch(e){return null;}
 }
+
 async function init(){
   try{
     const me=await apicall('GET','/auth/me');
@@ -401,11 +403,13 @@ async function init(){
   await loadDeptsAndTitles();
   setLang(currentLang,false);
 }
+
 async function loadDeptsAndTitles(){
   const [d,j]=await Promise.all([apicall('GET','/departments'),apicall('GET','/job-titles')]);
   deptsData=d?.departments||[];
   jobTitlesData=j?.job_titles||[];
 }
+
 function showPage(page){
   localStorage.setItem('ghaya_page',page);
   ['dashboard','employees','leaves','payroll','settings'].forEach(p=>{
@@ -421,6 +425,7 @@ function showPage(page){
   if(page==='payroll')loadPayroll();
   if(page==='settings')renderSettings();
 }
+
 async function loadDashboard(){
   const[emps,leaves]=await Promise.all([apicall('GET','/employees'),apicall('GET','/leaves?status=pending')]);
   const employees=emps?.employees||[];
@@ -435,18 +440,22 @@ async function loadDashboard(){
   renderDashEmployees(employees.slice(0,5));
   renderDashLeaves(pendingLeaves.slice(0,3));
 }
+
 function getDeptName(id){return deptsData.find(d=>d.id===id)?.name_en||'—';}
 function getJobTitle(id){return jobTitlesData.find(j=>j.id===id)?.title_en||'—';}
+
 function renderDashEmployees(list){
   const el=document.getElementById('dash-employees');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees yet</div></div>';return;}
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Title</th><th>Department</th><th>Salary (KWD)</th><th>Status</th></tr></thead><tbody>${list.map(e=>`<tr><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.nationality||''}</div></td><td>${getJobTitle(e.job_title_id)}</td><td>${getDeptName(e.department_id)}</td><td style="font-weight:700">${parseFloat(e.basic_salary||0).toFixed(3)}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td></tr>`).join('')}</tbody></table></div>`;
 }
+
 function renderDashLeaves(list){
   const el=document.getElementById('dash-leaves');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">No pending leave requests</div></div>';return;}
   el.innerHTML=list.map(l=>`<div class="leave-card"><div class="leave-avatar">${(l.employee_name||'?')[0]}</div><div class="leave-info"><div class="leave-name">${l.employee_name||'—'}</div><div class="leave-detail">${l.type_name||'Annual'} · ${l.start_date} → ${l.end_date} · ${l.days_count||'?'} days</div></div><div class="leave-actions"><button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕</button></div></div>`).join('');
 }
+
 async function loadEmployees(){
   document.getElementById('employees-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/employees');
@@ -454,31 +463,39 @@ async function loadEmployees(){
   document.getElementById('emp-count').textContent=`${employeesData.length} employees`;
   renderEmployeesTable(employeesData);
 }
+
 function filterEmployees(){
   const q=document.getElementById('emp-search').value.toLowerCase();
   renderEmployeesTable(employeesData.filter(e=>`${e.first_name_en} ${e.last_name_en} ${getDeptName(e.department_id)} ${getJobTitle(e.job_title_id)}`.toLowerCase().includes(q)));
 }
+
 function renderEmployeesTable(list){
   const el=document.getElementById('employees-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees found</div><div class="empty-sub">Add your first employee using the button above</div></div>';return;}
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Title / Dept</th><th>Nationality</th><th>Basic Salary</th><th>Start Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((e,i)=>`<tr><td style="color:#888;font-size:12px">${i+1}</td><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></td><td><div>${getJobTitle(e.job_title_id)}</div><div style="font-size:11px;color:#888">${getDeptName(e.department_id)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="font-size:12px;color:#888">${e.hire_date||'—'}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td><td><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button></td></tr>`).join('')}</tbody></table></div>`;
 }
+
 async function loadLeaves(){
   document.getElementById('leaves-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/leaves?status='+currentLeaveFilter);
   leavesData=data?.requests||[];
   renderLeavesList(leavesData);
 }
+
 function filterLeaves(status,btn){currentLeaveFilter=status;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');loadLeaves();}
+
 function renderLeavesList(list){
   const el=document.getElementById('leaves-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div>';return;}
   const statusBadge={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>'};
   el.innerHTML=list.map(l=>`<div class="leave-card"><div class="leave-avatar">${(l.employee_name||'?')[0]}</div><div class="leave-info"><div class="leave-name">${l.employee_name||'—'} ${statusBadge[l.status]||''}</div><div class="leave-detail">${l.leave_type||l.type_name||'Annual'} · ${l.start_date} → ${l.end_date} · ${l.days_count||l.days_requested||'?'} days${l.reason?' · '+l.reason:''}</div></div>${l.status==='pending'?`<div class="leave-actions"><button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕ Reject</button></div>`:''}</div>`).join('');
 }
+
 async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'approve'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast(res?.error||'Error','error');}
 async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'reject'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast(res?.error||'Error','error');}
+
 const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
 async function loadPayroll(){
   const now=new Date();
   const yearSel=document.getElementById('payroll-year');
@@ -492,6 +509,7 @@ async function loadPayroll(){
   const statusBadge={draft:'<span class="badge badge-orange">Draft</span>',approved:'<span class="badge badge-blue">Published</span>',paid:'<span class="badge badge-green">Paid</span>'};
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Period</th><th>Gross (KWD)</th><th>PIFSS Deducted</th><th>Net Pay (KWD)</th><th>Status</th><th>Actions</th></tr></thead><tbody>${runs.map(r=>`<tr><td style="font-weight:700">${MONTH_NAMES[r.period_month-1]} ${r.period_year}</td><td>KWD ${(r.total_gross||0).toFixed(3)}</td><td style="color:#E8472A">- KWD ${(r.total_pifss_employee||0).toFixed(3)}</td><td style="font-weight:800;color:#1a7a42">KWD ${(r.total_net||0).toFixed(3)}</td><td>${statusBadge[r.status]||r.status}</td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="viewPayrollRun('${r.id}')">View</button>${r.status==='draft'?`<button class="btn btn-primary btn-sm" onclick="publishPayslips('${r.id}')">Publish</button>`:''}${r.status==='approved'?`<button class="btn btn-success btn-sm" onclick="markAsPaid('${r.id}')">Mark Paid</button>`:''}${r.status!=='paid'?`<button class="btn btn-danger btn-sm" onclick="deletePayrollRun('${r.id}')">Delete</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;
 }
+
 async function runPayroll(){
   const month=parseInt(document.getElementById('payroll-month').value);
   const year=parseInt(document.getElementById('payroll-year').value);
@@ -501,6 +519,7 @@ async function runPayroll(){
   showToast(`✓ Payroll for ${MONTH_NAMES[month-1]} ${year} created`,'success');
   loadPayroll();
 }
+
 async function viewPayrollRun(id){
   document.getElementById('payroll-runs-view').style.display='none';
   document.getElementById('payroll-detail-view').style.display='';
@@ -516,10 +535,12 @@ async function viewPayrollRun(id){
   else{actionsEl.innerHTML=`<span class="badge badge-green" style="padding:8px 16px;font-size:13px;">✓ Paid</span>`;}
   document.getElementById('payroll-detail-list').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Nationality</th><th>Basic Salary</th><th>PIFSS (8%)</th><th>Net Pay</th><th>Payslip</th></tr></thead><tbody>${(entries||[]).map(e=>`<tr><td style="font-weight:700">${e.first_name_en} ${e.last_name_en}</td><td style="font-size:12px">${e.nationality||'—'}</td><td>KWD ${(e.basic_salary||0).toFixed(3)}</td><td style="color:${e.pifss_employee>0?'#E8472A':'#888'}">${e.pifss_employee>0?`- KWD ${e.pifss_employee.toFixed(3)}`:'—'}</td><td style="font-weight:800;color:#1a7a42">KWD ${(e.net_salary||0).toFixed(3)}</td><td>${e.payslip_published?'<span class="badge badge-green">Published</span>':'<span class="badge badge-gray">Pending</span>'}</td></tr>`).join('')}</tbody></table></div>`;
 }
+
 function showPayrollList(){document.getElementById('payroll-runs-view').style.display='';document.getElementById('payroll-detail-view').style.display='none';}
 async function publishPayslips(id){const res=await apicall('PUT','/payroll/'+id,{action:'publish'});if(!res||res.error){showToast(res?.error||'Error','error');return;}showToast('Payslips published ✓','success');loadPayroll();viewPayrollRun(id);}
 async function markAsPaid(id){const res=await apicall('PUT','/payroll/'+id,{action:'pay'});if(!res||res.error){showToast(res?.error||'Error','error');return;}showToast('Marked as paid ✓','success');loadPayroll();viewPayrollRun(id);}
 async function deletePayrollRun(id){if(!confirm('Delete this payroll run?'))return;const res=await apicall('DELETE','/payroll/'+id);if(!res||res.error){showToast(res?.error||'Error','error');return;}showToast('Deleted','success');showPayrollList();loadPayroll();}
+
 function renderSettings(){renderDeptList();renderJTList();}
 function renderDeptList(){const el=document.getElementById('dept-list');if(!deptsData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No departments yet</div>';return;}el.innerHTML=deptsData.map(d=>`<div class="tag-item"><div><div class="tag-item-name">${d.name_en}</div><div class="tag-item-ar">${d.name_ar||''}</div></div><button class="tag-delete" onclick="deleteDept('${d.id}')">✕</button></div>`).join('');}
 function renderJTList(){const el=document.getElementById('jt-list');if(!jobTitlesData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No job titles yet</div>';return;}el.innerHTML=jobTitlesData.map(j=>`<div class="tag-item"><div><div class="tag-item-name">${j.title_en}</div><div class="tag-item-ar">${j.title_ar||''}</div></div><button class="tag-delete" onclick="deleteJobTitle('${j.id}')">✕</button></div>`).join('');}
@@ -527,14 +548,17 @@ async function addDept(){const en=document.getElementById('new-dept-en').value.t
 async function addJobTitle(){const en=document.getElementById('new-jt-en').value.trim();const ar=document.getElementById('new-jt-ar').value.trim();if(!en){showToast('Enter job title','error');return;}const res=await apicall('POST','/job-titles',{title_en:en,title_ar:ar});if(res&&res.job_title){jobTitlesData.push(res.job_title);renderJTList();document.getElementById('new-jt-en').value='';document.getElementById('new-jt-ar').value='';showToast('Job title added ✓','success');}else showToast('Error adding job title','error');}
 async function deleteDept(id){const res=await apicall('DELETE','/departments/'+id);if(res&&res.success){deptsData=deptsData.filter(d=>d.id!==id);renderDeptList();showToast('Deleted','success');}else showToast('Error','error');}
 async function deleteJobTitle(id){const res=await apicall('DELETE','/job-titles/'+id);if(res&&res.success){jobTitlesData=jobTitlesData.filter(j=>j.id!==id);renderJTList();showToast('Deleted','success');}else showToast('Error','error');}
+
 function populateDropdowns(){const deptSel=document.getElementById('emp-dept-id');const jtSel=document.getElementById('emp-job-title-id');deptSel.innerHTML='<option value="">— Select Department —</option>'+deptsData.map(d=>`<option value="${d.id}">${d.name_en}</option>`).join('');jtSel.innerHTML='<option value="">— Select Job Title —</option>'+jobTitlesData.map(j=>`<option value="${j.id}">${j.title_en}</option>`).join('');}
 function openAddEmployee(){editingEmpId=null;document.getElementById('modal-emp-title').textContent='Add Employee';document.getElementById('save-emp-btn').textContent='Add Employee';['emp-id','emp-first-en','emp-last-en','emp-first-ar','emp-last-ar','emp-civil-id','emp-salary','emp-email','emp-phone','emp-password'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('emp-start').value=new Date().toISOString().split('T')[0];populateDropdowns();document.getElementById('modal-employee').classList.add('open');}
 function editEmployee(id){const emp=employeesData.find(e=>e.id===id);if(!emp)return;editingEmpId=id;document.getElementById('modal-emp-title').textContent='Edit Employee';document.getElementById('save-emp-btn').textContent='Save Changes';document.getElementById('emp-id').value=emp.id;document.getElementById('emp-first-en').value=emp.first_name_en||'';document.getElementById('emp-last-en').value=emp.last_name_en||'';document.getElementById('emp-first-ar').value=emp.first_name_ar||'';document.getElementById('emp-last-ar').value=emp.last_name_ar||'';document.getElementById('emp-civil-id').value=emp.civil_id||'';document.getElementById('emp-nationality').value=emp.nationality||'Kuwaiti';document.getElementById('emp-salary').value=emp.basic_salary||'';document.getElementById('emp-start').value=emp.hire_date||'';document.getElementById('emp-email').value=emp.work_email||'';document.getElementById('emp-phone').value=emp.mobile||'';document.getElementById('emp-contract').value=emp.employment_type||'full_time';document.getElementById('emp-password').value='';populateDropdowns();document.getElementById('emp-dept-id').value=emp.department_id||'';document.getElementById('emp-job-title-id').value=emp.job_title_id||'';document.getElementById('modal-employee').classList.add('open');}
 async function saveEmployee(){const body={first_name_en:document.getElementById('emp-first-en').value.trim(),last_name_en:document.getElementById('emp-last-en').value.trim(),first_name_ar:document.getElementById('emp-first-ar').value.trim(),last_name_ar:document.getElementById('emp-last-ar').value.trim(),civil_id:document.getElementById('emp-civil-id').value.trim(),nationality:document.getElementById('emp-nationality').value,department_id:document.getElementById('emp-dept-id').value||null,job_title_id:document.getElementById('emp-job-title-id').value||null,basic_salary:parseFloat(document.getElementById('emp-salary').value)||0,hire_date:document.getElementById('emp-start').value,work_email:document.getElementById('emp-email').value.trim(),mobile:document.getElementById('emp-phone').value.trim(),employment_type:document.getElementById('emp-contract').value,initial_password:document.getElementById('emp-password')?.value||''};if(!body.first_name_en||!body.last_name_en){showToast('First and last name required','error');return;}const res=editingEmpId?await apicall('PUT','/employees/'+editingEmpId,body):await apicall('POST','/employees',body);if(res&&!res.error){showToast(editingEmpId?'Employee updated ✓':'Employee added ✓','success');closeModal('modal-employee');loadEmployees();loadDashboard();}else showToast(res?.error||'Error saving employee','error');}
+
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function setLang(lang,save=true){currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);document.documentElement.lang=lang;document.body.classList.toggle('ar',lang==='ar');document.getElementById('btn-en').classList.toggle('active',lang==='en');document.getElementById('btn-ar').classList.toggle('active',lang==='ar');document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.dataset[lang]||el.dataset.en;});}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3000);}
 function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem('ghaya_user');localStorage.removeItem('ghaya_page');window.location.href='/';}
+
 document.querySelectorAll('.info-icon').forEach(icon=>{
   icon.addEventListener('mouseenter',function(){
     const tip=document.createElement('div');
@@ -546,10 +570,12 @@ document.querySelectorAll('.info-icon').forEach(icon=>{
   });
   icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
 });
-init().finally(()=>{
-  const saved=localStorage.getItem('ghaya_page')||'dashboard';
-  showPage(saved);
-});
+
+// Show saved page immediately — no waiting for init
+const saved=localStorage.getItem('ghaya_page')||'dashboard';
+showPage(saved);
+// Init runs in background to populate user info & sidebar
+init();
 </script>
 </body>
 </html>
