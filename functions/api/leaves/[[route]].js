@@ -25,7 +25,7 @@ export async function onRequest({ request, env, params }) {
     return json({ leave_types: results });
   }
 
-  // ── GET /api/leaves/balance?employee_id=&year= ──
+  // ── GET /api/leaves/balance ──────────────────
   if (method === 'GET' && subResource === 'balance') {
     const empId = url.searchParams.get('employee_id') || user.employee_id;
     const year = url.searchParams.get('year') || new Date().getFullYear();
@@ -46,19 +46,28 @@ export async function onRequest({ request, env, params }) {
     let query, binds;
 
     if (user.role === 'employee') {
-      query = `SELECT lr.*, lt.name_en as type_name, lt.name_ar as type_name_ar
+      query = `SELECT lr.*,
+               lt.name_en as type_name, lt.name_ar as type_name_ar,
+               lt.name_en as leave_type, lt.name_en as type,
+               lr.days_count as days_requested
                FROM leave_requests lr JOIN leave_types lt ON lt.id = lr.leave_type_id
                WHERE lr.employee_id = ? AND lr.company_id = ? ORDER BY lr.created_at DESC`;
       binds = [user.employee_id, companyId];
     } else if (empId) {
-      query = `SELECT lr.*, lt.name_en as type_name, e.first_name_en, e.last_name_en
+      query = `SELECT lr.*,
+               lt.name_en as type_name, e.first_name_en, e.last_name_en,
+               lt.name_en as leave_type, lt.name_en as type,
+               lr.days_count as days_requested
                FROM leave_requests lr JOIN leave_types lt ON lt.id = lr.leave_type_id
                JOIN employees e ON e.id = lr.employee_id
                WHERE lr.employee_id = ? AND lr.company_id = ? ORDER BY lr.created_at DESC`;
       binds = [empId, companyId];
     } else {
       const statusClause = status ? `AND lr.status = '${status.replace(/'/g,"''")}' ` : '';
-      query = `SELECT lr.*, lt.name_en as type_name,
+      query = `SELECT lr.*,
+               lt.name_en as type_name,
+               lt.name_en as leave_type, lt.name_en as type,
+               lr.days_count as days_requested,
                e.first_name_en || ' ' || e.last_name_en as employee_name
                FROM leave_requests lr
                JOIN leave_types lt ON lt.id = lr.leave_type_id
@@ -105,10 +114,14 @@ export async function onRequest({ request, env, params }) {
     }
 
     const id = crypto.randomUUID();
-    await db.prepare(`
-      INSERT INTO leave_requests (id, company_id, employee_id, leave_type_id, start_date, end_date, days_count, reason, status)
-      VALUES (?,?,?,?,?,?,?,?,'pending')
-    `).bind(id, companyId, empId, leave_type_id, start_date, end_date, days, reason || null).run();
+    try {
+      await db.prepare(`
+        INSERT INTO leave_requests (id, company_id, employee_id, leave_type_id, start_date, end_date, days_count, reason, status)
+        VALUES (?,?,?,?,?,?,?,?,'pending')
+      `).bind(id, companyId, empId, leave_type_id, start_date, end_date, days, reason || null).run();
+    } catch(e) {
+      return error(`Insert failed: ${e.message}`, 500);
+    }
 
     if (balance) {
       await db.prepare(
