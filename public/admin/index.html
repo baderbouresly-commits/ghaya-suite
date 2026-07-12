@@ -359,7 +359,7 @@ async function apicall(method,path,body){
   try{
     const res=await fetch(API+path,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:body?JSON.stringify(body):undefined});
     if(res.status===401){logout();return null;}
-    return res.json();
+return await res.json();
   }catch(e){return null;}
 }
 
