@@ -238,6 +238,16 @@ select.form-input{cursor:pointer}
         </div>
         <div id="leaves-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
+      <div class="section-card">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Leave Balances</div>
+            <div class="section-sub">Accrued annual leave per employee (pro-rata)</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="loadLeaveBalances()">↻ Refresh</button>
+        </div>
+        <div id="leave-balances-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
     </div>
     <div id="page-payroll" style="display:none">
       <div id="payroll-runs-view">
@@ -421,7 +431,7 @@ function showPage(page){
   document.getElementById('page-title').textContent=titles[page]?.[currentLang]||titles[page]?.en;
   if(page==='dashboard')loadDashboard();
   if(page==='employees')loadEmployees();
-  if(page==='leaves')loadLeaves();
+  if(page==='leaves'){loadLeaves();loadLeaveBalances();}
   if(page==='payroll')loadPayroll();
   if(page==='settings')renderSettings();
 }
@@ -491,8 +501,53 @@ function renderLeavesList(list){
   el.innerHTML=list.map(l=>`<div class="leave-card"><div class="leave-avatar">${(l.employee_name||'?')[0]}</div><div class="leave-info"><div class="leave-name">${l.employee_name||'—'} ${statusBadge[l.status]||''}</div><div class="leave-detail">${l.leave_type||l.type_name||'Annual'} · ${l.start_date} → ${l.end_date} · ${l.days_count||l.days_requested||'?'} days${l.reason?' · '+l.reason:''}</div></div>${l.status==='pending'?`<div class="leave-actions"><button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕ Reject</button></div>`:''}</div>`).join('');
 }
 
-async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'approve'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast(res?.error||'Error','error');}
-async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'reject'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast(res?.error||'Error','error');}
+async function loadLeaveBalances(){
+  const el=document.getElementById('leave-balances-list');
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const [empsData, allLeavesData]=await Promise.all([apicall('GET','/employees'),apicall('GET','/leaves')]);
+  const employees=empsData?.employees||[];
+  const allLeaves=allLeavesData?.requests||[];
+  const year=new Date().getFullYear().toString();
+  if(!employees.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌴</div><div class="empty-text">No employees yet</div></div>';return;}
+
+  function calcBalance(hireDate){
+    if(!hireDate)return null;
+    const now=new Date();
+    const hire=new Date(hireDate);
+    if(isNaN(hire))return null;
+    const yearStart=new Date(now.getFullYear(),0,1);
+    const msPerYear=1000*60*60*24*365.25;
+    const yearsOfService=(now-hire)/msPerYear;
+    const entitlement=yearsOfService>=5?35:30;
+    const accrualStart=hire>yearStart?hire:yearStart;
+    const daysAccruing=Math.max(0,(now-accrualStart)/(1000*60*60*24));
+    const isLeap=new Date(now.getFullYear(),1,29).getDate()===29;
+    const daysInYear=isLeap?366:365;
+    const accrued=(daysAccruing/daysInYear)*entitlement;
+    return{yearsOfService:Math.round(yearsOfService*10)/10,entitlement,accrued:Math.round(accrued*10)/10};
+  }
+
+  const rows=employees.map(emp=>{
+    const empLeaves=allLeaves.filter(l=>l.employee_id===emp.id&&l.status==='approved'&&(l.start_date||'').startsWith(year)&&(l.leave_type==='annual'||!l.leave_type));
+    const taken=empLeaves.reduce((s,l)=>s+(parseFloat(l.days_count||l.days_requested)||0),0);
+    const bal=calcBalance(emp.hire_date);
+    const remaining=bal?Math.max(0,Math.round((bal.accrued-taken)*10)/10):'—';
+    const remainingColor=bal&&remaining<5?'#c42a00':bal&&remaining<10?'#c46a00':'#1a7a42';
+    return`<tr>
+      <td><div style="font-weight:700">${emp.first_name_en} ${emp.last_name_en}</div><div style="font-size:11px;color:#888">${getDeptName(emp.department_id)}</div></td>
+      <td style="font-size:12px;color:#888">${bal?bal.yearsOfService+' yrs':'No hire date'}</td>
+      <td><span class="badge badge-blue">${bal?bal.entitlement+' days':'—'}</span></td>
+      <td style="font-weight:700;color:#E8472A">${bal?bal.accrued:'—'}</td>
+      <td>${taken||0}</td>
+      <td style="font-weight:800;color:${remainingColor}">${remaining}</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Service</th><th>Entitlement</th><th>Accrued</th><th>Taken</th><th>Remaining</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'approve'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none'){loadLeaves();loadLeaveBalances();}}else showToast(res?.error||'Error','error');}
+async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'reject'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none'){loadLeaves();loadLeaveBalances();}}else showToast(res?.error||'Error','error');}
 
 const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -571,10 +626,8 @@ document.querySelectorAll('.info-icon').forEach(icon=>{
   icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
 });
 
-// Show saved page immediately — no waiting for init
 const saved=localStorage.getItem('ghaya_page')||'dashboard';
 showPage(saved);
-// Init runs in background to populate user info & sidebar
 init();
 </script>
 </body>
