@@ -523,7 +523,8 @@ async function loadEOS(id,type){
   document.getElementById('eos-btn-resignation').style.justifyContent='center';
   document.getElementById('eos-content').innerHTML='<div class="loading"><div class="spinner"></div></div>';
 
-  const data=await apicall('GET',`/eos?employee_id=${id}&type=${type}`);
+const data=await apicall('GET',`/eos?employee_id=${id}&type=${type}`);
+console.log('EOS data:', data);
   if(!data||data.error){
     document.getElementById('eos-content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">${data?.error||'Error loading EOS'}</div><div class="empty-sub">Make sure this employee has a hire date set</div></div>`;
     return;
