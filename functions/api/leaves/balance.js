@@ -1,5 +1,4 @@
-import { requireAuth, json, error } from '../../_lib/auth.js';
-
+import { requireAuth, json, error } from '../_lib/auth.js';
 function isLeapYear(year) {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 }
