@@ -169,7 +169,8 @@
         <button class="btn btn-primary" onclick="openLeaveModal()">+ <span id="btn-request-leave">Request Leave</span></button>
       </div>
       <div class="card">
-        <div class="card-title" style="margin-bottom:16px;" id="title-balance">Leave Balance</div>
+        <div class="card-title" style="margin-bottom:4px;" id="title-balance">Leave Balance</div>
+        <div style="font-size:11px;color:#888;margin-bottom:16px;" id="bal-accrual-note"></div>
         <div class="leave-balance">
           <div class="balance-item"><div class="balance-num" id="bal-remaining">—</div><div class="balance-label" id="lbl-bal-remaining">Days Remaining</div></div>
           <div class="balance-item"><div class="balance-num" id="bal-taken">—</div><div class="balance-label" id="lbl-bal-taken">Taken This Year</div></div>
@@ -244,7 +245,7 @@
   <script>
     let token = localStorage.getItem('ghaya_token');
     let currentUser = null, employeeData = null, lang = 'en';
-    let editingLeaveId = null, leavesCache = [];
+    let editingLeaveId = null, leavesCache = [], leaveBalance = null;
     if (!token) { window.location.href = '/login.html'; }
 
     const i18n = {
@@ -291,25 +292,35 @@
       document.getElementById('user-role').textContent = currentUser.role.replace(/_/g, ' ');
     }
 
+    async function loadLeaveBalance() {
+      const data = await api('/api/leaves/balance');
+      if (!data || data.error) return;
+      leaveBalance = data;
+      document.getElementById('stat-remaining').textContent = data.annual.remaining;
+      document.getElementById('stat-taken').textContent = data.annual.taken;
+      document.getElementById('bal-remaining').textContent = data.annual.remaining;
+      document.getElementById('bal-taken').textContent = data.annual.taken;
+      // Show accrual note (e.g. "17.6 of 30 days accrued · 2.3 years of service")
+      const note = document.getElementById('bal-accrual-note');
+      if (note) note.textContent = `${data.annual.accrued} of ${data.annual.entitlement} days accrued · ${data.years_of_service} years of service`;
+    }
+
     async function loadDashboard() {
       if (currentUser && currentUser.employee_id) {
         const d = await api(`/api/employees/${currentUser.employee_id}`);
-        if (!d.error) { employeeData = d.employee || d; document.getElementById('stat-salary').textContent = parseFloat(employeeData.basic_salary || 0).toFixed(3); }
+        if (!d.error) {
+          employeeData = d.employee || d;
+          document.getElementById('stat-salary').textContent = parseFloat(employeeData.basic_salary || 0).toFixed(3);
+        }
       }
+      await loadLeaveBalance();
       const ldata = await api('/api/leaves');
       if (!ldata.error) {
         const leaves = ldata.leaves || ldata.requests || [];
-        const year = new Date().getFullYear().toString();
-        const yearLeaves = leaves.filter(l => (l.start_date || '').startsWith(year));
-        const approvedDays = yearLeaves.filter(l => l.status === 'approved').reduce((s, l) => s + (parseInt(l.days_count || l.days_requested) || 0), 0);
-        const pendingCount = leaves.filter(l => l.status === 'pending').length;
-        const pendingDays = leaves.filter(l => l.status === 'pending').reduce((s, l) => s + (parseInt(l.days_count || l.days_requested) || 0), 0);
-        document.getElementById('stat-remaining').textContent = 30 - approvedDays;
-        document.getElementById('stat-pending').textContent = pendingCount;
-        document.getElementById('stat-taken').textContent = approvedDays;
-        document.getElementById('bal-remaining').textContent = 30 - approvedDays;
-        document.getElementById('bal-taken').textContent = approvedDays;
-        document.getElementById('bal-pending-days').textContent = pendingDays;
+        const pending = leaves.filter(l => l.status === 'pending');
+        document.getElementById('stat-pending').textContent = pending.length;
+        document.getElementById('bal-pending-days').textContent =
+          pending.reduce((s, l) => s + (parseInt(l.days_count || l.days_requested) || 0), 0);
         const recent = leaves.slice(0, 5);
         if (recent.length > 0) {
           document.getElementById('recent-leaves-body').innerHTML = `<table><thead><tr><th>Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th></tr></thead><tbody>${recent.map(l => `<tr><td>${l.type_name||l.leave_type||'—'}</td><td>${l.start_date||'—'}</td><td>${l.end_date||'—'}</td><td>${l.days_count||l.days_requested||'—'}</td><td><span class="badge badge-${l.status}">${l.status}</span></td></tr>`).join('')}</tbody></table>`;
@@ -318,12 +329,23 @@
     }
 
     async function loadLeaves(status) {
+      loadLeaveBalance();
+      const allData = await api('/api/leaves');
+      if (!allData.error) {
+        const all = allData.leaves || allData.requests || [];
+        const pending = all.filter(l => l.status === 'pending');
+        document.getElementById('bal-pending-days').textContent =
+          pending.reduce((s, l) => s + (parseInt(l.days_count || l.days_requested) || 0), 0);
+      }
       const url = (!status || status === 'all') ? '/api/leaves' : `/api/leaves?status=${status}`;
       const data = await api(url);
       const leaves = data.leaves || data.requests || [];
       leavesCache = leaves;
       const tbody = document.getElementById('leaves-tbody');
-      if (!leaves.length) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div></td></tr>`; return; }
+      if (!leaves.length) {
+        tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div></td></tr>`;
+        return;
+      }
       tbody.innerHTML = leaves.map((l, i) => `<tr><td>${l.type_name||l.leave_type||l.type||'—'}</td><td>${l.start_date||'—'}</td><td>${l.end_date||'—'}</td><td>${l.days_count||l.days_requested||'—'}</td><td><span class="badge badge-${l.status}">${l.status}</span></td><td>${l.status === 'pending' ? `<button class="action-btn action-btn-edit" onclick="editLeaveModal(leavesCache[${i}])">Edit</button><button class="action-btn action-btn-cancel" onclick="cancelLeave('${l.id}')">Cancel</button>` : '—'}</td></tr>`).join('');
     }
 
@@ -421,10 +443,8 @@
 
     document.getElementById('leave-modal').addEventListener('click', function(e) { if (e.target === this) closeLeaveModal(); });
 
-    // Show saved page immediately — no waiting for init
     const saved = localStorage.getItem('ghaya_emp_page') || 'dashboard';
     showPage(saved);
-    // Init runs in background to populate user info & sidebar
     init();
   </script>
 </body>
