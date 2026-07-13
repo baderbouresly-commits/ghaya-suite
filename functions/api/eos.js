@@ -1,5 +1,4 @@
-import { requireAuth, json, error } from '../_lib/auth.js';
-
+import { requireAuth, json, error } from './_lib/auth.js';
 function calcEOS(hireDate, basicSalary, type) {
   const now = new Date();
   const hire = new Date(hireDate);
