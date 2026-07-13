@@ -64,6 +64,8 @@ body.ar .main{margin-left:0;margin-right:240px}
 .btn-success:hover{background:#156234}
 .btn-danger{background:#fff;color:#c42a00;border:1px solid #E8472A}
 .btn-danger:hover{background:#E8472A;color:#fff}
+.btn-purple{background:#5c35b8;color:#fff}
+.btn-purple:hover{background:#4a2a9a}
 .btn-sm{padding:6px 12px;font-size:12px}
 .table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse}
@@ -78,6 +80,7 @@ tr:hover td{background:#fdf9f6}
 .badge-orange{background:#fff3e6;color:#c46a00}
 .badge-red{background:#ffeee6;color:#c42a00}
 .badge-gray{background:#f0ebe4;color:#666}
+.badge-purple{background:#f0ebff;color:#5c35b8}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
 .modal-overlay.open{opacity:1;pointer-events:all}
 .modal{background:#fff;border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
@@ -133,6 +136,9 @@ select.form-input{cursor:pointer}
 .toggle-wrap input:checked+.toggle-slider{background:#1a7a42}
 .toggle-wrap input:checked+.toggle-slider::after{left:19px}
 .info-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#e8e0d8;color:#555;font-size:11px;font-weight:800;cursor:help}
+.eos-scenario{border-radius:12px;padding:20px;text-align:center;flex:1}
+.eos-scenario.termination{background:#e6f0ff}
+.eos-scenario.resignation{background:#fff3e6}
 @media(max-width:768px){.sidebar{display:none}.main{margin-left:0!important;margin-right:0!important}.stats-grid{grid-template-columns:1fr 1fr}.content{padding:16px}.form-grid{grid-template-columns:1fr}.settings-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -191,44 +197,49 @@ select.form-input{cursor:pointer}
     </div>
   </div>
   <div class="content">
+    <!-- DASHBOARD -->
     <div id="page-dashboard" style="display:none">
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label" data-en="Total Employees" data-ar="إجمالي الموظفين">Total Employees</div><div class="stat-value" id="s-total">—</div></div>
-        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label" data-en="Active" data-ar="نشطون">Active</div><div class="stat-value" id="s-active">—</div></div>
-        <div class="stat-card"><div class="stat-icon">🌴</div><div class="stat-label" data-en="Pending Leaves" data-ar="إجازات معلقة">Pending Leaves</div><div class="stat-value" id="s-leaves">—</div></div>
-        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label" data-en="Monthly Payroll (KWD)" data-ar="الرواتب الشهرية">Monthly Payroll (KWD)</div><div class="stat-value" id="s-payroll">—</div></div>
+        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">Total Employees</div><div class="stat-value" id="s-total">—</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">Active</div><div class="stat-value" id="s-active">—</div></div>
+        <div class="stat-card"><div class="stat-icon">🌴</div><div class="stat-label">Pending Leaves</div><div class="stat-value" id="s-leaves">—</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">Monthly Payroll (KWD)</div><div class="stat-value" id="s-payroll">—</div></div>
       </div>
       <div class="section-card">
         <div class="section-header">
-          <div><div class="section-title" data-en="Recent Employees" data-ar="أحدث الموظفين">Recent Employees</div></div>
-          <button class="btn btn-primary btn-sm" onclick="showPage('employees')"><span data-en="View All" data-ar="عرض الكل">View All</span> →</button>
+          <div><div class="section-title">Recent Employees</div></div>
+          <button class="btn btn-primary btn-sm" onclick="showPage('employees')">View All →</button>
         </div>
         <div id="dash-employees"><div class="loading"><div class="spinner"></div></div></div>
       </div>
       <div class="section-card">
         <div class="section-header">
-          <div><div class="section-title" data-en="Pending Leave Requests" data-ar="طلبات الإجازة المعلقة">Pending Leave Requests</div></div>
-          <button class="btn btn-ghost btn-sm" onclick="showPage('leaves')"><span data-en="View All" data-ar="عرض الكل">View All</span></button>
+          <div><div class="section-title">Pending Leave Requests</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="showPage('leaves')">View All</button>
         </div>
         <div id="dash-leaves"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
+
+    <!-- EMPLOYEES -->
     <div id="page-employees" style="display:none">
       <div class="section-card">
         <div class="section-header">
-          <div><div class="section-title" data-en="All Employees" data-ar="جميع الموظفين">All Employees</div><div class="section-sub" id="emp-count">—</div></div>
+          <div><div class="section-title">All Employees</div><div class="section-sub" id="emp-count">—</div></div>
           <div class="section-actions">
             <input class="search-bar" id="emp-search" placeholder="Search..." oninput="filterEmployees()"/>
-            <button class="btn btn-primary" onclick="openAddEmployee()">+ <span data-en="Add Employee" data-ar="إضافة موظف">Add Employee</span></button>
+            <button class="btn btn-primary" onclick="openAddEmployee()">+ Add Employee</button>
           </div>
         </div>
         <div id="employees-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
+
+    <!-- LEAVES -->
     <div id="page-leaves" style="display:none">
       <div class="section-card">
         <div class="section-header">
-          <div><div class="section-title" data-en="Leave Requests" data-ar="طلبات الإجازة">Leave Requests</div></div>
+          <div><div class="section-title">Leave Requests</div></div>
           <div class="filter-row">
             <button class="filter-btn active" onclick="filterLeaves('pending',this)">Pending</button>
             <button class="filter-btn" onclick="filterLeaves('approved',this)">Approved</button>
@@ -240,39 +251,27 @@ select.form-input{cursor:pointer}
       </div>
       <div class="section-card">
         <div class="section-header">
-          <div>
-            <div class="section-title">Leave Balances</div>
-            <div class="section-sub">Accrued annual leave per employee (pro-rata)</div>
-          </div>
+          <div><div class="section-title">Leave Balances</div><div class="section-sub">Accrued annual leave per employee (pro-rata)</div></div>
           <button class="btn btn-ghost btn-sm" onclick="loadLeaveBalances()">↻ Refresh</button>
         </div>
         <div id="leave-balances-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
+
+    <!-- PAYROLL -->
     <div id="page-payroll" style="display:none">
       <div id="payroll-runs-view">
         <div class="section-card" style="margin-bottom:24px;">
           <div class="section-header">
-            <div>
-              <div class="section-title">Run Payroll</div>
-              <div class="section-sub">Calculates salaries + PIFSS for all active employees</div>
-            </div>
+            <div><div class="section-title">Run Payroll</div><div class="section-sub">Calculates salaries + PIFSS for all active employees</div></div>
             <div style="display:flex;gap:10px;align-items:center;">
               <select class="search-bar" id="payroll-month" style="width:130px;">
-                <option value="1">January</option><option value="2">February</option>
-                <option value="3">March</option><option value="4">April</option>
-                <option value="5">May</option><option value="6">June</option>
-                <option value="7">July</option><option value="8">August</option>
-                <option value="9">September</option><option value="10">October</option>
-                <option value="11">November</option><option value="12">December</option>
+                <option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option>
               </select>
               <select class="search-bar" id="payroll-year" style="width:90px;"></select>
               <div style="display:flex;align-items:center;gap:6px;padding:0 10px;border-left:1px solid #e8e0d8;">
                 <span style="font-size:12px;font-weight:700;color:#555;">PIFSS</span>
-                <label class="toggle-wrap">
-                  <input type="checkbox" id="pifss-toggle" checked>
-                  <span class="toggle-slider"></span>
-                </label>
+                <label class="toggle-wrap"><input type="checkbox" id="pifss-toggle" checked><span class="toggle-slider"></span></label>
                 <span class="info-icon" data-tip="Kuwaiti nationals: 8% deducted from salary + 11% employer cost. Non-Kuwaitis: exempt.">ℹ</span>
               </div>
               <button class="btn btn-primary" onclick="runPayroll()">▶ Run Payroll</button>
@@ -285,9 +284,7 @@ select.form-input{cursor:pointer}
         </div>
       </div>
       <div id="payroll-detail-view" style="display:none">
-        <div style="margin-bottom:20px;">
-          <button class="btn btn-ghost btn-sm" onclick="showPayrollList()">← Back to History</button>
-        </div>
+        <div style="margin-bottom:20px;"><button class="btn btn-ghost btn-sm" onclick="showPayrollList()">← Back to History</button></div>
         <div id="payroll-detail-summary" style="margin-bottom:24px;"></div>
         <div class="section-card">
           <div class="section-header">
@@ -298,6 +295,8 @@ select.form-input{cursor:pointer}
         </div>
       </div>
     </div>
+
+    <!-- SETTINGS -->
     <div id="page-settings" style="display:none">
       <div class="section-card">
         <div class="section-header"><div class="section-title">Departments &amp; Job Titles</div><div class="section-sub">Manage your company structure</div></div>
@@ -325,6 +324,8 @@ select.form-input{cursor:pointer}
     </div>
   </div>
 </div>
+
+<!-- MODAL: Add/Edit Employee -->
 <div class="modal-overlay" id="modal-employee">
   <div class="modal">
     <div class="modal-header">
@@ -345,23 +346,21 @@ select.form-input{cursor:pointer}
         <div class="form-row"><label class="form-label">Civil ID</label><input class="form-input" id="emp-civil-id" placeholder="28012345678"/></div>
         <div class="form-row"><label class="form-label">Nationality</label>
           <select class="form-input" id="emp-nationality">
-            <option value="Kuwaiti">Kuwaiti</option><option value="Saudi">Saudi</option><option value="Egyptian">Egyptian</option>
-            <option value="Indian">Indian</option><option value="Pakistani">Pakistani</option><option value="Bangladeshi">Bangladeshi</option>
-            <option value="Filipino">Filipino</option><option value="Sri Lankan">Sri Lankan</option><option value="Nepalese">Nepalese</option><option value="Other">Other</option>
+            <option value="Kuwaiti">Kuwaiti</option><option value="Saudi">Saudi</option><option value="Egyptian">Egyptian</option><option value="Indian">Indian</option><option value="Pakistani">Pakistani</option><option value="Bangladeshi">Bangladeshi</option><option value="Filipino">Filipino</option><option value="Sri Lankan">Sri Lankan</option><option value="Nepalese">Nepalese</option><option value="Other">Other</option>
           </select>
         </div>
       </div>
       <div class="form-grid">
         <div class="form-row"><label class="form-label">Department</label>
-          <select class="form-input" id="emp-dept-id"><option value="">— Select Department —</option></select>
+          <select class="form-input" id="emp-dept-id"><option value="">— Select —</option></select>
         </div>
         <div class="form-row"><label class="form-label">Job Title</label>
-          <select class="form-input" id="emp-job-title-id"><option value="">— Select Job Title —</option></select>
+          <select class="form-input" id="emp-job-title-id"><option value="">— Select —</option></select>
         </div>
       </div>
       <div class="form-grid">
         <div class="form-row"><label class="form-label">Basic Salary (KWD)</label><input class="form-input" id="emp-salary" type="number" step="0.001" placeholder="350.000"/></div>
-        <div class="form-row"><label class="form-label">Start Date</label><input class="form-input" id="emp-start" type="date"/></div>
+        <div class="form-row"><label class="form-label">Hire Date</label><input class="form-input" id="emp-start" type="date"/></div>
       </div>
       <div class="form-grid">
         <div class="form-row"><label class="form-label">Work Email</label><input class="form-input" id="emp-email" type="email" placeholder="ahmed@company.com"/></div>
@@ -380,13 +379,36 @@ select.form-input{cursor:pointer}
     </div>
   </div>
 </div>
+
+<!-- MODAL: End of Service Calculator -->
+<div class="modal-overlay" id="modal-eos">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="eos-emp-name">End of Service Indemnity</div>
+        <div style="font-size:11px;color:#888;margin-top:3px;">مكافأة نهاية الخدمة · Kuwait Labour Law Art. 51</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-eos')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:8px;margin-bottom:20px;background:#faf6f1;padding:6px;border-radius:10px;">
+        <button class="btn btn-primary" id="eos-btn-termination" style="flex:1;justify-content:center;" onclick="loadEOS(currentEOSId,'termination')">🔴 Terminated by Employer</button>
+        <button class="btn btn-ghost" id="eos-btn-resignation" style="flex:1;justify-content:center;" onclick="loadEOS(currentEOSId,'resignation')">📝 Resignation</button>
+      </div>
+      <div id="eos-content"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
+
 <script>
 const API='/api';
 let token=localStorage.getItem('ghaya_token');
 let currentUser=null,currentLang=localStorage.getItem('ghaya_lang')||'en';
 let employeesData=[],leavesData=[],currentLeaveFilter='pending',editingEmpId=null;
 let deptsData=[],jobTitlesData=[];
+let currentEOSId=null;
 if(!token){window.location.href='/';}
 
 async function apicall(method,path,body){
@@ -415,7 +437,7 @@ async function init(){
 }
 
 async function loadDeptsAndTitles(){
-  const [d,j]=await Promise.all([apicall('GET','/departments'),apicall('GET','/job-titles')]);
+  const[d,j]=await Promise.all([apicall('GET','/departments'),apicall('GET','/job-titles')]);
   deptsData=d?.departments||[];
   jobTitlesData=j?.job_titles||[];
 }
@@ -482,7 +504,73 @@ function filterEmployees(){
 function renderEmployeesTable(list){
   const el=document.getElementById('employees-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees found</div><div class="empty-sub">Add your first employee using the button above</div></div>';return;}
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Title / Dept</th><th>Nationality</th><th>Basic Salary</th><th>Start Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((e,i)=>`<tr><td style="color:#888;font-size:12px">${i+1}</td><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></td><td><div>${getJobTitle(e.job_title_id)}</div><div style="font-size:11px;color:#888">${getDeptName(e.department_id)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="font-size:12px;color:#888">${e.hire_date||'—'}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td><td><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button></td></tr>`).join('')}</tbody></table></div>`;
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Title / Dept</th><th>Nationality</th><th>Basic Salary</th><th>Hire Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((e,i)=>`<tr><td style="color:#888;font-size:12px">${i+1}</td><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></td><td><div>${getJobTitle(e.job_title_id)}</div><div style="font-size:11px;color:#888">${getDeptName(e.department_id)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="font-size:12px;color:#888">${e.hire_date||'—'}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button><button class="btn btn-purple btn-sm" onclick="viewEOS('${e.id}')">EOS</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+
+/* ── EOS Calculator ── */
+function viewEOS(id){
+  currentEOSId=id;
+  document.getElementById('modal-eos').classList.add('open');
+  loadEOS(id,'termination');
+}
+
+async function loadEOS(id,type){
+  document.getElementById('eos-btn-termination').className='btn '+(type==='termination'?'btn-primary':'btn-ghost')+' ';
+  document.getElementById('eos-btn-termination').style.flex='1';
+  document.getElementById('eos-btn-termination').style.justifyContent='center';
+  document.getElementById('eos-btn-resignation').className='btn '+(type==='resignation'?'btn-primary':'btn-ghost')+' ';
+  document.getElementById('eos-btn-resignation').style.flex='1';
+  document.getElementById('eos-btn-resignation').style.justifyContent='center';
+  document.getElementById('eos-content').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+
+  const data=await apicall('GET',`/eos?employee_id=${id}&type=${type}`);
+  if(!data||data.error){
+    document.getElementById('eos-content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">${data?.error||'Error loading EOS'}</div><div class="empty-sub">Make sure this employee has a hire date set</div></div>`;
+    return;
+  }
+
+  document.getElementById('eos-emp-name').textContent=`EOS — ${data.employee.name}`;
+  const kwd=n=>`KWD ${parseFloat(n).toFixed(3)}`;
+  const accentColor=data.final_indemnity>0?'#1a7a42':'#c46a00';
+  const bgColor=data.final_indemnity>0?'#e6f7ee':'#fff3e6';
+
+  document.getElementById('eos-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;">
+      <div class="stat-card" style="padding:14px;"><div class="stat-label">Hire Date</div><div style="font-size:15px;font-weight:800;margin-top:4px;">${data.employee.hire_date}</div></div>
+      <div class="stat-card" style="padding:14px;"><div class="stat-label">Years of Service</div><div style="font-size:20px;font-weight:800;margin-top:4px;">${data.years_of_service} yrs</div></div>
+      <div class="stat-card" style="padding:14px;"><div class="stat-label">Daily Wage</div><div style="font-size:15px;font-weight:800;margin-top:4px;">${kwd(data.daily_wage)}</div></div>
+    </div>
+
+    <div class="section-card" style="margin-bottom:14px;">
+      <div style="padding:16px 20px;">
+        <div style="font-size:13px;font-weight:800;margin-bottom:12px;color:#1a1a2e;">Indemnity Breakdown</div>
+        <table width="100%" style="border-collapse:collapse;font-size:13px;">
+          <tr>
+            <td style="padding:8px 0;color:#555;">First 5 years &nbsp;<span style="color:#888;font-size:11px;">(${Math.min(data.years_of_service,5).toFixed(2)} yrs × 15 days × ${kwd(data.daily_wage)}/day)</span></td>
+            <td style="text-align:right;font-weight:700;">${kwd(data.first_5_years_amount)}</td>
+          </tr>
+          ${data.beyond_5_years>0?`<tr>
+            <td style="padding:8px 0;color:#555;">Beyond 5 years &nbsp;<span style="color:#888;font-size:11px;">(${data.beyond_5_years.toFixed(2)} yrs × 30 days × ${kwd(data.daily_wage)}/day)</span></td>
+            <td style="text-align:right;font-weight:700;">${kwd(data.beyond_5_years_amount)}</td>
+          </tr>`:''}
+          <tr style="border-top:2px solid #e8e0d8;">
+            <td style="padding:12px 0 6px;font-weight:800;">Full Indemnity (before factor)</td>
+            <td style="text-align:right;font-weight:800;font-size:15px;">${kwd(data.full_indemnity)}</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 0;font-size:12px;color:#888;">${data.factor_reason}</td>
+            <td style="text-align:right;font-size:12px;color:#888;">× ${data.factor===2/3?'2/3 (66.7%)':data.factor*100+'%'}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div style="background:${bgColor};border-radius:12px;padding:22px;text-align:center;">
+      <div style="font-size:11px;font-weight:700;color:#888;letter-spacing:1px;margin-bottom:8px;">TOTAL END OF SERVICE INDEMNITY</div>
+      <div style="font-size:36px;font-weight:800;color:${accentColor};">${kwd(data.final_indemnity)}</div>
+      <div style="font-size:12px;color:#888;margin-top:6px;">Based on basic salary of ${kwd(data.employee.basic_salary)}/month · as of today</div>
+    </div>
+  `;
 }
 
 async function loadLeaves(){
@@ -504,16 +592,14 @@ function renderLeavesList(list){
 async function loadLeaveBalances(){
   const el=document.getElementById('leave-balances-list');
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const [empsData, allLeavesData]=await Promise.all([apicall('GET','/employees'),apicall('GET','/leaves')]);
+  const[empsData,allLeavesData]=await Promise.all([apicall('GET','/employees'),apicall('GET','/leaves')]);
   const employees=empsData?.employees||[];
   const allLeaves=allLeavesData?.requests||[];
   const year=new Date().getFullYear().toString();
   if(!employees.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌴</div><div class="empty-text">No employees yet</div></div>';return;}
-
-  function calcBalance(hireDate){
+  function calcBal(hireDate){
     if(!hireDate)return null;
-    const now=new Date();
-    const hire=new Date(hireDate);
+    const now=new Date(),hire=new Date(hireDate);
     if(isNaN(hire))return null;
     const yearStart=new Date(now.getFullYear(),0,1);
     const msPerYear=1000*60*60*24*365.25;
@@ -522,27 +608,17 @@ async function loadLeaveBalances(){
     const accrualStart=hire>yearStart?hire:yearStart;
     const daysAccruing=Math.max(0,(now-accrualStart)/(1000*60*60*24));
     const isLeap=new Date(now.getFullYear(),1,29).getDate()===29;
-    const daysInYear=isLeap?366:365;
-    const accrued=(daysAccruing/daysInYear)*entitlement;
+    const accrued=(daysAccruing/(isLeap?366:365))*entitlement;
     return{yearsOfService:Math.round(yearsOfService*10)/10,entitlement,accrued:Math.round(accrued*10)/10};
   }
-
   const rows=employees.map(emp=>{
     const empLeaves=allLeaves.filter(l=>l.employee_id===emp.id&&l.status==='approved'&&(l.start_date||'').startsWith(year)&&(l.leave_type==='annual'||!l.leave_type));
     const taken=empLeaves.reduce((s,l)=>s+(parseFloat(l.days_count||l.days_requested)||0),0);
-    const bal=calcBalance(emp.hire_date);
+    const bal=calcBal(emp.hire_date);
     const remaining=bal?Math.max(0,Math.round((bal.accrued-taken)*10)/10):'—';
     const remainingColor=bal&&remaining<5?'#c42a00':bal&&remaining<10?'#c46a00':'#1a7a42';
-    return`<tr>
-      <td><div style="font-weight:700">${emp.first_name_en} ${emp.last_name_en}</div><div style="font-size:11px;color:#888">${getDeptName(emp.department_id)}</div></td>
-      <td style="font-size:12px;color:#888">${bal?bal.yearsOfService+' yrs':'No hire date'}</td>
-      <td><span class="badge badge-blue">${bal?bal.entitlement+' days':'—'}</span></td>
-      <td style="font-weight:700;color:#E8472A">${bal?bal.accrued:'—'}</td>
-      <td>${taken||0}</td>
-      <td style="font-weight:800;color:${remainingColor}">${remaining}</td>
-    </tr>`;
+    return`<tr><td><div style="font-weight:700">${emp.first_name_en} ${emp.last_name_en}</div><div style="font-size:11px;color:#888">${getDeptName(emp.department_id)}</div></td><td style="font-size:12px;color:#888">${bal?bal.yearsOfService+' yrs':'No hire date'}</td><td><span class="badge badge-blue">${bal?bal.entitlement+' days':'—'}</span></td><td style="font-weight:700;color:#E8472A">${bal?bal.accrued:'—'}</td><td>${taken||0}</td><td style="font-weight:800;color:${remainingColor}">${remaining}</td></tr>`;
   }).join('');
-
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Service</th><th>Entitlement</th><th>Accrued</th><th>Taken</th><th>Remaining</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
@@ -616,12 +692,9 @@ function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem
 
 document.querySelectorAll('.info-icon').forEach(icon=>{
   icon.addEventListener('mouseenter',function(){
-    const tip=document.createElement('div');
-    tip.id='gtip';tip.style.cssText='position:fixed;background:#1a1a2e;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;line-height:1.5;width:210px;z-index:9999;pointer-events:none';
+    const tip=document.createElement('div');tip.id='gtip';tip.style.cssText='position:fixed;background:#1a1a2e;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;line-height:1.5;width:210px;z-index:9999;pointer-events:none';
     tip.textContent=this.dataset.tip;document.body.appendChild(tip);
-    const r=this.getBoundingClientRect();
-    tip.style.left=Math.max(10,r.right-215)+'px';
-    tip.style.top=(r.bottom+8)+'px';
+    const r=this.getBoundingClientRect();tip.style.left=Math.max(10,r.right-215)+'px';tip.style.top=(r.bottom+8)+'px';
   });
   icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
 });
