@@ -189,3 +189,470 @@ tr:last-child td{border-bottom:none}
           <div style="display:flex;gap:8px;align-items:center;">
             <div class="filter-row">
               <button class="
+                <!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Ghaya — Employee Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Almarai',sans-serif;background:#FAF6F1;color:#1a1a2e;min-height:100vh}
+body.ar{direction:rtl}
+.sidebar{position:fixed;top:0;left:0;width:240px;height:100vh;background:#1a1a2e;display:flex;flex-direction:column;z-index:100}
+body.ar .sidebar{left:auto;right:0}
+.sidebar-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-circle{width:36px;height:36px;border-radius:50%;background:#E8472A;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff}
+.logo-text{font-size:20px;font-weight:800;color:#fff}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:1px;margin-top:2px}
+.emp-badge{margin-top:12px;display:flex;align-items:center;gap:10px}
+.emp-avatar{width:38px;height:38px;border-radius:50%;background:#E8472A;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff;flex-shrink:0}
+.emp-name{font-size:13px;font-weight:700;color:#fff}
+.emp-role{font-size:11px;color:rgba(255,255,255,.4)}
+.nav{flex:1;padding:16px 0;overflow-y:auto}
+.nav-section{padding:8px 20px 4px;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1.5px;font-weight:700}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;transition:background .2s;color:rgba(255,255,255,.7);font-size:14px;border-left:3px solid transparent}
+body.ar .nav-item{border-left:none;border-right:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav-item.active{background:rgba(232,71,42,.15);color:#E8472A;border-left-color:#E8472A}
+body.ar .nav-item.active{border-left-color:transparent;border-right-color:#E8472A}
+.nav-icon{font-size:16px;width:20px;text-align:center}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.1)}
+.sign-out-btn{width:100%;padding:10px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-family:'Almarai',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.sign-out-btn:hover{background:rgba(232,71,42,.2);color:#E8472A;border-color:#E8472A}
+.main{margin-left:240px;min-height:100vh}
+body.ar .main{margin-left:0;margin-right:240px}
+.topbar{background:#fff;border-bottom:1px solid #e8e0d8;padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.page-title{font-size:18px;font-weight:800}
+.lang-toggle{display:flex;border:1px solid #e8e0d8;border-radius:8px;overflow:hidden}
+.lang-btn{padding:6px 14px;font-size:12px;font-family:'Almarai',sans-serif;cursor:pointer;border:none;background:#fff;color:#666;font-weight:700;transition:all .2s}
+.lang-btn.active{background:#1a1a2e;color:#fff}
+.content{padding:32px}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:#fff;border-radius:12px;padding:20px;border:1px solid #e8e0d8;text-align:center}
+.stat-label{font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;margin-bottom:8px}
+.stat-value{font-size:32px;font-weight:800;color:#1a1a2e}
+.section-card{background:#fff;border-radius:12px;border:1px solid #e8e0d8;margin-bottom:24px;overflow:hidden}
+.section-header{padding:20px 24px;border-bottom:1px solid #f0ebe4;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.section-title{font-size:15px;font-weight:800}
+.section-sub{font-size:12px;color:#888;margin-top:2px}
+.btn{padding:9px 18px;border-radius:8px;font-family:'Almarai',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:#E8472A;color:#fff}
+.btn-primary:hover{background:#d03d22}
+.btn-ghost{background:#f5f0eb;color:#1a1a2e;border:1px solid #e8e0d8}
+.btn-ghost:hover{background:#e8e0d8}
+.btn-sm{padding:6px 12px;font-size:12px}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 20px;text-align:left;font-size:11px;font-weight:700;color:#888;letter-spacing:.5px;border-bottom:1px solid #f0ebe4;background:#faf6f1}
+body.ar th{text-align:right}
+td{padding:13px 20px;font-size:13px;border-bottom:1px solid #f5f0eb;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-green{background:#e6f7ee;color:#1a7a42}
+.badge-orange{background:#fff3e6;color:#c46a00}
+.badge-red{background:#ffeee6;color:#c42a00}
+.badge-gray{background:#f0ebe4;color:#666}
+.badge-blue{background:#e6f0ff;color:#1a4da0}
+.badge-purple{background:#f0ebff;color:#5c35b8}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-header{padding:24px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:17px;font-weight:800}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#888;padding:4px}
+.modal-body{padding:24px}
+.modal-footer{padding:0 24px 24px;display:flex;gap:10px;justify-content:flex-end}
+.form-row{margin-bottom:14px}
+.form-label{display:block;font-size:12px;font-weight:700;color:#555;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
+.form-input{width:100%;padding:10px 14px;border:1px solid #e8e0d8;border-radius:8px;font-family:'Almarai',sans-serif;font-size:14px;color:#1a1a2e;background:#faf6f1;transition:border .2s}
+.form-input:focus{outline:none;border-color:#E8472A;background:#fff}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.filter-btn{padding:5px 14px;border-radius:20px;font-family:'Almarai',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #e8e0d8;background:#fff;color:#888;transition:all .2s}
+.filter-btn.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.empty{padding:48px 24px;text-align:center;color:#888}
+.empty-icon{font-size:40px;margin-bottom:10px}
+.empty-text{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
+.loading{display:flex;align-items:center;justify-content:center;padding:48px;color:#888;font-size:14px;gap:8px}
+.spinner{width:20px;height:20px;border:2px solid #e8e0d8;border-top-color:#E8472A;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:#1a7a42}
+.toast.error{background:#c42a00}
+.balance-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:20px 24px}
+.balance-card{background:#faf6f1;border-radius:10px;padding:16px;text-align:center;border:1px solid #f0ebe4}
+.balance-num{font-size:28px;font-weight:800;color:#1a1a2e;margin-bottom:4px}
+.balance-label{font-size:11px;color:#888;font-weight:700;letter-spacing:.5px}
+.profile-grid{display:grid;grid-template-columns:1fr 1fr}
+.profile-field{padding:14px 24px;border-bottom:1px solid #f5f0eb}
+.profile-field:nth-child(odd){border-right:1px solid #f5f0eb}
+.profile-key{font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;margin-bottom:4px}
+.profile-val{font-size:14px;font-weight:700}
+.eos-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:20px 24px}
+.eos-card{border-radius:12px;padding:20px;text-align:center}
+.eos-card.termination{background:#fff3f0;border:2px solid #E8472A30}
+.eos-card.resignation{background:#f0f4ff;border:2px solid #1a4da030}
+.eos-card-icon{font-size:24px;margin-bottom:8px}
+.eos-card-type{font-size:11px;font-weight:700;letter-spacing:.5px;color:#888;margin-bottom:6px}
+.eos-card-amount{font-size:24px;font-weight:800;margin-bottom:6px}
+.eos-card-note{font-size:11px;color:#888;line-height:1.5}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0!important;margin-right:0!important}.stats-grid{grid-template-columns:1fr 1fr}.content{padding:16px}.form-grid{grid-template-columns:1fr}.profile-grid{grid-template-columns:1fr}.eos-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-row">
+      <div class="logo-circle">غ</div>
+      <div><div class="logo-text">Ghaya <span style="font-size:13px;opacity:.6">غاية</span></div><div class="logo-sub">EMPLOYEE PORTAL</div></div>
+    </div>
+    <div class="emp-badge">
+      <div class="emp-avatar" id="sidebar-avatar">?</div>
+      <div><div class="emp-name" id="sidebar-name">Loading...</div><div class="emp-role">Employee</div></div>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">OVERVIEW</div>
+    <div class="nav-item" onclick="showPage('dashboard')" id="nav-dashboard"><span class="nav-icon">📊</span><span>Dashboard</span></div>
+    <div class="nav-section" style="margin-top:8px">MY HR</div>
+    <div class="nav-item" onclick="showPage('leaves')" id="nav-leaves"><span class="nav-icon">🌴</span><span>My Leaves</span></div>
+    <div class="nav-item" onclick="showPage('payslips')" id="nav-payslips"><span class="nav-icon">💰</span><span>My Payslips</span></div>
+    <div class="nav-item" onclick="showPage('profile')" id="nav-profile"><span class="nav-icon">👤</span><span>My Profile</span></div>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="sign-out-btn" onclick="logout()">Sign Out ↩</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">Dashboard</div>
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="btn-ar" onclick="setLang('ar')">ع</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" style="display:none">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Basic Salary (KWD)</div><div class="stat-value" id="stat-salary">—</div></div>
+        <div class="stat-card"><div class="stat-label">Leave Days Remaining</div><div class="stat-value" id="stat-remaining">—</div></div>
+        <div class="stat-card"><div class="stat-label">Pending Requests</div><div class="stat-value" id="stat-pending">0</div></div>
+      </div>
+      <div class="section-card">
+        <div class="section-header"><div class="section-title">Recent Leave Requests</div><button class="btn btn-ghost btn-sm" onclick="showPage('leaves')">View All</button></div>
+        <div id="recent-leaves-body"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- LEAVES -->
+    <div id="page-leaves" style="display:none">
+      <div class="section-card" style="margin-bottom:24px;">
+        <div class="section-header"><div class="section-title">Leave Balance</div></div>
+        <div class="balance-grid">
+          <div class="balance-card"><div class="balance-num" id="bal-remaining">—</div><div class="balance-label">Days Remaining</div></div>
+          <div class="balance-card"><div class="balance-num" id="bal-taken">—</div><div class="balance-label">Taken This Year</div></div>
+          <div class="balance-card"><div class="balance-num" id="bal-pending-days" style="color:#c46a00">0</div><div class="balance-label">Pending Days</div></div>
+        </div>
+        <div style="padding:0 24px 16px;text-align:center;font-size:12px;color:#888;" id="bal-accrual-note"></div>
+      </div>
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">Leave History</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="filter-btn active" onclick="filterLeaves('all',this)">All</button>
+            <button class="filter-btn" onclick="filterLeaves('pending',this)">Pending</button>
+            <button class="filter-btn" onclick="filterLeaves('approved',this)">Approved</button>
+            <button class="filter-btn" onclick="filterLeaves('rejected',this)">Rejected</button>
+            <button class="btn btn-primary btn-sm" onclick="openLeaveModal()">+ Request Leave</button>
+          </div>
+        </div>
+        <div id="leaves-table"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- PAYSLIPS -->
+    <div id="page-payslips" style="display:none">
+      <div class="section-card">
+        <div class="section-header"><div class="section-title">My Payslips</div></div>
+        <div id="payslips-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="page-profile" style="display:none">
+      <div class="section-card" style="margin-bottom:24px;">
+        <div class="section-header"><div class="section-title">My Information</div></div>
+        <div class="profile-grid" id="profile-fields"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+
+      <!-- EOS SECTION -->
+      <div class="section-card">
+        <div class="section-header">
+          <div>
+            <div class="section-title">End of Service Indemnity</div>
+            <div class="section-sub">مكافأة نهاية الخدمة · Kuwait Labour Law Art. 51 · estimated as of today</div>
+          </div>
+        </div>
+        <div id="eos-profile-content"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: Leave Request -->
+<div class="modal-overlay" id="modal-leave">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Request Leave</div>
+      <button class="modal-close" onclick="closeModal('modal-leave')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">Leave Type</label>
+        <select class="form-input" id="leave-type">
+          <option value="annual">Annual Leave</option>
+          <option value="sick">Sick Leave</option>
+          <option value="emergency">Emergency Leave</option>
+          <option value="unpaid">Unpaid Leave</option>
+        </select>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Start Date</label><input class="form-input" id="leave-start" type="date"/></div>
+        <div class="form-row"><label class="form-label">End Date</label><input class="form-input" id="leave-end" type="date"/></div>
+      </div>
+      <div class="form-row"><label class="form-label">Reason (optional)</label><textarea class="form-input" id="leave-reason" rows="3" placeholder="Brief reason for leave..."></textarea></div>
+      <div id="leave-days-preview" style="background:#faf6f1;border-radius:8px;padding:12px;text-align:center;font-size:14px;font-weight:700;color:#1a1a2e;display:none;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-leave')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitLeave()">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API='/api';
+let token=localStorage.getItem('ghaya_token');
+let currentUser=null,employeeData=null,leaveBalance=null,currentLang=localStorage.getItem('ghaya_lang')||'en';
+let allLeaves=[],currentLeaveFilter='all';
+if(!token){window.location.href='/';}
+
+async function api(path,method='GET',body){
+  try{
+    const res=await fetch(API+path,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:body?JSON.stringify(body):undefined});
+    if(res.status===401){logout();return null;}
+    return await res.json();
+  }catch(e){return null;}
+}
+
+async function init(){
+  const me=await api('/auth/me');
+  if(!me||me.error){logout();return;}
+  currentUser=me.user;
+  const name=me.user.name||me.user.email;
+  document.getElementById('sidebar-name').textContent=name;
+  document.getElementById('sidebar-avatar').textContent=name[0].toUpperCase();
+  setLang(currentLang,false);
+}
+
+function showPage(page){
+  localStorage.setItem('ghaya_emp_page',page);
+  ['dashboard','leaves','payslips','profile'].forEach(p=>{
+    document.getElementById('page-'+p).style.display=p===page?'':'none';
+    const nav=document.getElementById('nav-'+p);
+    if(nav)nav.classList.toggle('active',p===page);
+  });
+  const titles={dashboard:'Dashboard',leaves:'My Leaves',payslips:'My Payslips',profile:'My Profile'};
+  document.getElementById('page-title').textContent=titles[page]||page;
+  if(page==='dashboard')loadDashboard();
+  if(page==='leaves')loadLeaves();
+  if(page==='payslips')loadPayslips();
+  if(page==='profile'){loadProfile();loadEOSProfile();}
+}
+
+async function loadLeaveBalance(){
+  const data=await api('/leaves/balance');
+  if(!data||data.error)return;
+  leaveBalance=data;
+  document.getElementById('stat-remaining').textContent=data.annual.remaining;
+  document.getElementById('bal-remaining').textContent=data.annual.remaining;
+  document.getElementById('bal-taken').textContent=data.annual.taken;
+  const note=document.getElementById('bal-accrual-note');
+  if(note)note.textContent=`${data.annual.accrued} of ${data.annual.entitlement} days accrued · ${data.years_of_service} years of service`;
+}
+
+async function loadDashboard(){
+  if(currentUser&&currentUser.employee_id){
+    const d=await api(`/employees/${currentUser.employee_id}`);
+    if(d&&!d.error){employeeData=d.employee||d;document.getElementById('stat-salary').textContent=parseFloat(employeeData.basic_salary||0).toFixed(3);}
+  }
+  await loadLeaveBalance();
+  const ldata=await api('/leaves');
+  if(ldata&&!ldata.error){
+    const leaves=ldata.leaves||ldata.requests||[];
+    const pending=leaves.filter(l=>l.status==='pending');
+    document.getElementById('stat-pending').textContent=pending.length;
+    document.getElementById('bal-pending-days').textContent=pending.reduce((s,l)=>s+(parseInt(l.days_count||l.days_requested)||0),0);
+    const recent=leaves.slice(0,5);
+    const el=document.getElementById('recent-leaves-body');
+    if(!recent.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests yet</div></div>';return;}
+    const badge={pending:'badge-orange',approved:'badge-green',rejected:'badge-red',cancelled:'badge-gray'};
+    el.innerHTML=`<table><thead><tr><th>Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th></tr></thead><tbody>${recent.map(l=>`<tr><td style="font-weight:700">${formatLeaveType(l.leave_type)}</td><td>${l.start_date}</td><td>${l.end_date}</td><td>${l.days_count||l.days_requested||'—'}</td><td><span class="badge ${badge[l.status]||'badge-gray'}">${l.status}</span></td></tr>`).join('')}</tbody></table>`;
+  }
+}
+
+async function loadLeaves(){
+  await loadLeaveBalance();
+  const ldata=await api('/leaves');
+  if(!ldata||ldata.error){document.getElementById('leaves-table').innerHTML='<div class="empty"><div class="empty-text">Error loading leaves</div></div>';return;}
+  allLeaves=ldata.leaves||ldata.requests||[];
+  renderLeavesTable(allLeaves);
+}
+
+function filterLeaves(status,btn){
+  currentLeaveFilter=status;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLeavesTable(status==='all'?allLeaves:allLeaves.filter(l=>l.status===status));
+}
+
+function renderLeavesTable(list){
+  const el=document.getElementById('leaves-table');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div>';return;}
+  const badge={pending:'badge-orange',approved:'badge-green',rejected:'badge-red',cancelled:'badge-gray'};
+  el.innerHTML=`<table><thead><tr><th>Type</th><th>Start</th><th>End</th><th>Days</th><th>Reason</th><th>Status</th><th></th></tr></thead><tbody>${list.map(l=>`<tr><td style="font-weight:700">${formatLeaveType(l.leave_type)}</td><td>${l.start_date}</td><td>${l.end_date}</td><td>${l.days_count||l.days_requested||'—'}</td><td style="color:#888;font-size:12px">${l.reason||'—'}</td><td><span class="badge ${badge[l.status]||'badge-gray'}">${l.status}</span></td><td>${l.status==='pending'?`<button class="btn btn-ghost btn-sm" onclick="cancelLeave('${l.id}')">Cancel</button>`:'—'}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function formatLeaveType(t){const m={annual:'Annual Leave',sick:'Sick Leave',emergency:'Emergency Leave',unpaid:'Unpaid Leave'};return m[t]||t||'Annual Leave';}
+
+async function loadPayslips(){
+  const data=await api('/payroll/my-payslips');
+  const el=document.getElementById('payslips-list');
+  const payslips=data?.payslips||[];
+  if(!payslips.length){el.innerHTML='<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">No payslips yet</div><div class="empty-sub">Your payslips will appear here once payroll is processed</div></div>';return;}
+  const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  el.innerHTML=`<table><thead><tr><th>Period</th><th>Basic Salary</th><th>PIFSS (8%)</th><th>Net Pay</th><th>Status</th></tr></thead><tbody>${payslips.map(p=>`<tr><td style="font-weight:700">${MONTHS[(p.period_month||1)-1]} ${p.period_year}</td><td>KWD ${parseFloat(p.basic_salary||0).toFixed(3)}</td><td style="color:#E8472A">${p.pifss_employee>0?`- KWD ${parseFloat(p.pifss_employee).toFixed(3)}`:'—'}</td><td style="font-weight:800;color:#1a7a42">KWD ${parseFloat(p.net_salary||0).toFixed(3)}</td><td><span class="badge badge-green">Published</span></td></tr>`).join('')}</tbody></table>`;
+}
+
+async function loadProfile(){
+  const el=document.getElementById('profile-fields');
+  if(!currentUser?.employee_id){el.innerHTML='<div class="empty"><div class="empty-text">No employee record linked</div></div>';return;}
+  const d=await api(`/employees/${currentUser.employee_id}`);
+  if(!d||d.error){el.innerHTML='<div class="empty"><div class="empty-text">Error loading profile</div></div>';return;}
+  const emp=d.employee||d;
+  employeeData=emp;
+  const fields=[
+    ['Full Name (EN)',`${emp.first_name_en||''} ${emp.last_name_en||''}`],
+    ['Full Name (AR)',`${emp.first_name_ar||''} ${emp.last_name_ar||''}`],
+    ['Civil ID',emp.civil_id||'—'],
+    ['Nationality',emp.nationality||'—'],
+    ['Work Email',emp.work_email||'—'],
+    ['Phone',emp.mobile||'—'],
+    ['Hire Date',emp.hire_date||'—'],
+    ['Contract Type',emp.employment_type?.replace('_',' ')||'—'],
+    ['Basic Salary',emp.basic_salary?`KWD ${parseFloat(emp.basic_salary).toFixed(3)}`:'—'],
+    ['Status',emp.status==='active'?'<span class="badge badge-green">Active</span>':'<span class="badge badge-gray">Inactive</span>'],
+  ];
+  el.innerHTML=fields.map(([k,v])=>`<div class="profile-field"><div class="profile-key">${k}</div><div class="profile-val">${v}</div></div>`).join('');
+}
+
+async function loadEOSProfile(){
+  const el=document.getElementById('eos-profile-content');
+  if(!currentUser?.employee_id){el.innerHTML='<div class="empty"><div class="empty-text">No employee record</div></div>';return;}
+
+  const[termData,resignData]=await Promise.all([
+    api(`/eos?type=termination`),
+    api(`/eos?type=resignation`)
+  ]);
+
+  if(!termData||termData.error){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">${termData?.error||'Could not calculate EOS'}</div><div class="empty-sub">Make sure your hire date is set in your profile</div></div>`;
+    return;
+  }
+
+  const kwd=n=>`KWD ${parseFloat(n).toFixed(3)}`;
+
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:20px 24px;border-bottom:1px solid #f0ebe4;">
+      <div style="text-align:center;"><div style="font-size:11px;font-weight:700;color:#888;letter-spacing:.5px;margin-bottom:6px;">HIRE DATE</div><div style="font-size:15px;font-weight:800;">${termData.employee.hire_date}</div></div>
+      <div style="text-align:center;"><div style="font-size:11px;font-weight:700;color:#888;letter-spacing:.5px;margin-bottom:6px;">YEARS OF SERVICE</div><div style="font-size:22px;font-weight:800;">${termData.years_of_service}</div></div>
+      <div style="text-align:center;"><div style="font-size:11px;font-weight:700;color:#888;letter-spacing:.5px;margin-bottom:6px;">DAILY WAGE</div><div style="font-size:15px;font-weight:800;">${kwd(termData.daily_wage)}</div></div>
+    </div>
+    <div class="eos-grid">
+      <div class="eos-card termination">
+        <div class="eos-card-icon">🔴</div>
+        <div class="eos-card-type">IF TERMINATED BY EMPLOYER</div>
+        <div class="eos-card-amount" style="color:#E8472A;">${kwd(termData.final_indemnity)}</div>
+        <div class="eos-card-note">${termData.factor_reason}</div>
+      </div>
+      <div class="eos-card resignation">
+        <div class="eos-card-icon">📝</div>
+        <div class="eos-card-type">IF YOU RESIGN</div>
+        <div class="eos-card-amount" style="color:#1a4da0;">${kwd(resignData?.final_indemnity||0)}</div>
+        <div class="eos-card-note">${resignData?.factor_reason||'—'}</div>
+      </div>
+    </div>
+    <div style="padding:12px 24px 20px;text-align:center;">
+      <div style="font-size:11px;color:#aaa;">Breakdown: First 5 yrs × 15 days + Beyond 5 yrs × 30 days · Based on basic salary ${kwd(termData.employee.basic_salary)}/month · Kuwait Labour Law Art. 51</div>
+    </div>
+  `;
+}
+
+function openLeaveModal(){
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('leave-start').value=today;
+  document.getElementById('leave-end').value=today;
+  document.getElementById('leave-reason').value='';
+  document.getElementById('leave-days-preview').style.display='none';
+  document.getElementById('modal-leave').classList.add('open');
+}
+
+document.addEventListener('change',e=>{
+  if(e.target.id==='leave-start'||e.target.id==='leave-end'){
+    const s=document.getElementById('leave-start').value;
+    const en=document.getElementById('leave-end').value;
+    if(s&&en){
+      const days=Math.round((new Date(en)-new Date(s))/(1000*60*60*24))+1;
+      const prev=document.getElementById('leave-days-preview');
+      if(days>0){prev.style.display='';prev.textContent=`${days} day${days>1?'s':''} requested`;}
+      else{prev.style.display='none';}
+    }
+  }
+});
+
+async function submitLeave(){
+  const type=document.getElementById('leave-type').value;
+  const start=document.getElementById('leave-start').value;
+  const end=document.getElementById('leave-end').value;
+  const reason=document.getElementById('leave-reason').value.trim();
+  if(!start||!end){showToast('Select start and end dates','error');return;}
+  const days=Math.round((new Date(end)-new Date(start))/(1000*60*60*24))+1;
+  if(days<1){showToast('End date must be after start date','error');return;}
+  const res=await api('/leaves','POST',{leave_type:type,start_date:start,end_date:end,days_requested:days,reason});
+  if(res&&!res.error){showToast('Leave request submitted ✓','success');closeModal('modal-leave');loadLeaves();}
+  else showToast(res?.error||'Error submitting request','error');
+}
+
+async function cancelLeave(id){
+  const res=await api('/leaves/'+id,'DELETE');
+  if(res&&!res.error){showToast('Request cancelled','success');loadLeaves();}
+  else showToast(res?.error||'Error','error');
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function setLang(lang,save=true){currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);document.body.classList.toggle('ar',lang==='ar');document.getElementById('btn-en').classList.toggle('active',lang==='en');document.getElementById('btn-ar').classList.toggle('active',lang==='ar');}
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3000);}
+function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem('ghaya_user');localStorage.removeItem('ghaya_emp_page');window.location.href='/';}
+
+const saved=localStorage.getItem('ghaya_emp_page')||'dashboard';
+showPage(saved);
+init();
+</script>
+</body>
+</html>
