@@ -543,6 +543,8 @@ async function init(){
   for(let y=now.getFullYear();y>=now.getFullYear()-3;y--){const o=document.createElement('option');o.value=y;o.textContent=y;yr.appendChild(o);}
   document.getElementById('payroll-month').value=now.getMonth()+1;
   setLang(currentLang,false);
+  const saved=localStorage.getItem('ghaya_page')||'dashboard';
+showPage(saved);
 }
 
 async function loadDeptsAndTitles(){
@@ -947,8 +949,6 @@ document.querySelectorAll('.info-icon').forEach(icon=>{
   icon.addEventListener('mouseenter',function(){const tip=document.createElement('div');tip.id='gtip';tip.style.cssText='position:fixed;background:#1a1a2e;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;line-height:1.5;width:210px;z-index:9999;pointer-events:none';tip.textContent=this.dataset.tip;document.body.appendChild(tip);const r=this.getBoundingClientRect();tip.style.left=Math.max(10,r.right-215)+'px';tip.style.top=(r.bottom+8)+'px';});
   icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
 });
-const saved=localStorage.getItem('ghaya_page')||'dashboard';
-showPage(saved);
 init();
 </script>
 </body>
