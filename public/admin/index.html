@@ -330,6 +330,30 @@ select.form-input{cursor:pointer}
     <!-- SETTINGS -->
     <div id="page-settings" style="display:none">
       <div class="section-card" style="margin-bottom:24px;">
+        <div class="section-header">
+          <div><div class="section-title">Workplace Geofencing</div><div class="section-sub">Restrict clock in/out to within a set distance of your workplace</div></div>
+          <label class="toggle-wrap" style="gap:8px;">
+            <input type="checkbox" id="geofence-enabled" onchange="toggleGeofenceFields()"/>
+            <span class="toggle-slider"></span>
+            <span style="font-size:13px;font-weight:700;color:#1a1a2e;" id="geofence-toggle-label">Off</span>
+          </label>
+        </div>
+        <div id="geofence-fields" style="padding:20px 24px;display:none;">
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+            <div><div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px;">LATITUDE</div><input class="form-input" id="workplace-lat" type="number" step="any" placeholder="29.3759" style="width:160px;"/></div>
+            <div><div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px;">LONGITUDE</div><input class="form-input" id="workplace-lng" type="number" step="any" placeholder="47.9774" style="width:160px;"/></div>
+            <button class="btn btn-ghost" onclick="useMyLocation()">📍 Use My Location</button>
+          </div>
+          <div style="margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px;">RADIUS — <span id="radius-label">200</span>m</div>
+            <input type="range" id="geofence-radius" min="50" max="1000" step="50" value="200" style="width:300px;" oninput="document.getElementById('radius-label').textContent=this.value"/>
+            <div style="display:flex;justify-content:space-between;width:300px;font-size:11px;color:#aaa;margin-top:2px;"><span>50m</span><span>500m</span><span>1000m</span></div>
+          </div>
+          <div id="geofence-location-preview" style="font-size:12px;color:#888;margin-bottom:16px;"></div>
+          <button class="btn btn-primary" onclick="saveGeofenceSettings()">Save Geofencing</button>
+        </div>
+      </div>
+      <div class="section-card" style="margin-bottom:24px;">
         <div class="section-header"><div class="section-title">Work Schedule</div><div class="section-sub">Default hours used for attendance tracking</div></div>
         <div style="padding:20px 24px;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;">
           <div><div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px;">START TIME</div><input class="form-input" id="work-start" type="time" style="width:120px;" value="08:00"/></div>
@@ -513,7 +537,7 @@ function showPage(page){
   if(page==='leaves'){loadLeaves();loadLeaveBalances();}
   if(page==='permissions'){loadPerms();loadPermUsage();}
   if(page==='payroll')loadPayroll();
-  if(page==='settings'){renderSettings();loadPermSettings();loadWorkSchedule();}
+if(page==='settings'){renderSettings();loadPermSettings();loadWorkSchedule();loadGeofenceSettings();}
 }
 
 async function loadDashboard(){
@@ -829,13 +853,48 @@ async function markAsPaid(id){const res=await apicall('PUT','/payroll/'+id,{acti
 async function deletePayrollRun(id){if(!confirm('Delete this payroll run?'))return;const res=await apicall('DELETE','/payroll/'+id);if(!res||res.error){showToast(res?.error||'Error','error');return;}showToast('Deleted','success');showPayrollList();loadPayroll();}
 
 function renderSettings(){renderDeptList();renderJTList();}
-function renderDeptList(){const el=document.getElementById('dept-list');if(!deptsData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No departments yet</div>';return;}el.innerHTML=deptsData.map(d=>`<div class="tag-item"><div><div class="tag-item-name">${d.name_en}</div><div class="tag-item-ar">${d.name_ar||''}</div></div><button class="tag-delete" onclick="deleteDept('${d.id}')">✕</button></div>`).join('');}
-function renderJTList(){const el=document.getElementById('jt-list');if(!jobTitlesData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No job titles yet</div>';return;}el.innerHTML=jobTitlesData.map(j=>`<div class="tag-item"><div><div class="tag-item-name">${j.title_en}</div><div class="tag-item-ar">${j.title_ar||''}</div></div><button class="tag-delete" onclick="deleteJobTitle('${j.id}')">✕</button></div>`).join('');}
-async function addDept(){const en=document.getElementById('new-dept-en').value.trim();const ar=document.getElementById('new-dept-ar').value.trim();if(!en){showToast('Enter department name','error');return;}const res=await apicall('POST','/departments',{name_en:en,name_ar:ar});if(res&&res.department){deptsData.push(res.department);renderDeptList();document.getElementById('new-dept-en').value='';document.getElementById('new-dept-ar').value='';showToast('Department added ✓','success');}else showToast('Error adding department','error');}
-async function addJobTitle(){const en=document.getElementById('new-jt-en').value.trim();const ar=document.getElementById('new-jt-ar').value.trim();if(!en){showToast('Enter job title','error');return;}const res=await apicall('POST','/job-titles',{title_en:en,title_ar:ar});if(res&&res.job_title){jobTitlesData.push(res.job_title);renderJTList();document.getElementById('new-jt-en').value='';document.getElementById('new-jt-ar').value='';showToast('Job title added ✓','success');}else showToast('Error adding job title','error');}
-async function deleteDept(id){const res=await apicall('DELETE','/departments/'+id);if(res&&res.success){deptsData=deptsData.filter(d=>d.id!==id);renderDeptList();showToast('Deleted','success');}else showToast('Error','error');}
-async function deleteJobTitle(id){const res=await apicall('DELETE','/job-titles/'+id);if(res&&res.success){jobTitlesData=jobTitlesData.filter(j=>j.id!==id);renderJTList();showToast('Deleted','success');}else showToast('Error','error');}
 
+function toggleGeofenceFields(){
+  const enabled=document.getElementById('geofence-enabled').checked;
+  document.getElementById('geofence-fields').style.display=enabled?'':'none';
+  document.getElementById('geofence-toggle-label').textContent=enabled?'On':'Off';
+}
+
+function useMyLocation(){
+  if(!navigator.geolocation){alert('Geolocation not supported');return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    document.getElementById('workplace-lat').value=pos.coords.latitude.toFixed(6);
+    document.getElementById('workplace-lng').value=pos.coords.longitude.toFixed(6);
+    document.getElementById('geofence-location-preview').textContent=`📍 ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)} — accuracy ±${Math.round(pos.coords.accuracy)}m`;
+  },()=>alert('Could not get location'));
+}
+
+async function loadGeofenceSettings(){
+  if(!currentUser?.company_id)return;
+  const co=await apicall('GET','/companies/'+currentUser.company_id);
+  if(co?.company){
+    const c=co.company;
+    document.getElementById('geofence-enabled').checked=!!c.geofence_enabled;
+    if(c.workplace_lat)document.getElementById('workplace-lat').value=c.workplace_lat;
+    if(c.workplace_lng)document.getElementById('workplace-lng').value=c.workplace_lng;
+    if(c.geofence_radius_meters){document.getElementById('geofence-radius').value=c.geofence_radius_meters;document.getElementById('radius-label').textContent=c.geofence_radius_meters;}
+    toggleGeofenceFields();
+  }
+}
+
+async function saveGeofenceSettings(){
+  const geofence_enabled=document.getElementById('geofence-enabled').checked?1:0;
+  const workplace_lat=parseFloat(document.getElementById('workplace-lat').value)||null;
+  const workplace_lng=parseFloat(document.getElementById('workplace-lng').value)||null;
+  const geofence_radius_meters=parseInt(document.getElementById('geofence-radius').value)||200;
+  if(geofence_enabled&&(!workplace_lat||!workplace_lng)){showToast('Set workplace location first','error');return;}
+  const current=await apicall('GET','/companies/'+currentUser.company_id);
+  const body=Object.assign({},current?.company||{},{geofence_enabled,workplace_lat,workplace_lng,geofence_radius_meters});
+  const res=await apicall('PUT','/companies/'+currentUser.company_id,body);
+  if(res&&!res.error)showToast('Geofencing saved ✓','success');
+  else showToast(res?.error||'Error','error');
+}
+  
 function populateDropdowns(){
   const deptSel=document.getElementById('emp-dept-id');
   const jtSel=document.getElementById('emp-job-title-id');
