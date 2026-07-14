@@ -1,221 +1,236 @@
-// functions/api/attendance/[[route]].js — self-contained, no imports
-const enc = new TextEncoder();
-
-function parseB64u(str) {
-  str = str.replace(/-/g, '+').replace(/_/g, '/');
-  while (str.length % 4) str += '=';
-  return Uint8Array.from(atob(str), c => c.charCodeAt(0));
-}
-
-async function verifyJWT(token, secret) {
-  try {
-    const [h, b, sig] = token.split('.');
-    if (!h || !b || !sig) return null;
-    const key = await crypto.subtle.importKey('raw', enc.encode(secret), {name:'HMAC',hash:'SHA-256'}, false, ['verify']);
-    const valid = await crypto.subtle.verify('HMAC', key, parseB64u(sig), enc.encode(`${h}.${b}`));
-    if (!valid) return null;
-    const payload = JSON.parse(new TextDecoder().decode(parseB64u(b)));
-    if (payload.exp < Math.floor(Date.now()/1000)) return null;
-    return payload;
-  } catch { return null; }
-}
-
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
-}
-
-function getToday() {
-  return new Date().toISOString().split('T')[0];
-}
-
-function getKuwaitTime() {
-  return new Date().toLocaleString('en-GB', { timeZone: 'Asia/Kuwait', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-}
-
-function calcHours(clockIn, clockOut) {
-  if (!clockIn || !clockOut) return null;
-  const [ih, im, is_] = clockIn.split(':').map(Number);
-  const [oh, om, os] = clockOut.split(':').map(Number);
-  return Math.round(((oh * 3600 + om * 60 + os) - (ih * 3600 + im * 60 + is_)) / 36) / 100;
-}
-
-function getStatus(clockIn, workStart, lateThreshold) {
-  if (!clockIn) return 'absent';
-  const [ih, im] = clockIn.split(':').map(Number);
-  const [wh, wm] = workStart.split(':').map(Number);
-  const diffMinutes = (ih * 60 + im) - (wh * 60 + wm);
-  if (diffMinutes > (lateThreshold || 15)) return 'late';
-  return 'present';
-}
-
-export async function onRequest({ request, env, params }) {
-  const auth = request.headers.get('Authorization') || '';
-  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
-  if (!token) return json({ error: 'Unauthorized' }, 401);
-  const user = await verifyJWT(token, env.JWT_SECRET);
-  if (!user) return json({ error: 'Token expired or invalid' }, 401);
-
-  const route = params.route || [];
-  const seg = route[0] || null;
-  const method = request.method;
-  const isAdmin = ['ghaya_admin', 'company_admin', 'manager'].includes(user.role);
+export async function onRequest(context) {
+  const { request, env } = context;
   const url = new URL(request.url);
+  const parts = url.pathname.replace('/api/attendance', '').split('/').filter(Boolean);
+  const method = request.method;
+
+  // ── JWT verify ────────────────────────────────────────────
+  const auth = request.headers.get('Authorization') || '';
+  const token = auth.replace('Bearer ', '');
+  if (!token) return json({ error: 'Unauthorized' }, 401);
+  let payload;
+  try {
+    const [h, p, s] = token.split('.');
+    const sig = await crypto.subtle.importKey('raw', new TextEncoder().encode(env.JWT_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+    const valid = await crypto.subtle.verify('HMAC', sig, b64url(s), new TextEncoder().encode(h + '.' + p));
+    if (!valid) return json({ error: 'Unauthorized' }, 401);
+    payload = JSON.parse(atob(p.replace(/-/g, '+').replace(/_/g, '/')));
+    if (payload.exp < Math.floor(Date.now() / 1000)) return json({ error: 'Token expired' }, 401);
+  } catch { return json({ error: 'Unauthorized' }, 401); }
+
+  const isAdmin = ['company_admin', 'manager'].includes(payload.role);
+  const companyId = payload.company_id;
+  const employeeId = payload.employee_id || payload.id;
+
+  // ── Helpers ───────────────────────────────────────────────
+  function getKuwaitTime() {
+    const s = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Kuwait', hour12: false });
+    const [date, time] = s.split(', ');
+    const [d, m, y] = date.split('/');
+    return { date: `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`, time };
+  }
+
+  function getStatus(clockIn, workStart, lateThreshold) {
+    if (!clockIn || !workStart) return 'present';
+    const [ih, im] = clockIn.split(':').map(Number);
+    const [wh, wm] = workStart.split(':').map(Number);
+    const inMins = ih * 60 + im;
+    const startMins = wh * 60 + wm;
+    return inMins > startMins + (lateThreshold || 15) ? 'late' : 'present';
+  }
+
+  function calcHours(clockIn, clockOut) {
+    if (!clockIn || !clockOut) return null;
+    const toMins = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+    return Math.round((toMins(clockOut) - toMins(clockIn)) / 60 * 10) / 10;
+  }
+
+  function haversine(lat1, lng1, lat2, lng2) {
+    const R = 6371000;
+    const toRad = x => x * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function b64url(s) {
+    const b = atob(s.replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from(b, c => c.charCodeAt(0));
+  }
+
+  function uid() { return crypto.randomUUID(); }
+  function json(data, status = 200) { return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } }); }
+
+  // ── GET company schedule ──────────────────────────────────
+  async function getCompany() {
+    const row = await env.DB.prepare('SELECT * FROM companies WHERE id=?').bind(companyId).first();
+    return row;
+  }
+
+  // ── ROUTES ────────────────────────────────────────────────
 
   // POST /api/attendance/clockin
-  if (seg === 'clockin' && method === 'POST') {
-    if (!user.employee_id) return json({ error: 'No employee linked' }, 404);
-    let body = {};
-    try { body = await request.json(); } catch {}
-    const today = getToday();
-    const time = getKuwaitTime();
+  if (method === 'POST' && parts[0] === 'clockin') {
+    const body = await request.json().catch(() => ({}));
+    const { lat, lng } = body;
+    const { date, time } = getKuwaitTime();
+    const company = await getCompany();
 
-    // Check already clocked in today
-    const existing = await env.DB.prepare(
-      'SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?'
-    ).bind(user.employee_id, today).first();
-    if (existing?.clock_in) return json({ error: 'Already clocked in today' }, 400);
-
-    // Get company schedule
-    const emp = await env.DB.prepare('SELECT company_id FROM employees WHERE id = ?').bind(user.employee_id).first();
-    const company = await env.DB.prepare('SELECT * FROM companies WHERE id = ?').bind(emp.company_id).first();
-    const status = getStatus(time, company?.work_start_time || '08:00', company?.late_threshold_minutes || 15);
-
-    const id = crypto.randomUUID();
-    if (existing) {
-      await env.DB.prepare(
-        'UPDATE attendance_records SET clock_in = ?, clock_in_lat = ?, clock_in_lng = ?, status = ? WHERE id = ?'
-      ).bind(time, body.lat || null, body.lng || null, status, existing.id).run();
-    } else {
-      await env.DB.prepare(
-        `INSERT INTO attendance_records (id, company_id, employee_id, date, clock_in, clock_in_lat, clock_in_lng, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-      ).bind(id, emp.company_id, user.employee_id, today, time, body.lat || null, body.lng || null, status).run();
+    // Geofence check
+    if (company?.geofence_enabled && company?.workplace_lat && company?.workplace_lng) {
+      if (lat == null || lng == null) {
+        return json({ error: 'Location required — workplace geofencing is enabled. Please allow location access and try again.' }, 403);
+      }
+      const distance = haversine(lat, lng, company.workplace_lat, company.workplace_lng);
+      const radius = company.geofence_radius_meters || 200;
+      if (distance > radius) {
+        return json({ error: `You are ${Math.round(distance)}m from the workplace. Must be within ${radius}m to clock in.` }, 403);
+      }
     }
 
-    const record = await env.DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(user.employee_id, today).first();
-    return json({ record, message: 'Clocked in at ' + time });
+    // Check existing record
+    const existing = await env.DB.prepare(
+      'SELECT * FROM attendance_records WHERE company_id=? AND employee_id=? AND date=?'
+    ).bind(companyId, employeeId, date).first();
+
+    if (existing?.clock_in) return json({ error: 'Already clocked in today' }, 400);
+
+    const status = getStatus(time.slice(0,5), company?.work_start_time || '08:00', company?.late_threshold_minutes || 15);
+
+    if (existing) {
+      await env.DB.prepare(
+        'UPDATE attendance_records SET clock_in=?,clock_in_lat=?,clock_in_lng=?,status=? WHERE id=?'
+      ).bind(time.slice(0,8), lat, lng, status, existing.id).run();
+    } else {
+      await env.DB.prepare(
+        'INSERT INTO attendance_records (id,company_id,employee_id,date,clock_in,clock_in_lat,clock_in_lng,status) VALUES (?,?,?,?,?,?,?,?)'
+      ).bind(uid(), companyId, employeeId, date, time.slice(0,8), lat, lng, status).run();
+    }
+
+    const record = await env.DB.prepare(
+      'SELECT * FROM attendance_records WHERE company_id=? AND employee_id=? AND date=?'
+    ).bind(companyId, employeeId, date).first();
+
+    const msg = status === 'late' ? `Clocked in at ${time.slice(0,5)} — marked as Late` : `Clocked in at ${time.slice(0,5)}`;
+    return json({ message: msg, record });
   }
 
   // POST /api/attendance/clockout
-  if (seg === 'clockout' && method === 'POST') {
-    if (!user.employee_id) return json({ error: 'No employee linked' }, 404);
-    let body = {};
-    try { body = await request.json(); } catch {}
-    const today = getToday();
-    const time = getKuwaitTime();
+  if (method === 'POST' && parts[0] === 'clockout') {
+    const body = await request.json().catch(() => ({}));
+    const { lat, lng } = body;
+    const { date, time } = getKuwaitTime();
+    const company = await getCompany();
 
-    const existing = await env.DB.prepare(
-      'SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?'
-    ).bind(user.employee_id, today).first();
-    if (!existing?.clock_in) return json({ error: 'You have not clocked in today' }, 400);
-    if (existing?.clock_out) return json({ error: 'Already clocked out today' }, 400);
-
-    const hours = calcHours(existing.clock_in, time);
-    let status = existing.status;
-    if (status === 'present' || status === 'late') {
-      if (hours !== null && hours < 4) status = 'half_day';
+    // Geofence check
+    if (company?.geofence_enabled && company?.workplace_lat && company?.workplace_lng) {
+      if (lat == null || lng == null) {
+        return json({ error: 'Location required — workplace geofencing is enabled. Please allow location access and try again.' }, 403);
+      }
+      const distance = haversine(lat, lng, company.workplace_lat, company.workplace_lng);
+      const radius = company.geofence_radius_meters || 200;
+      if (distance > radius) {
+        return json({ error: `You are ${Math.round(distance)}m from the workplace. Must be within ${radius}m to clock out.` }, 403);
+      }
     }
 
-    await env.DB.prepare(
-      'UPDATE attendance_records SET clock_out = ?, clock_out_lat = ?, clock_out_lng = ?, hours_worked = ?, status = ? WHERE id = ?'
-    ).bind(time, body.lat || null, body.lng || null, hours, status, existing.id).run();
+    const existing = await env.DB.prepare(
+      'SELECT * FROM attendance_records WHERE company_id=? AND employee_id=? AND date=?'
+    ).bind(companyId, employeeId, date).first();
 
-    const record = await env.DB.prepare('SELECT * FROM attendance_records WHERE id = ?').bind(existing.id).first();
-    return json({ record, message: 'Clocked out at ' + time + ' · ' + hours + ' hrs worked' });
+    if (!existing?.clock_in) return json({ error: 'Not clocked in yet' }, 400);
+    if (existing?.clock_out) return json({ error: 'Already clocked out today' }, 400);
+
+    const hours = calcHours(existing.clock_in.slice(0,5), time.slice(0,5));
+    const status = hours != null && hours < 4 ? 'half_day' : (existing.status || 'present');
+
+    await env.DB.prepare(
+      'UPDATE attendance_records SET clock_out=?,clock_out_lat=?,clock_out_lng=?,hours_worked=?,status=? WHERE id=?'
+    ).bind(time.slice(0,8), lat, lng, hours, status, existing.id).run();
+
+    const record = await env.DB.prepare(
+      'SELECT * FROM attendance_records WHERE id=?'
+    ).bind(existing.id).first();
+
+    return json({ message: `Clocked out at ${time.slice(0,5)} — ${hours} hrs worked`, record });
   }
 
   // GET /api/attendance/today
-  if (seg === 'today' && method === 'GET') {
-    if (!user.employee_id) return json({ error: 'No employee linked' }, 404);
-    const today = getToday();
+  if (method === 'GET' && parts[0] === 'today') {
+    const { date } = getKuwaitTime();
+    const company = await getCompany();
     const record = await env.DB.prepare(
-      'SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?'
-    ).bind(user.employee_id, today).first();
-
-    const emp = await env.DB.prepare('SELECT company_id FROM employees WHERE id = ?').bind(user.employee_id).first();
-    const company = await env.DB.prepare('SELECT work_start_time, work_end_time, work_days FROM companies WHERE id = ?').bind(emp.company_id).first();
-
-    return json({ record: record || null, schedule: company });
+      'SELECT * FROM attendance_records WHERE company_id=? AND employee_id=? AND date=?'
+    ).bind(companyId, employeeId, date).first();
+    return json({ record: record || null, date, company });
   }
 
   // GET /api/attendance
-  if (!seg && method === 'GET') {
-    const date = url.searchParams.get('date') || getToday();
-    const month = url.searchParams.get('month') || null;
-    const employeeId = url.searchParams.get('employee_id') || null;
+  if (method === 'GET' && parts.length === 0) {
+    const dateParam = url.searchParams.get('date');
+    const monthParam = url.searchParams.get('month');
+    const empParam = url.searchParams.get('employee_id');
+
+    let query, params;
 
     if (isAdmin) {
-      let sql = `SELECT ar.*, e.first_name_en, e.last_name_en, e.first_name_ar, e.last_name_ar
-                 FROM attendance_records ar
-                 JOIN employees e ON ar.employee_id = e.id
-                 WHERE ar.company_id = ?`;
-      const binds = [user.company_id];
-      if (month) { sql += ' AND ar.date LIKE ?'; binds.push(month + '%'); }
-      else if (!employeeId) { sql += ' AND ar.date = ?'; binds.push(date); }
-      if (employeeId) { sql += ' AND ar.employee_id = ?'; binds.push(employeeId); }
-      sql += ' ORDER BY ar.date DESC, ar.clock_in ASC';
-      const result = await env.DB.prepare(sql).bind(...binds).all();
-      return json({ records: result.results || [] });
+      if (dateParam) {
+        query = `SELECT ar.*, e.first_name_en, e.last_name_en FROM attendance_records ar LEFT JOIN employees e ON ar.employee_id=e.id WHERE ar.company_id=? AND ar.date=? ORDER BY e.first_name_en`;
+        params = [companyId, dateParam];
+      } else if (monthParam) {
+        query = `SELECT ar.*, e.first_name_en, e.last_name_en FROM attendance_records ar LEFT JOIN employees e ON ar.employee_id=e.id WHERE ar.company_id=? AND ar.date LIKE ? ${empParam ? 'AND ar.employee_id=?' : ''} ORDER BY ar.date DESC, e.first_name_en`;
+        params = empParam ? [companyId, monthParam + '%', empParam] : [companyId, monthParam + '%'];
+      } else {
+        const { date } = getKuwaitTime();
+        query = `SELECT ar.*, e.first_name_en, e.last_name_en FROM attendance_records ar LEFT JOIN employees e ON ar.employee_id=e.id WHERE ar.company_id=? AND ar.date=? ORDER BY e.first_name_en`;
+        params = [companyId, date];
+      }
     } else {
-      if (!user.employee_id) return json({ error: 'No employee linked' }, 404);
-      let sql = 'SELECT * FROM attendance_records WHERE employee_id = ?';
-      const binds = [user.employee_id];
-      if (month) { sql += ' AND date LIKE ?'; binds.push(month + '%'); }
-      else { sql += ' AND date = ?'; binds.push(date); }
-      sql += ' ORDER BY date DESC';
-      const result = await env.DB.prepare(sql).bind(...binds).all();
-      return json({ records: result.results || [] });
+      if (monthParam) {
+        query = `SELECT * FROM attendance_records WHERE company_id=? AND employee_id=? AND date LIKE ? ORDER BY date DESC`;
+        params = [companyId, employeeId, monthParam + '%'];
+      } else {
+        const { date } = getKuwaitTime();
+        query = `SELECT * FROM attendance_records WHERE company_id=? AND employee_id=? AND date=?`;
+        params = [companyId, employeeId, date];
+      }
     }
+
+    const { results } = await env.DB.prepare(query).bind(...params).all();
+    return json({ records: results });
   }
 
-  // PUT /api/attendance/:id — admin manual edit
-  if (seg && method === 'PUT') {
+  // PUT /api/attendance/:id
+  if (method === 'PUT' && parts[0] && parts[0] !== 'clockin' && parts[0] !== 'clockout') {
     if (!isAdmin) return json({ error: 'Forbidden' }, 403);
-    let body = {};
-    try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
-
-    const record = await env.DB.prepare('SELECT * FROM attendance_records WHERE id = ?').bind(seg).first();
-    if (!record) return json({ error: 'Record not found' }, 404);
-    if (record.company_id !== user.company_id && user.role !== 'ghaya_admin') return json({ error: 'Forbidden' }, 403);
-
-    const clockIn = body.clock_in || record.clock_in;
-    const clockOut = body.clock_out || record.clock_out;
-    const hours = calcHours(clockIn, clockOut);
-
+    const body = await request.json().catch(() => ({}));
+    const { clock_in, clock_out, status, notes } = body;
+    const hours = calcHours(clock_in?.slice(0,5), clock_out?.slice(0,5));
     await env.DB.prepare(
-      `UPDATE attendance_records SET clock_in = ?, clock_out = ?, hours_worked = ?, status = ?, notes = ? WHERE id = ?`
-    ).bind(clockIn, clockOut || null, hours, body.status || record.status, body.notes || record.notes || null, seg).run();
-
-    const updated = await env.DB.prepare('SELECT * FROM attendance_records WHERE id = ?').bind(seg).first();
-    return json({ record: updated });
+      'UPDATE attendance_records SET clock_in=?,clock_out=?,hours_worked=?,status=?,notes=? WHERE id=? AND company_id=?'
+    ).bind(clock_in || null, clock_out || null, hours, status || 'present', notes || null, parts[0], companyId).run();
+    const record = await env.DB.prepare('SELECT * FROM attendance_records WHERE id=?').bind(parts[0]).first();
+    return json({ record });
   }
 
-  // POST /api/attendance — admin manual insert
-  if (!seg && method === 'POST') {
+  // POST /api/attendance (admin manual insert)
+  if (method === 'POST' && parts.length === 0) {
     if (!isAdmin) return json({ error: 'Forbidden' }, 403);
-    let body = {};
-    try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
-
+    const body = await request.json().catch(() => ({}));
     const { employee_id, date, clock_in, clock_out, status, notes } = body;
     if (!employee_id || !date) return json({ error: 'employee_id and date required' }, 400);
-
-    const emp = await env.DB.prepare('SELECT company_id FROM employees WHERE id = ?').bind(employee_id).first();
-    if (!emp) return json({ error: 'Employee not found' }, 404);
-
-    const hours = calcHours(clock_in, clock_out);
-    const id = crypto.randomUUID();
-
+    const hours = calcHours(clock_in?.slice(0,5), clock_out?.slice(0,5));
     await env.DB.prepare(
-      `INSERT INTO attendance_records (id, company_id, employee_id, date, clock_in, clock_out, hours_worked, status, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT(company_id, employee_id, date) DO UPDATE SET
-       clock_in = excluded.clock_in, clock_out = excluded.clock_out,
-       hours_worked = excluded.hours_worked, status = excluded.status, notes = excluded.notes`
-    ).bind(id, emp.company_id, employee_id, date, clock_in || null, clock_out || null, hours, status || 'present', notes || null).run();
-
-    const record = await env.DB.prepare('SELECT * FROM attendance_records WHERE employee_id = ? AND date = ?').bind(employee_id, date).first();
-    return json({ record }, 201);
+      `INSERT INTO attendance_records (id,company_id,employee_id,date,clock_in,clock_out,hours_worked,status,notes)
+       VALUES (?,?,?,?,?,?,?,?,?)
+       ON CONFLICT(company_id,employee_id,date) DO UPDATE SET clock_in=excluded.clock_in,clock_out=excluded.clock_out,hours_worked=excluded.hours_worked,status=excluded.status,notes=excluded.notes`
+    ).bind(uid(), companyId, employee_id, date, clock_in || null, clock_out || null, hours, status || 'present', notes || null).run();
+    const record = await env.DB.prepare(
+      'SELECT * FROM attendance_records WHERE company_id=? AND employee_id=? AND date=?'
+    ).bind(companyId, employee_id, date).first();
+    return json({ record });
   }
 
-  return json({ error: 'Method not allowed' }, 405);
+  return json({ error: 'Not found' }, 404);
 }
