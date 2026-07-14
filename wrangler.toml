@@ -17,3 +17,4 @@ JWT_SECRET = "ghaya2025xK9mP3nQ7rL2sT8vW4yZ6aB1cD5eF0hJ"
 JWT_EXPIRES_IN = "86400"
 APP_NAME = "Ghaya Suite"
 SUPPORT_EMAIL = "support@ghaya.hr"
+
