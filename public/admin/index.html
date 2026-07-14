@@ -337,8 +337,13 @@ select.form-input{cursor:pointer}
           <div><div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px;">LATE AFTER (mins)</div><input class="form-input" id="late-threshold" type="number" style="width:100px;" value="15" min="0" max="60"/></div>
           <div><div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px;">WORK DAYS</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="work-day-cb" value="${d.toLowerCase()}" ${['sun','mon','tue','wed','thu'].includes(d.toLowerCase())?'checked':''}/>${d}</label>`).join('')}
-            </div>
+<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="work-day-cb" value="sun" checked/>Sun</label>
+<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="work-day-cb" value="mon" checked/>Mon</label>
+<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="work-day-cb" value="tue" checked/>Tue</label>
+<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="work-day-cb" value="wed" checked/>Wed</label>
+<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="work-day-cb" value="thu" checked/>Thu</label>
+<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="work-day-cb" value="fri"/>Fri</label>
+<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="work-day-cb" value="sat"/>Sat</label>            </div>
           </div>
           <button class="btn btn-primary" onclick="saveWorkSchedule()">Save Schedule</button>
         </div>
