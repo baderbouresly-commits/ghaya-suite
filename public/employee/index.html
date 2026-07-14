@@ -447,12 +447,19 @@
       });
     }
 
-    async function handleClock() {
-      if (todayRecord?.clock_in && todayRecord?.clock_out) return; // already done
-      const btn = document.getElementById('clock-btn');
-      if (btn) btn.disabled = true;
-      const btn2 = document.getElementById('clock-btn-2');
-      if (btn2) btn2.disabled = true;
+async function handleClock() {
+  if (todayRecord?.clock_in && todayRecord?.clock_out) return;
+  const loc = await getLocation();
+  const action = (!todayRecord || !todayRecord.clock_in) ? 'clockin' : 'clockout';
+  const res = await api('/api/attendance/' + action, { method: 'POST', body: JSON.stringify(loc) });
+  if (res && !res.error) {
+    todayRecord = res.record;
+    updateClockUI();
+    alert(res.message);
+  } else {
+    alert(res?.error || 'Could not record attendance. Please try again.');
+  }
+}
 
       const loc = await getLocation();
       const action = (!todayRecord || !todayRecord.clock_in) ? 'clockin' : 'clockout';
