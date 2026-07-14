@@ -81,6 +81,10 @@ tr:hover td{background:#fdf9f6}
 .badge-red{background:#ffeee6;color:#c42a00}
 .badge-gray{background:#f0ebe4;color:#666}
 .badge-purple{background:#f0ebff;color:#5c35b8}
+.badge-present{background:#e6f7ee;color:#1a7a42}
+.badge-late{background:#fff3e6;color:#c46a00}
+.badge-absent{background:#ffeee6;color:#c42a00}
+.badge-half_day{background:#e6f0ff;color:#1a4da0}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
 .modal-overlay.open{opacity:1;pointer-events:all}
 .modal{background:#fff;border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
@@ -136,6 +140,10 @@ select.form-input{cursor:pointer}
 .toggle-wrap input:checked+.toggle-slider{background:#1a7a42}
 .toggle-wrap input:checked+.toggle-slider::after{left:19px}
 .info-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#e8e0d8;color:#555;font-size:11px;font-weight:800;cursor:help}
+.att-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:20px 24px;border-bottom:1px solid #f0ebe4;}
+.att-sum-card{text-align:center;padding:12px;border-radius:10px;}
+.att-sum-val{font-size:24px;font-weight:800;}
+.att-sum-label{font-size:11px;color:#888;margin-top:4px;}
 @media(max-width:768px){.sidebar{display:none}.main{margin-left:0!important;margin-right:0!important}.stats-grid{grid-template-columns:1fr 1fr}.content{padding:16px}.form-grid{grid-template-columns:1fr}.settings-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -153,36 +161,20 @@ select.form-input{cursor:pointer}
   </div>
   <nav class="nav">
     <div class="nav-section">OVERVIEW</div>
-    <div class="nav-item" onclick="showPage('dashboard')" id="nav-dashboard">
-      <span class="nav-icon">📊</span><span data-en="Dashboard" data-ar="لوحة التحكم">Dashboard</span>
-    </div>
+    <div class="nav-item" onclick="showPage('dashboard')" id="nav-dashboard"><span class="nav-icon">📊</span><span data-en="Dashboard" data-ar="لوحة التحكم">Dashboard</span></div>
     <div class="nav-section" style="margin-top:8px">HR MANAGEMENT</div>
-    <div class="nav-item" onclick="showPage('employees')" id="nav-employees">
-      <span class="nav-icon">👥</span><span data-en="Employees" data-ar="الموظفون">Employees</span>
-    </div>
-    <div class="nav-item" onclick="showPage('leaves')" id="nav-leaves">
-      <span class="nav-icon">🌴</span><span data-en="Leave Requests" data-ar="طلبات الإجازة">Leave Requests</span>
-      <span class="nav-badge" id="leave-badge" style="display:none">0</span>
-    </div>
-    <div class="nav-item" onclick="showPage('permissions')" id="nav-permissions">
-      <span class="nav-icon">🕐</span><span data-en="Permission Hours" data-ar="ساعات الاستئذان">Permission Hours</span>
-      <span class="nav-badge" id="perm-badge" style="display:none">0</span>
-    </div>
-    <div class="nav-item" onclick="showPage('payroll')" id="nav-payroll">
-      <span class="nav-icon">💰</span><span data-en="Payroll" data-ar="الرواتب">Payroll</span>
-    </div>
+    <div class="nav-item" onclick="showPage('employees')" id="nav-employees"><span class="nav-icon">👥</span><span data-en="Employees" data-ar="الموظفون">Employees</span></div>
+    <div class="nav-item" onclick="showPage('attendance')" id="nav-attendance"><span class="nav-icon">📅</span><span data-en="Attendance" data-ar="الحضور">Attendance</span></div>
+    <div class="nav-item" onclick="showPage('leaves')" id="nav-leaves"><span class="nav-icon">🌴</span><span data-en="Leave Requests" data-ar="طلبات الإجازة">Leave Requests</span><span class="nav-badge" id="leave-badge" style="display:none">0</span></div>
+    <div class="nav-item" onclick="showPage('permissions')" id="nav-permissions"><span class="nav-icon">🕐</span><span data-en="Permission Hours" data-ar="ساعات الاستئذان">Permission Hours</span><span class="nav-badge" id="perm-badge" style="display:none">0</span></div>
+    <div class="nav-item" onclick="showPage('payroll')" id="nav-payroll"><span class="nav-icon">💰</span><span data-en="Payroll" data-ar="الرواتب">Payroll</span></div>
     <div class="nav-section" style="margin-top:8px">SETTINGS</div>
-    <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
-      <span class="nav-icon">⚙️</span><span data-en="Settings" data-ar="الإعدادات">Settings</span>
-    </div>
+    <div class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="nav-icon">⚙️</span><span data-en="Settings" data-ar="الإعدادات">Settings</span></div>
   </nav>
   <div class="sidebar-footer">
     <div class="user-row">
       <div class="user-avatar" id="user-avatar">A</div>
-      <div class="user-info">
-        <div class="user-name" id="user-name">Loading...</div>
-        <div class="user-role" data-en="Company Admin" data-ar="مدير الشركة">Company Admin</div>
-      </div>
+      <div class="user-info"><div class="user-name" id="user-name">Loading...</div><div class="user-role" data-en="Company Admin" data-ar="مدير الشركة">Company Admin</div></div>
       <button class="logout-btn" onclick="logout()" title="Logout">↩</button>
     </div>
   </div>
@@ -198,6 +190,7 @@ select.form-input{cursor:pointer}
     </div>
   </div>
   <div class="content">
+
     <!-- DASHBOARD -->
     <div id="page-dashboard" style="display:none">
       <div class="stats-grid">
@@ -207,20 +200,15 @@ select.form-input{cursor:pointer}
         <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">Monthly Payroll (KWD)</div><div class="stat-value" id="s-payroll">—</div></div>
       </div>
       <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Recent Employees</div></div>
-          <button class="btn btn-primary btn-sm" onclick="showPage('employees')">View All →</button>
-        </div>
+        <div class="section-header"><div><div class="section-title">Recent Employees</div></div><button class="btn btn-primary btn-sm" onclick="showPage('employees')">View All →</button></div>
         <div id="dash-employees"><div class="loading"><div class="spinner"></div></div></div>
       </div>
       <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Pending Leave Requests</div></div>
-          <button class="btn btn-ghost btn-sm" onclick="showPage('leaves')">View All</button>
-        </div>
+        <div class="section-header"><div><div class="section-title">Pending Leave Requests</div></div><button class="btn btn-ghost btn-sm" onclick="showPage('leaves')">View All</button></div>
         <div id="dash-leaves"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
+
     <!-- EMPLOYEES -->
     <div id="page-employees" style="display:none">
       <div class="section-card">
@@ -234,6 +222,38 @@ select.form-input{cursor:pointer}
         <div id="employees-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
+
+    <!-- ATTENDANCE -->
+    <div id="page-attendance" style="display:none">
+      <div class="section-card" style="margin-bottom:24px;">
+        <div class="section-header">
+          <div><div class="section-title">Daily Attendance</div><div class="section-sub" id="att-date-label">Today</div></div>
+          <div class="section-actions">
+            <input type="date" class="search-bar" id="att-date-picker" style="width:160px;" onchange="loadAttendance()"/>
+            <button class="btn btn-ghost btn-sm" onclick="loadAttendance()">↻ Refresh</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddAttModal()">+ Manual Entry</button>
+          </div>
+        </div>
+        <div class="att-summary">
+          <div class="att-sum-card" style="background:#e6f7ee"><div class="att-sum-val" style="color:#1a7a42" id="att-present">—</div><div class="att-sum-label">Present</div></div>
+          <div class="att-sum-card" style="background:#fff3e6"><div class="att-sum-val" style="color:#c46a00" id="att-late">—</div><div class="att-sum-label">Late</div></div>
+          <div class="att-sum-card" style="background:#ffeee6"><div class="att-sum-val" style="color:#c42a00" id="att-absent">—</div><div class="att-sum-label">Absent</div></div>
+          <div class="att-sum-card" style="background:#e6f0ff"><div class="att-sum-val" style="color:#1a4da0" id="att-half">—</div><div class="att-sum-label">Half Day</div></div>
+        </div>
+        <div id="att-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+      <div class="section-card">
+        <div class="section-header">
+          <div><div class="section-title">Monthly Report</div></div>
+          <div class="section-actions">
+            <input type="month" class="search-bar" id="att-month-picker" style="width:160px;" onchange="loadMonthlyReport()"/>
+            <select class="search-bar" id="att-emp-filter" style="width:180px;" onchange="loadMonthlyReport()"><option value="">All Employees</option></select>
+          </div>
+        </div>
+        <div id="att-monthly-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
     <!-- LEAVES -->
     <div id="page-leaves" style="display:none">
       <div class="section-card">
@@ -249,13 +269,11 @@ select.form-input{cursor:pointer}
         <div id="leaves-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
       <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Leave Balances</div><div class="section-sub">Accrued annual leave per employee (pro-rata)</div></div>
-          <button class="btn btn-ghost btn-sm" onclick="loadLeaveBalances()">↻ Refresh</button>
-        </div>
+        <div class="section-header"><div><div class="section-title">Leave Balances</div><div class="section-sub">Accrued annual leave per employee</div></div><button class="btn btn-ghost btn-sm" onclick="loadLeaveBalances()">↻ Refresh</button></div>
         <div id="leave-balances-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
+
     <!-- PERMISSIONS -->
     <div id="page-permissions" style="display:none">
       <div class="section-card">
@@ -271,13 +289,11 @@ select.form-input{cursor:pointer}
         <div id="perms-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
       <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Monthly Usage by Employee</div><div class="section-sub" id="perm-month-label">This month</div></div>
-          <button class="btn btn-ghost btn-sm" onclick="loadPermUsage()">↻ Refresh</button>
-        </div>
+        <div class="section-header"><div><div class="section-title">Monthly Usage by Employee</div><div class="section-sub" id="perm-month-label">This month</div></div><button class="btn btn-ghost btn-sm" onclick="loadPermUsage()">↻ Refresh</button></div>
         <div id="perm-usage-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
+
     <!-- PAYROLL -->
     <div id="page-payroll" style="display:none">
       <div id="payroll-runs-view">
@@ -285,9 +301,7 @@ select.form-input{cursor:pointer}
           <div class="section-header">
             <div><div class="section-title">Run Payroll</div><div class="section-sub">Calculates salaries + PIFSS for all active employees</div></div>
             <div style="display:flex;gap:10px;align-items:center;">
-              <select class="search-bar" id="payroll-month" style="width:130px;">
-                <option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option>
-              </select>
+              <select class="search-bar" id="payroll-month" style="width:130px;"><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select>
               <select class="search-bar" id="payroll-year" style="width:90px;"></select>
               <div style="display:flex;align-items:center;gap:6px;padding:0 10px;border-left:1px solid #e8e0d8;">
                 <span style="font-size:12px;font-weight:700;color:#555;">PIFSS</span>
@@ -307,16 +321,28 @@ select.form-input{cursor:pointer}
         <div style="margin-bottom:20px;"><button class="btn btn-ghost btn-sm" onclick="showPayrollList()">← Back to History</button></div>
         <div id="payroll-detail-summary" style="margin-bottom:24px;"></div>
         <div class="section-card">
-          <div class="section-header">
-            <div class="section-title" id="payroll-detail-title">Payroll Breakdown</div>
-            <div id="payroll-detail-actions" style="display:flex;gap:8px;"></div>
-          </div>
+          <div class="section-header"><div class="section-title" id="payroll-detail-title">Payroll Breakdown</div><div id="payroll-detail-actions" style="display:flex;gap:8px;"></div></div>
           <div id="payroll-detail-list"><div class="loading"><div class="spinner"></div></div></div>
         </div>
       </div>
     </div>
+
     <!-- SETTINGS -->
     <div id="page-settings" style="display:none">
+      <div class="section-card" style="margin-bottom:24px;">
+        <div class="section-header"><div class="section-title">Work Schedule</div><div class="section-sub">Default hours used for attendance tracking</div></div>
+        <div style="padding:20px 24px;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;">
+          <div><div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px;">START TIME</div><input class="form-input" id="work-start" type="time" style="width:120px;" value="08:00"/></div>
+          <div><div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px;">END TIME</div><input class="form-input" id="work-end" type="time" style="width:120px;" value="17:00"/></div>
+          <div><div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px;">LATE AFTER (mins)</div><input class="form-input" id="late-threshold" type="number" style="width:100px;" value="15" min="0" max="60"/></div>
+          <div><div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px;">WORK DAYS</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" class="work-day-cb" value="${d.toLowerCase()}" ${['sun','mon','tue','wed','thu'].includes(d.toLowerCase())?'checked':''}/>${d}</label>`).join('')}
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveWorkSchedule()">Save Schedule</button>
+        </div>
+      </div>
       <div class="section-card" style="margin-bottom:24px;">
         <div class="section-header"><div class="section-title">Permission Hours Limit</div><div class="section-sub">Monthly استئذان allowance per employee</div></div>
         <div style="padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
@@ -336,33 +362,24 @@ select.form-input{cursor:pointer}
           <div>
             <div class="settings-col-title">🏢 Departments</div>
             <div class="tag-list" id="dept-list"><div class="loading"><div class="spinner"></div></div></div>
-            <div class="add-tag-row">
-              <input class="add-tag-input" id="new-dept-en" placeholder="Name (EN)"/>
-              <input class="add-tag-input" id="new-dept-ar" placeholder="الاسم (AR)" dir="rtl"/>
-              <button class="btn btn-primary btn-sm" onclick="addDept()">+ Add</button>
-            </div>
+            <div class="add-tag-row"><input class="add-tag-input" id="new-dept-en" placeholder="Name (EN)"/><input class="add-tag-input" id="new-dept-ar" placeholder="الاسم (AR)" dir="rtl"/><button class="btn btn-primary btn-sm" onclick="addDept()">+ Add</button></div>
           </div>
           <div>
             <div class="settings-col-title">💼 Job Titles</div>
             <div class="tag-list" id="jt-list"><div class="loading"><div class="spinner"></div></div></div>
-            <div class="add-tag-row">
-              <input class="add-tag-input" id="new-jt-en" placeholder="Title (EN)"/>
-              <input class="add-tag-input" id="new-jt-ar" placeholder="المسمى (AR)" dir="rtl"/>
-              <button class="btn btn-primary btn-sm" onclick="addJobTitle()">+ Add</button>
-            </div>
+            <div class="add-tag-row"><input class="add-tag-input" id="new-jt-en" placeholder="Title (EN)"/><input class="add-tag-input" id="new-jt-ar" placeholder="المسمى (AR)" dir="rtl"/><button class="btn btn-primary btn-sm" onclick="addJobTitle()">+ Add</button></div>
           </div>
         </div>
       </div>
     </div>
+
   </div>
 </div>
+
 <!-- MODAL: Add/Edit Employee -->
 <div class="modal-overlay" id="modal-employee">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-emp-title">Add Employee</div>
-      <button class="modal-close" onclick="closeModal('modal-employee')">✕</button>
-    </div>
+    <div class="modal-header"><div class="modal-title" id="modal-emp-title">Add Employee</div><button class="modal-close" onclick="closeModal('modal-employee')">✕</button></div>
     <div class="modal-body">
       <input type="hidden" id="emp-id"/>
       <div class="form-grid">
@@ -376,18 +393,12 @@ select.form-input{cursor:pointer}
       <div class="form-grid">
         <div class="form-row"><label class="form-label">Civil ID</label><input class="form-input" id="emp-civil-id" placeholder="28012345678"/></div>
         <div class="form-row"><label class="form-label">Nationality</label>
-          <select class="form-input" id="emp-nationality">
-            <option value="Kuwaiti">Kuwaiti</option><option value="Saudi">Saudi</option><option value="Egyptian">Egyptian</option><option value="Indian">Indian</option><option value="Pakistani">Pakistani</option><option value="Bangladeshi">Bangladeshi</option><option value="Filipino">Filipino</option><option value="Sri Lankan">Sri Lankan</option><option value="Nepalese">Nepalese</option><option value="Other">Other</option>
-          </select>
+          <select class="form-input" id="emp-nationality"><option value="Kuwaiti">Kuwaiti</option><option value="Saudi">Saudi</option><option value="Egyptian">Egyptian</option><option value="Indian">Indian</option><option value="Pakistani">Pakistani</option><option value="Bangladeshi">Bangladeshi</option><option value="Filipino">Filipino</option><option value="Sri Lankan">Sri Lankan</option><option value="Nepalese">Nepalese</option><option value="Other">Other</option></select>
         </div>
       </div>
       <div class="form-grid">
-        <div class="form-row"><label class="form-label">Department</label>
-          <select class="form-input" id="emp-dept-id"><option value="">— Select —</option></select>
-        </div>
-        <div class="form-row"><label class="form-label">Job Title</label>
-          <select class="form-input" id="emp-job-title-id"><option value="">— Select —</option></select>
-        </div>
+        <div class="form-row"><label class="form-label">Department</label><select class="form-input" id="emp-dept-id"><option value="">— Select —</option></select></div>
+        <div class="form-row"><label class="form-label">Job Title</label><select class="form-input" id="emp-job-title-id"><option value="">— Select —</option></select></div>
       </div>
       <div class="form-grid">
         <div class="form-row"><label class="form-label">Basic Salary (KWD)</label><input class="form-input" id="emp-salary" type="number" step="0.001" placeholder="350.000"/></div>
@@ -397,27 +408,18 @@ select.form-input{cursor:pointer}
         <div class="form-row"><label class="form-label">Work Email</label><input class="form-input" id="emp-email" type="email" placeholder="ahmed@company.com"/></div>
         <div class="form-row"><label class="form-label">Phone</label><input class="form-input" id="emp-phone" placeholder="+965 9999 9999"/></div>
       </div>
-      <div class="form-row"><label class="form-label">Contract Type</label>
-        <select class="form-input" id="emp-contract">
-          <option value="full_time">Full Time</option><option value="part_time">Part Time</option><option value="contract">Contract</option>
-        </select>
-      </div>
+      <div class="form-row"><label class="form-label">Contract Type</label><select class="form-input" id="emp-contract"><option value="full_time">Full Time</option><option value="part_time">Part Time</option><option value="contract">Contract</option></select></div>
       <div class="form-row"><label class="form-label">Login Password</label><input class="form-input" id="emp-password" type="password" placeholder="Employee portal login password"/></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-employee')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveEmployee()" id="save-emp-btn">Add Employee</button>
-    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-employee')">Cancel</button><button class="btn btn-primary" onclick="saveEmployee()" id="save-emp-btn">Add Employee</button></div>
   </div>
 </div>
-<!-- MODAL: End of Service Calculator -->
+
+<!-- MODAL: EOS -->
 <div class="modal-overlay" id="modal-eos">
   <div class="modal" style="max-width:600px">
     <div class="modal-header">
-      <div>
-        <div class="modal-title" id="eos-emp-name">End of Service Indemnity</div>
-        <div style="font-size:11px;color:#888;margin-top:3px;">مكافأة نهاية الخدمة · Kuwait Labour Law Art. 51</div>
-      </div>
+      <div><div class="modal-title" id="eos-emp-name">End of Service Indemnity</div><div style="font-size:11px;color:#888;margin-top:3px;">مكافأة نهاية الخدمة · Kuwait Labour Law Art. 51</div></div>
       <button class="modal-close" onclick="closeModal('modal-eos')">✕</button>
     </div>
     <div class="modal-body">
@@ -429,15 +431,37 @@ select.form-input{cursor:pointer}
     </div>
   </div>
 </div>
+
+<!-- MODAL: Manual Attendance -->
+<div class="modal-overlay" id="modal-att">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Manual Attendance Entry</div><button class="modal-close" onclick="closeModal('modal-att')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">Employee</label><select class="form-input" id="att-emp-id"></select></div>
+      <div class="form-row"><label class="form-label">Date</label><input class="form-input" id="att-manual-date" type="date"/></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Clock In</label><input class="form-input" id="att-manual-in" type="time"/></div>
+        <div class="form-row"><label class="form-label">Clock Out</label><input class="form-input" id="att-manual-out" type="time"/></div>
+      </div>
+      <div class="form-row"><label class="form-label">Status</label>
+        <select class="form-input" id="att-manual-status"><option value="present">Present</option><option value="late">Late</option><option value="half_day">Half Day</option><option value="absent">Absent</option></select>
+      </div>
+      <div class="form-row"><label class="form-label">Notes</label><input class="form-input" id="att-manual-notes" placeholder="Optional notes"/></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-att')">Cancel</button><button class="btn btn-primary" onclick="saveManualAtt()">Save</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <script>
 const API='/api';
 let token=localStorage.getItem('ghaya_token');
 let currentUser=null,currentLang=localStorage.getItem('ghaya_lang')||'en';
 let employeesData=[],leavesData=[],currentLeaveFilter='pending',editingEmpId=null;
-let deptsData=[],jobTitlesData=[];
-let currentEOSId=null;
+let deptsData=[],jobTitlesData=[],currentEOSId=null;
+let permsData=[],currentPermFilter='pending';
 if(!token){window.location.href='/';}
+
 async function apicall(method,path,body){
   try{
     const res=await fetch(API+path,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:body?JSON.stringify(body):undefined});
@@ -445,6 +469,7 @@ async function apicall(method,path,body){
     return await res.json();
   }catch(e){return null;}
 }
+
 async function init(){
   try{
     const me=await apicall('GET','/auth/me');
@@ -461,27 +486,31 @@ async function init(){
   await loadDeptsAndTitles();
   setLang(currentLang,false);
 }
+
 async function loadDeptsAndTitles(){
   const[d,j]=await Promise.all([apicall('GET','/departments'),apicall('GET','/job-titles')]);
   deptsData=d?.departments||[];
   jobTitlesData=j?.job_titles||[];
 }
+
 function showPage(page){
   localStorage.setItem('ghaya_page',page);
-  ['dashboard','employees','leaves','permissions','payroll','settings'].forEach(p=>{
+  ['dashboard','employees','attendance','leaves','permissions','payroll','settings'].forEach(p=>{
     document.getElementById('page-'+p).style.display=p===page?'':'none';
     const nav=document.getElementById('nav-'+p);
     if(nav)nav.classList.toggle('active',p===page);
   });
-  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},payroll:{en:'Payroll',ar:'الرواتب'},settings:{en:'Settings',ar:'الإعدادات'}};
+  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},payroll:{en:'Payroll',ar:'الرواتب'},settings:{en:'Settings',ar:'الإعدادات'}};
   document.getElementById('page-title').textContent=titles[page]?.[currentLang]||titles[page]?.en;
   if(page==='dashboard')loadDashboard();
   if(page==='employees')loadEmployees();
+  if(page==='attendance')initAttendancePage();
   if(page==='leaves'){loadLeaves();loadLeaveBalances();}
   if(page==='permissions'){loadPerms();loadPermUsage();}
   if(page==='payroll')loadPayroll();
-  if(page==='settings'){renderSettings();loadPermSettings();}
+  if(page==='settings'){renderSettings();loadPermSettings();loadWorkSchedule();}
 }
+
 async function loadDashboard(){
   const[emps,leaves]=await Promise.all([apicall('GET','/employees'),apicall('GET','/leaves?status=pending')]);
   const employees=emps?.employees||[];
@@ -496,18 +525,22 @@ async function loadDashboard(){
   renderDashEmployees(employees.slice(0,5));
   renderDashLeaves(pendingLeaves.slice(0,3));
 }
+
 function getDeptName(id){return deptsData.find(d=>d.id===id)?.name_en||id||'—';}
 function getJobTitle(id){return jobTitlesData.find(j=>j.id===id)?.title_en||id||'—';}
+
 function renderDashEmployees(list){
   const el=document.getElementById('dash-employees');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees yet</div></div>';return;}
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Title</th><th>Department</th><th>Salary (KWD)</th><th>Status</th></tr></thead><tbody>${list.map(e=>`<tr><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.nationality||''}</div></td><td>${getJobTitle(e.job_title_en)}</td><td>${getDeptName(e.department)}</td><td style="font-weight:700">${parseFloat(e.basic_salary||0).toFixed(3)}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td></tr>`).join('')}</tbody></table></div>`;
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Title</th><th>Department</th><th>Salary (KWD)</th><th>Status</th></tr></thead><tbody>${list.map(e=>`<tr><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div></td><td>${getJobTitle(e.job_title_en)}</td><td>${getDeptName(e.department)}</td><td style="font-weight:700">${parseFloat(e.basic_salary||0).toFixed(3)}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td></tr>`).join('')}</tbody></table></div>`;
 }
+
 function renderDashLeaves(list){
   const el=document.getElementById('dash-leaves');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">No pending leave requests</div></div>';return;}
   el.innerHTML=list.map(l=>`<div class="leave-card"><div class="leave-avatar">${(l.employee_name||'?')[0]}</div><div class="leave-info"><div class="leave-name">${l.employee_name||'—'}</div><div class="leave-detail">${l.type_name||'Annual'} · ${l.start_date} → ${l.end_date} · ${l.days_count||'?'} days</div></div><div class="leave-actions"><button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕</button></div></div>`).join('');
 }
+
 async function loadEmployees(){
   document.getElementById('employees-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/employees');
@@ -515,20 +548,155 @@ async function loadEmployees(){
   document.getElementById('emp-count').textContent=`${employeesData.length} employees`;
   renderEmployeesTable(employeesData);
 }
+
 function filterEmployees(){
   const q=document.getElementById('emp-search').value.toLowerCase();
   renderEmployeesTable(employeesData.filter(e=>`${e.first_name_en} ${e.last_name_en} ${getDeptName(e.department)} ${getJobTitle(e.job_title_en)}`.toLowerCase().includes(q)));
 }
+
 function renderEmployeesTable(list){
   const el=document.getElementById('employees-list');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees found</div><div class="empty-sub">Add your first employee using the button above</div></div>';return;}
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees found</div></div>';return;}
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Title / Dept</th><th>Nationality</th><th>Basic Salary</th><th>Hire Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((e,i)=>`<tr><td style="color:#888;font-size:12px">${i+1}</td><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></td><td><div>${getJobTitle(e.job_title_en)}</div><div style="font-size:11px;color:#888">${getDeptName(e.department)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="font-size:12px;color:#888">${e.hire_date||'—'}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button><button class="btn btn-purple btn-sm" onclick="viewEOS('${e.id}')">EOS</button></td></tr>`).join('')}</tbody></table></div>`;
 }
-function viewEOS(id){
-  currentEOSId=id;
-  document.getElementById('modal-eos').classList.add('open');
-  loadEOS(id,'termination');
+
+// ── ATTENDANCE ────────────────────────────────────────────────
+function initAttendancePage(){
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('att-date-picker').value=today;
+  const now=new Date();
+  const month=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('att-month-picker').value=month;
+  loadAttendance();
+  loadMonthlyReport();
+  populateEmpFilter();
 }
+
+async function populateEmpFilter(){
+  if(!employeesData.length){const d=await apicall('GET','/employees');employeesData=d?.employees||[];}
+  const sel=document.getElementById('att-emp-filter');
+  sel.innerHTML='<option value="">All Employees</option>'+employeesData.map(e=>`<option value="${e.id}">${e.first_name_en} ${e.last_name_en}</option>`).join('');
+  const attSel=document.getElementById('att-emp-id');
+  if(attSel)attSel.innerHTML=employeesData.map(e=>`<option value="${e.id}">${e.first_name_en} ${e.last_name_en}</option>`).join('');
+}
+
+async function loadAttendance(){
+  const date=document.getElementById('att-date-picker').value;
+  document.getElementById('att-date-label').textContent=date;
+  document.getElementById('att-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  if(!employeesData.length){const d=await apicall('GET','/employees');employeesData=d?.employees||[];}
+  const data=await apicall('GET',`/attendance?date=${date}`);
+  const records=data?.records||[];
+  // Build map
+  const recMap={};records.forEach(r=>recMap[r.employee_id]=r);
+  // Count statuses
+  let present=0,late=0,absent=0,half=0;
+  const rows=employeesData.filter(e=>e.status==='active').map(emp=>{
+    const r=recMap[emp.id];
+    let status=r?.status||'absent';
+    if(status==='present')present++;
+    else if(status==='late')late++;
+    else if(status==='half_day')half++;
+    else absent++;
+    const mapLink=r?.clock_in_lat?`<a href="https://www.google.com/maps?q=${r.clock_in_lat},${r.clock_in_lng}" target="_blank" style="color:#E8472A;font-size:12px;text-decoration:none;">📍 Map</a>`:'—';
+    const statusBadge={present:'<span class="badge badge-present">Present</span>',late:'<span class="badge badge-late">Late</span>',absent:'<span class="badge badge-absent">Absent</span>',half_day:'<span class="badge badge-half_day">Half Day</span>'};
+    return`<tr><td><div style="font-weight:700">${emp.first_name_en} ${emp.last_name_en}</div></td><td style="font-size:12px">${r?.clock_in?.slice(0,5)||'—'}</td><td style="font-size:12px">${r?.clock_out?.slice(0,5)||'—'}</td><td style="font-weight:700">${r?.hours_worked!=null?r.hours_worked.toFixed(1)+' hrs':'—'}</td><td>${statusBadge[status]||status}</td><td>${mapLink}</td><td>${r?`<button class="btn btn-ghost btn-sm" onclick="openEditAtt('${r.id}','${emp.first_name_en} ${emp.last_name_en}')">Edit</button>`:'<button class="btn btn-ghost btn-sm" onclick="openAddAttForEmp(\'${emp.id}\',\'${date}\')">+ Add</button>'}</td></tr>`;
+  }).join('');
+  document.getElementById('att-present').textContent=present;
+  document.getElementById('att-late').textContent=late;
+  document.getElementById('att-absent').textContent=absent;
+  document.getElementById('att-half').textContent=half;
+  document.getElementById('att-list').innerHTML=rows?`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Status</th><th>Location</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">No active employees</div></div>';
+}
+
+async function loadMonthlyReport(){
+  const month=document.getElementById('att-month-picker').value;
+  const empId=document.getElementById('att-emp-filter').value;
+  if(!month)return;
+  document.getElementById('att-monthly-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  let url=`/attendance?month=${month}`;
+  if(empId)url+=`&employee_id=${empId}`;
+  const data=await apicall('GET',url);
+  const records=data?.records||[];
+  if(!records.length){document.getElementById('att-monthly-list').innerHTML='<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">No records for this period</div></div>';return;}
+  const statusBadge={present:'<span class="badge badge-present">Present</span>',late:'<span class="badge badge-late">Late</span>',absent:'<span class="badge badge-absent">Absent</span>',half_day:'<span class="badge badge-half_day">Half Day</span>'};
+  const mapLink=r=>r.clock_in_lat?`<a href="https://www.google.com/maps?q=${r.clock_in_lat},${r.clock_in_lng}" target="_blank" style="color:#E8472A;font-size:11px;text-decoration:none;">📍</a>`:'';
+  document.getElementById('att-monthly-list').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Date</th><th>In</th><th>Out</th><th>Hours</th><th>Status</th><th>Loc</th></tr></thead><tbody>${records.map(r=>`<tr><td style="font-weight:700">${r.first_name_en||''} ${r.last_name_en||''}</td><td style="font-size:12px">${r.date}</td><td style="font-size:12px">${r.clock_in?.slice(0,5)||'—'}</td><td style="font-size:12px">${r.clock_out?.slice(0,5)||'—'}</td><td style="font-weight:700">${r.hours_worked!=null?r.hours_worked.toFixed(1)+' hrs':'—'}</td><td>${statusBadge[r.status]||r.status}</td><td>${mapLink(r)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function openAddAttModal(){
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('att-manual-date').value=today;
+  document.getElementById('att-manual-in').value='08:00';
+  document.getElementById('att-manual-out').value='17:00';
+  document.getElementById('att-manual-status').value='present';
+  document.getElementById('att-manual-notes').value='';
+  populateEmpFilter();
+  document.getElementById('modal-att').classList.add('open');
+}
+
+function openAddAttForEmp(empId,date){
+  openAddAttModal();
+  setTimeout(()=>{document.getElementById('att-emp-id').value=empId;document.getElementById('att-manual-date').value=date;},100);
+}
+
+async function openEditAtt(id,name){
+  const data=await apicall('GET',`/attendance?date=${document.getElementById('att-date-picker').value}`);
+  const rec=(data?.records||[]).find(r=>r.id===id);
+  if(!rec)return;
+  populateEmpFilter();
+  setTimeout(()=>{
+    document.getElementById('att-emp-id').value=rec.employee_id;
+    document.getElementById('att-manual-date').value=rec.date;
+    document.getElementById('att-manual-in').value=rec.clock_in?.slice(0,5)||'';
+    document.getElementById('att-manual-out').value=rec.clock_out?.slice(0,5)||'';
+    document.getElementById('att-manual-status').value=rec.status||'present';
+    document.getElementById('att-manual-notes').value=rec.notes||'';
+    document.getElementById('modal-att').classList.add('open');
+    document.getElementById('modal-att').dataset.editId=id;
+  },100);
+}
+
+async function saveManualAtt(){
+  const empId=document.getElementById('att-emp-id').value;
+  const date=document.getElementById('att-manual-date').value;
+  const clock_in=document.getElementById('att-manual-in').value||null;
+  const clock_out=document.getElementById('att-manual-out').value||null;
+  const status=document.getElementById('att-manual-status').value;
+  const notes=document.getElementById('att-manual-notes').value;
+  if(!empId||!date){showToast('Employee and date required','error');return;}
+  const editId=document.getElementById('modal-att').dataset.editId;
+  let res;
+  if(editId){res=await apicall('PUT','/attendance/'+editId,{clock_in,clock_out,status,notes});delete document.getElementById('modal-att').dataset.editId;}
+  else{res=await apicall('POST','/attendance',{employee_id:empId,date,clock_in,clock_out,status,notes});}
+  if(res&&!res.error){showToast('Saved ✓','success');closeModal('modal-att');loadAttendance();}
+  else showToast(res?.error||'Error','error');
+}
+
+async function loadWorkSchedule(){
+  if(!currentUser?.company_id)return;
+  const co=await apicall('GET','/companies/'+currentUser.company_id);
+  if(co?.company){
+    document.getElementById('work-start').value=co.company.work_start_time||'08:00';
+    document.getElementById('work-end').value=co.company.work_end_time||'17:00';
+    document.getElementById('late-threshold').value=co.company.late_threshold_minutes||15;
+    const days=(co.company.work_days||'sun,mon,tue,wed,thu').split(',');
+    document.querySelectorAll('.work-day-cb').forEach(cb=>{cb.checked=days.includes(cb.value);});
+  }
+}
+
+async function saveWorkSchedule(){
+  const work_start_time=document.getElementById('work-start').value;
+  const work_end_time=document.getElementById('work-end').value;
+  const late_threshold_minutes=parseInt(document.getElementById('late-threshold').value)||15;
+  const work_days=[...document.querySelectorAll('.work-day-cb:checked')].map(cb=>cb.value).join(',');
+  const res=await apicall('PUT','/companies/'+currentUser.company_id,{work_start_time,work_end_time,late_threshold_minutes,work_days});
+  if(res&&!res.error)showToast('Work schedule saved ✓','success');
+  else showToast(res?.error||'Error','error');
+}
+// ── END ATTENDANCE ────────────────────────────────────────────
+
+function viewEOS(id){currentEOSId=id;document.getElementById('modal-eos').classList.add('open');loadEOS(id,'termination');}
 async function loadEOS(id,type){
   document.getElementById('eos-btn-termination').className='btn '+(type==='termination'?'btn-primary':'btn-ghost');
   document.getElementById('eos-btn-termination').style.cssText='flex:1;justify-content:center;';
@@ -536,10 +704,7 @@ async function loadEOS(id,type){
   document.getElementById('eos-btn-resignation').style.cssText='flex:1;justify-content:center;';
   document.getElementById('eos-content').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET',`/eos?employee_id=${id}&type=${type}`);
-  if(!data||data.error){
-    document.getElementById('eos-content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">${data?.error||'Error loading EOS'}</div><div class="empty-sub">Make sure this employee has a hire date set</div></div>`;
-    return;
-  }
+  if(!data||data.error){document.getElementById('eos-content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">${data?.error||'Error loading EOS'}</div></div>`;return;}
   document.getElementById('eos-emp-name').textContent=`EOS — ${data.employee.name}`;
   const kwd=n=>`KWD ${parseFloat(n).toFixed(3)}`;
   const accentColor=data.final_indemnity>0?'#1a7a42':'#c46a00';
@@ -550,23 +715,21 @@ async function loadEOS(id,type){
       <div class="stat-card" style="padding:14px;"><div class="stat-label">Years of Service</div><div style="font-size:20px;font-weight:800;margin-top:4px;">${data.years_of_service} yrs</div></div>
       <div class="stat-card" style="padding:14px;"><div class="stat-label">Daily Wage</div><div style="font-size:15px;font-weight:800;margin-top:4px;">${kwd(data.daily_wage)}</div></div>
     </div>
-    <div class="section-card" style="margin-bottom:14px;">
-      <div style="padding:16px 20px;">
-        <div style="font-size:13px;font-weight:800;margin-bottom:12px;color:#1a1a2e;">Indemnity Breakdown</div>
-        <table width="100%" style="border-collapse:collapse;font-size:13px;">
-          <tr><td style="padding:8px 0;color:#555;">First 5 years &nbsp;<span style="color:#888;font-size:11px;">(${Math.min(data.years_of_service,5).toFixed(2)} yrs × 15 days × ${kwd(data.daily_wage)}/day)</span></td><td style="text-align:right;font-weight:700;">${kwd(data.first_5_years_amount)}</td></tr>
-          ${data.beyond_5_years>0?`<tr><td style="padding:8px 0;color:#555;">Beyond 5 years &nbsp;<span style="color:#888;font-size:11px;">(${data.beyond_5_years.toFixed(2)} yrs × 30 days × ${kwd(data.daily_wage)}/day)</span></td><td style="text-align:right;font-weight:700;">${kwd(data.beyond_5_years_amount)}</td></tr>`:''}
-          <tr style="border-top:2px solid #e8e0d8;"><td style="padding:12px 0 6px;font-weight:800;">Full Indemnity (before factor)</td><td style="text-align:right;font-weight:800;font-size:15px;">${kwd(data.full_indemnity)}</td></tr>
-          <tr><td style="padding:4px 0;font-size:12px;color:#888;">${data.factor_reason}</td><td style="text-align:right;font-size:12px;color:#888;">× ${data.factor===(2/3)?'2/3 (66.7%)':data.factor*100+'%'}</td></tr>
-        </table>
-      </div>
-    </div>
+    <div class="section-card" style="margin-bottom:14px;"><div style="padding:16px 20px;">
+      <div style="font-size:13px;font-weight:800;margin-bottom:12px;">Indemnity Breakdown</div>
+      <table width="100%" style="border-collapse:collapse;font-size:13px;">
+        <tr><td style="padding:8px 0;color:#555;">First 5 years</td><td style="text-align:right;font-weight:700;">${kwd(data.first_5_years_amount)}</td></tr>
+        ${data.beyond_5_years>0?`<tr><td style="padding:8px 0;color:#555;">Beyond 5 years</td><td style="text-align:right;font-weight:700;">${kwd(data.beyond_5_years_amount)}</td></tr>`:''}
+        <tr style="border-top:2px solid #e8e0d8;"><td style="padding:12px 0 6px;font-weight:800;">Full Indemnity</td><td style="text-align:right;font-weight:800;font-size:15px;">${kwd(data.full_indemnity)}</td></tr>
+        <tr><td style="padding:4px 0;font-size:12px;color:#888;">${data.factor_reason}</td><td style="text-align:right;font-size:12px;color:#888;">× ${data.factor===(2/3)?'2/3':data.factor*100+'%'}</td></tr>
+      </table>
+    </div></div>
     <div style="background:${bgColor};border-radius:12px;padding:22px;text-align:center;">
       <div style="font-size:11px;font-weight:700;color:#888;letter-spacing:1px;margin-bottom:8px;">TOTAL END OF SERVICE INDEMNITY</div>
       <div style="font-size:36px;font-weight:800;color:${accentColor};">${kwd(data.final_indemnity)}</div>
-      <div style="font-size:12px;color:#888;margin-top:6px;">Based on basic salary of ${kwd(data.employee.basic_salary)}/month · as of today</div>
     </div>`;
 }
+
 async function loadLeaves(){
   document.getElementById('leaves-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/leaves?status='+currentLeaveFilter);
@@ -614,6 +777,7 @@ async function loadLeaveBalances(){
 }
 async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'approve'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none'){loadLeaves();loadLeaveBalances();}}else showToast(res?.error||'Error','error');}
 async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'reject'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none'){loadLeaves();loadLeaveBalances();}}else showToast(res?.error||'Error','error');}
+
 const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
 async function loadPayroll(){
   const now=new Date();
@@ -624,7 +788,7 @@ async function loadPayroll(){
   const data=await apicall('GET','/payroll');
   const runs=data?.runs||[];
   const el=document.getElementById('payroll-list');
-  if(!runs.length){el.innerHTML='<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">No payroll runs yet</div><div class="empty-sub">Select a month and click Run Payroll</div></div>';return;}
+  if(!runs.length){el.innerHTML='<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">No payroll runs yet</div></div>';return;}
   const statusBadge={draft:'<span class="badge badge-orange">Draft</span>',approved:'<span class="badge badge-blue">Published</span>',paid:'<span class="badge badge-green">Paid</span>'};
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Period</th><th>Gross (KWD)</th><th>PIFSS Deducted</th><th>Net Pay (KWD)</th><th>Status</th><th>Actions</th></tr></thead><tbody>${runs.map(r=>`<tr><td style="font-weight:700">${MONTH_NAMES[r.period_month-1]} ${r.period_year}</td><td>KWD ${(r.total_gross||0).toFixed(3)}</td><td style="color:#E8472A">- KWD ${(r.total_pifss_employee||0).toFixed(3)}</td><td style="font-weight:800;color:#1a7a42">KWD ${(r.total_net||0).toFixed(3)}</td><td>${statusBadge[r.status]||r.status}</td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="viewPayrollRun('${r.id}')">View</button>${r.status==='draft'?`<button class="btn btn-primary btn-sm" onclick="publishPayslips('${r.id}')">Publish</button>`:''}${r.status==='approved'?`<button class="btn btn-success btn-sm" onclick="markAsPaid('${r.id}')">Mark Paid</button>`:''}${r.status!=='paid'?`<button class="btn btn-danger btn-sm" onclick="deletePayrollRun('${r.id}')">Delete</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;
 }
@@ -645,7 +809,7 @@ async function viewPayrollRun(id){
   if(!data||data.error){showToast('Error loading run','error');return;}
   const{run,entries}=data;
   document.getElementById('payroll-detail-title').textContent=`${MONTH_NAMES[run.period_month-1]} ${run.period_year} — Breakdown`;
-  document.getElementById('payroll-detail-summary').innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;"><div class="stat-card"><div class="stat-label">Total Gross</div><div class="stat-value" style="font-size:22px">KWD ${(run.total_gross||0).toFixed(3)}</div></div><div class="stat-card"><div class="stat-label">PIFSS Deducted (8%)</div><div class="stat-value" style="font-size:22px;color:#E8472A">-${(run.total_pifss_employee||0).toFixed(3)}</div></div><div class="stat-card"><div class="stat-label">Net Salaries</div><div class="stat-value" style="font-size:22px;color:#1a7a42">KWD ${(run.total_net||0).toFixed(3)}</div></div><div class="stat-card"><div class="stat-label">Company PIFSS (11%)</div><div class="stat-value" style="font-size:22px;color:#888">KWD ${(run.total_pifss_employer||0).toFixed(3)}</div></div></div>`;
+  document.getElementById('payroll-detail-summary').innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;"><div class="stat-card"><div class="stat-label">Total Gross</div><div class="stat-value" style="font-size:22px">KWD ${(run.total_gross||0).toFixed(3)}</div></div><div class="stat-card"><div class="stat-label">PIFSS Deducted</div><div class="stat-value" style="font-size:22px;color:#E8472A">-${(run.total_pifss_employee||0).toFixed(3)}</div></div><div class="stat-card"><div class="stat-label">Net Salaries</div><div class="stat-value" style="font-size:22px;color:#1a7a42">KWD ${(run.total_net||0).toFixed(3)}</div></div><div class="stat-card"><div class="stat-label">Company PIFSS (11%)</div><div class="stat-value" style="font-size:22px;color:#888">KWD ${(run.total_pifss_employer||0).toFixed(3)}</div></div></div>`;
   const actionsEl=document.getElementById('payroll-detail-actions');
   if(run.status==='draft'){actionsEl.innerHTML=`<button class="btn btn-primary" onclick="publishPayslips('${id}')">📤 Publish Payslips</button><button class="btn btn-danger" onclick="deletePayrollRun('${id}')">Delete</button>`;}
   else if(run.status==='approved'){actionsEl.innerHTML=`<button class="btn btn-success" onclick="markAsPaid('${id}')">✓ Mark as Paid</button>`;}
@@ -656,6 +820,7 @@ function showPayrollList(){document.getElementById('payroll-runs-view').style.di
 async function publishPayslips(id){const res=await apicall('PUT','/payroll/'+id,{action:'publish'});if(!res||res.error){showToast(res?.error||'Error','error');return;}showToast('Payslips published ✓','success');loadPayroll();viewPayrollRun(id);}
 async function markAsPaid(id){const res=await apicall('PUT','/payroll/'+id,{action:'pay'});if(!res||res.error){showToast(res?.error||'Error','error');return;}showToast('Marked as paid ✓','success');loadPayroll();viewPayrollRun(id);}
 async function deletePayrollRun(id){if(!confirm('Delete this payroll run?'))return;const res=await apicall('DELETE','/payroll/'+id);if(!res||res.error){showToast(res?.error||'Error','error');return;}showToast('Deleted','success');showPayrollList();loadPayroll();}
+
 function renderSettings(){renderDeptList();renderJTList();}
 function renderDeptList(){const el=document.getElementById('dept-list');if(!deptsData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No departments yet</div>';return;}el.innerHTML=deptsData.map(d=>`<div class="tag-item"><div><div class="tag-item-name">${d.name_en}</div><div class="tag-item-ar">${d.name_ar||''}</div></div><button class="tag-delete" onclick="deleteDept('${d.id}')">✕</button></div>`).join('');}
 function renderJTList(){const el=document.getElementById('jt-list');if(!jobTitlesData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No job titles yet</div>';return;}el.innerHTML=jobTitlesData.map(j=>`<div class="tag-item"><div><div class="tag-item-name">${j.title_en}</div><div class="tag-item-ar">${j.title_ar||''}</div></div><button class="tag-delete" onclick="deleteJobTitle('${j.id}')">✕</button></div>`).join('');}
@@ -663,6 +828,7 @@ async function addDept(){const en=document.getElementById('new-dept-en').value.t
 async function addJobTitle(){const en=document.getElementById('new-jt-en').value.trim();const ar=document.getElementById('new-jt-ar').value.trim();if(!en){showToast('Enter job title','error');return;}const res=await apicall('POST','/job-titles',{title_en:en,title_ar:ar});if(res&&res.job_title){jobTitlesData.push(res.job_title);renderJTList();document.getElementById('new-jt-en').value='';document.getElementById('new-jt-ar').value='';showToast('Job title added ✓','success');}else showToast('Error adding job title','error');}
 async function deleteDept(id){const res=await apicall('DELETE','/departments/'+id);if(res&&res.success){deptsData=deptsData.filter(d=>d.id!==id);renderDeptList();showToast('Deleted','success');}else showToast('Error','error');}
 async function deleteJobTitle(id){const res=await apicall('DELETE','/job-titles/'+id);if(res&&res.success){jobTitlesData=jobTitlesData.filter(j=>j.id!==id);renderJTList();showToast('Deleted','success');}else showToast('Error','error');}
+
 function populateDropdowns(){
   const deptSel=document.getElementById('emp-dept-id');
   const jtSel=document.getElementById('emp-job-title-id');
@@ -702,29 +868,15 @@ function editEmployee(id){
   document.getElementById('modal-employee').classList.add('open');
 }
 async function saveEmployee(){
-  const body={
-    first_name_en:document.getElementById('emp-first-en').value.trim(),
-    last_name_en:document.getElementById('emp-last-en').value.trim(),
-    first_name_ar:document.getElementById('emp-first-ar').value.trim(),
-    last_name_ar:document.getElementById('emp-last-ar').value.trim(),
-    civil_id:document.getElementById('emp-civil-id').value.trim(),
-    nationality:document.getElementById('emp-nationality').value,
-    department_id:document.getElementById('emp-dept-id').value||null,
-    job_title_id:document.getElementById('emp-job-title-id').value||null,
-    basic_salary:parseFloat(document.getElementById('emp-salary').value)||0,
-    hire_date:document.getElementById('emp-start').value,
-    work_email:document.getElementById('emp-email').value.trim(),
-    mobile:document.getElementById('emp-phone').value.trim(),
-    employment_type:document.getElementById('emp-contract').value,
-    initial_password:document.getElementById('emp-password')?.value||''
-  };
+  const body={first_name_en:document.getElementById('emp-first-en').value.trim(),last_name_en:document.getElementById('emp-last-en').value.trim(),first_name_ar:document.getElementById('emp-first-ar').value.trim(),last_name_ar:document.getElementById('emp-last-ar').value.trim(),civil_id:document.getElementById('emp-civil-id').value.trim(),nationality:document.getElementById('emp-nationality').value,department_id:document.getElementById('emp-dept-id').value||null,job_title_id:document.getElementById('emp-job-title-id').value||null,basic_salary:parseFloat(document.getElementById('emp-salary').value)||0,hire_date:document.getElementById('emp-start').value,work_email:document.getElementById('emp-email').value.trim(),mobile:document.getElementById('emp-phone').value.trim(),employment_type:document.getElementById('emp-contract').value,initial_password:document.getElementById('emp-password')?.value||''};
   if(!body.first_name_en||!body.last_name_en){showToast('First and last name required','error');return;}
   const res=editingEmpId?await apicall('PUT','/employees/'+editingEmpId,body):await apicall('POST','/employees',body);
   if(res&&!res.error){showToast(editingEmpId?'Employee updated ✓':'Employee added ✓','success');closeModal('modal-employee');loadEmployees();loadDashboard();}
   else showToast(res?.error||'Error saving employee','error');
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-let permsData=[],currentPermFilter='pending';
+
+// ── PERMISSIONS ───────────────────────────────────────────────
 async function loadPerms(){
   document.getElementById('perms-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const status=currentPermFilter==='all'?'':('?status='+currentPermFilter);
@@ -736,32 +888,15 @@ async function loadPerms(){
   const badge=document.getElementById('perm-badge');
   if(count>0){badge.style.display='';badge.textContent=count;}else{badge.style.display='none';}
 }
-function filterPerms(status,btn){
-  currentPermFilter=status;
-  document.querySelectorAll('#page-permissions .filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  loadPerms();
-}
+function filterPerms(status,btn){currentPermFilter=status;document.querySelectorAll('#page-permissions .filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');loadPerms();}
 function renderPermsList(list){
   const el=document.getElementById('perms-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🕐</div><div class="empty-text">No permission requests</div></div>';return;}
   const statusBadge={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>'};
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Date</th><th>Time</th><th>Hours</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map(p=>{
-    const name=p.first_name_en?`${p.first_name_en} ${p.last_name_en}`:'—';
-    const time=`${p.start_time} – ${p.end_time}`;
-    return`<tr><td style="font-weight:700">${name}</td><td style="font-size:12px">${p.date}</td><td style="font-size:12px">${time}</td><td style="font-weight:700">${parseFloat(p.hours).toFixed(1)} hrs</td><td style="font-size:12px;color:#888;max-width:160px">${p.reason||'—'}</td><td>${statusBadge[p.status]||p.status}</td><td style="display:flex;gap:6px;">${p.status==='pending'?`<button class="btn btn-success btn-sm" onclick="approvePerm('${p.id}')">✓</button><button class="btn btn-danger btn-sm" onclick="rejectPerm('${p.id}')">✕</button>`:'—'}</td></tr>`;
-  }).join('')}</tbody></table></div>`;
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Date</th><th>Time</th><th>Hours</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map(p=>{const name=p.first_name_en?`${p.first_name_en} ${p.last_name_en}`:'—';return`<tr><td style="font-weight:700">${name}</td><td style="font-size:12px">${p.date}</td><td style="font-size:12px">${p.start_time} – ${p.end_time}</td><td style="font-weight:700">${parseFloat(p.hours).toFixed(1)} hrs</td><td style="font-size:12px;color:#888;max-width:160px">${p.reason||'—'}</td><td>${statusBadge[p.status]||p.status}</td><td style="display:flex;gap:6px;">${p.status==='pending'?`<button class="btn btn-success btn-sm" onclick="approvePerm('${p.id}')">✓</button><button class="btn btn-danger btn-sm" onclick="rejectPerm('${p.id}')">✕</button>`:'—'}</td></tr>`;}).join('')}</tbody></table></div>`;
 }
-async function approvePerm(id){
-  const res=await apicall('PUT','/permissions/'+id,{action:'approve'});
-  if(res&&!res.error){showToast('Approved ✓','success');loadPerms();loadPermUsage();}
-  else showToast(res?.error||'Error','error');
-}
-async function rejectPerm(id){
-  const res=await apicall('PUT','/permissions/'+id,{action:'reject'});
-  if(res&&!res.error){showToast('Rejected','');loadPerms();loadPermUsage();}
-  else showToast(res?.error||'Error','error');
-}
+async function approvePerm(id){const res=await apicall('PUT','/permissions/'+id,{action:'approve'});if(res&&!res.error){showToast('Approved ✓','success');loadPerms();loadPermUsage();}else showToast(res?.error||'Error','error');}
+async function rejectPerm(id){const res=await apicall('PUT','/permissions/'+id,{action:'reject'});if(res&&!res.error){showToast('Rejected','');loadPerms();loadPermUsage();}else showToast(res?.error||'Error','error');}
 async function loadPermUsage(){
   const el=document.getElementById('perm-usage-list');
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
@@ -784,29 +919,14 @@ async function loadPermUsage(){
   }).join('');
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Used This Month</th><th>Remaining</th><th>Usage</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
-async function savePermLimit(){
-  const val=parseFloat(document.getElementById('perm-hours-limit').value);
-  if(isNaN(val)||val<0){showToast('Enter a valid number','error');return;}
-  const res=await apicall('PUT','/companies/'+currentUser.company_id,{permission_hours_monthly:val});
-  if(res&&!res.error){showToast(`Limit set to ${val} hrs/month ✓`,'success');}
-  else showToast(res?.error||'Error saving limit','error');
-}
-async function loadPermSettings(){
-  if(!currentUser?.company_id)return;
-  const co=await apicall('GET','/companies/'+currentUser.company_id);
-  if(co?.company){document.getElementById('perm-hours-limit').value=co.company.permission_hours_monthly??4;}
-}
+async function savePermLimit(){const val=parseFloat(document.getElementById('perm-hours-limit').value);if(isNaN(val)||val<0){showToast('Enter a valid number','error');return;}const res=await apicall('PUT','/companies/'+currentUser.company_id,{permission_hours_monthly:val});if(res&&!res.error){showToast(`Limit set to ${val} hrs/month ✓`,'success');}else showToast(res?.error||'Error saving limit','error');}
+async function loadPermSettings(){if(!currentUser?.company_id)return;const co=await apicall('GET','/companies/'+currentUser.company_id);if(co?.company){document.getElementById('perm-hours-limit').value=co.company.permission_hours_monthly??4;}}
+
 function setLang(lang,save=true){currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);document.documentElement.lang=lang;document.body.classList.toggle('ar',lang==='ar');document.getElementById('btn-en').classList.toggle('active',lang==='en');document.getElementById('btn-ar').classList.toggle('active',lang==='ar');document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.dataset[lang]||el.dataset.en;});}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3000);}
 function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem('ghaya_user');localStorage.removeItem('ghaya_page');window.location.href='/';}
-document.querySelectorAll('.info-icon').forEach(icon=>{
-  icon.addEventListener('mouseenter',function(){
-    const tip=document.createElement('div');tip.id='gtip';tip.style.cssText='position:fixed;background:#1a1a2e;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;line-height:1.5;width:210px;z-index:9999;pointer-events:none';
-    tip.textContent=this.dataset.tip;document.body.appendChild(tip);
-    const r=this.getBoundingClientRect();tip.style.left=Math.max(10,r.right-215)+'px';tip.style.top=(r.bottom+8)+'px';
-  });
-  icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
-});
+document.querySelectorAll('.info-icon').forEach(icon=>{icon.addEventListener('mouseenter',function(){const tip=document.createElement('div');tip.id='gtip';tip.style.cssText='position:fixed;background:#1a1a2e;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;line-height:1.5;width:210px;z-index:9999;pointer-events:none';tip.textContent=this.dataset.tip;document.body.appendChild(tip);const r=this.getBoundingClientRect();tip.style.left=Math.max(10,r.right-215)+'px';tip.style.top=(r.bottom+8)+'px';});icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});});
+
 const saved=localStorage.getItem('ghaya_page')||'dashboard';
 showPage(saved);
 init();
