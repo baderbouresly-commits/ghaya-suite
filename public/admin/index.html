@@ -695,9 +695,11 @@ async function saveWorkSchedule(){
   const work_end_time=document.getElementById('work-end').value;
   const late_threshold_minutes=parseInt(document.getElementById('late-threshold').value)||15;
   const work_days=[...document.querySelectorAll('.work-day-cb:checked')].map(cb=>cb.value).join(',');
-  const res=await apicall('PUT','/companies/'+currentUser.company_id,{work_start_time,work_end_time,late_threshold_minutes,work_days});
+  const current=await apicall('GET','/companies/'+currentUser.company_id);
+  const body=Object.assign({},current?.company||{},{work_start_time,work_end_time,late_threshold_minutes,work_days});
+  const res=await apicall('PUT','/companies/'+currentUser.company_id,body);
   if(res&&!res.error)showToast('Work schedule saved ✓','success');
-  else showToast(res?.error||'Error','error');
+  else showToast(res?.error||'Error saving schedule','error');
 }
 // ── END ATTENDANCE ────────────────────────────────────────────
 
@@ -924,8 +926,7 @@ async function loadPermUsage(){
   }).join('');
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Used This Month</th><th>Remaining</th><th>Usage</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
-async function savePermLimit(){const val=parseFloat(document.getElementById('perm-hours-limit').value);if(isNaN(val)||val<0){showToast('Enter a valid number','error');return;}const res=await apicall('PUT','/companies/'+currentUser.company_id,{permission_hours_monthly:val});if(res&&!res.error){showToast(`Limit set to ${val} hrs/month ✓`,'success');}else showToast(res?.error||'Error saving limit','error');}
-async function loadPermSettings(){if(!currentUser?.company_id)return;const co=await apicall('GET','/companies/'+currentUser.company_id);if(co?.company){document.getElementById('perm-hours-limit').value=co.company.permission_hours_monthly??4;}}
+async function savePermLimit(){const val=parseFloat(document.getElementById('perm-hours-limit').value);if(isNaN(val)||val<0){showToast('Enter a valid number','error');return;}const current=await apicall('GET','/companies/'+currentUser.company_id);const body=Object.assign({},current?.company||{},{permission_hours_monthly:val});const res=await apicall('PUT','/companies/'+currentUser.company_id,body);if(res&&!res.error){showToast(`Limit set to ${val} hrs/month ✓`,'success');}else showToast(res?.error||'Error saving limit','error');}async function loadPermSettings(){if(!currentUser?.company_id)return;const co=await apicall('GET','/companies/'+currentUser.company_id);if(co?.company){document.getElementById('perm-hours-limit').value=co.company.permission_hours_monthly??4;}}
 
 function setLang(lang,save=true){currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);document.documentElement.lang=lang;document.body.classList.toggle('ar',lang==='ar');document.getElementById('btn-en').classList.toggle('active',lang==='en');document.getElementById('btn-ar').classList.toggle('active',lang==='ar');document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.dataset[lang]||el.dataset.en;});}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3000);}
