@@ -3,11 +3,11 @@ const enc = new TextEncoder();
 
 function b64u(data) {
   return btoa(String.fromCharCode(...new Uint8Array(data)))
-    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 function parseB64u(str) {
-  str = str.replace(/-/g,'+').replace(/_/g,'/');
+  str = str.replace(/-/g, '+').replace(/_/g, '/');
   while (str.length % 4) str += '=';
   return Uint8Array.from(atob(str), c => c.charCodeAt(0));
 }
@@ -77,8 +77,12 @@ export async function onRequest({request, env, params}) {
     try { body = await request.json(); } catch { return json({error:'Invalid JSON'}, 400); }
 
     const { first_name_en, last_name_en, first_name_ar, last_name_ar,
-      civil_id, nationality, job_title_en, department, basic_salary,
-      employment_start_date, work_email, phone, contract_type,
+      civil_id, nationality,
+      job_title_id, job_title_en,
+      department_id, department,
+      basic_salary,
+      hire_date, employment_start_date,
+      work_email, phone, contract_type,
       initial_password, company_id: bodyCompanyId } = body;
 
     if (!first_name_en || !last_name_en) return json({error:'First and last name required'}, 400);
@@ -87,6 +91,10 @@ export async function onRequest({request, env, params}) {
 
     const isKuwaiti = (nationality||'').toLowerCase() === 'kuwaiti' ? 1 : 0;
     const newId = crypto.randomUUID();
+
+    const resolvedJobTitle = job_title_id || job_title_en || null;
+    const resolvedDept = department_id || department || null;
+    const resolvedHireDate = hire_date || employment_start_date || null;
 
     await env.DB.prepare(`
       INSERT INTO employees
@@ -99,15 +107,15 @@ export async function onRequest({request, env, params}) {
       first_name_en, last_name_en,
       first_name_ar||null, last_name_ar||null,
       civil_id||null, nationality||null, isKuwaiti,
-      job_title_en||null, department||null,
+      resolvedJobTitle,
+      resolvedDept,
       basic_salary ? parseFloat(basic_salary) : 0,
-      employment_start_date||null,
+      resolvedHireDate,
       work_email||null, phone||null,
       contract_type||'full_time',
       'active'
     ).run();
 
-    // Create user account if password + email provided
     if (initial_password && work_email) {
       try {
         const passwordHash = await hashPassword(initial_password);
@@ -139,11 +147,13 @@ export async function onRequest({request, env, params}) {
     const fieldMap = {
       first_name_en:'first_name_en', last_name_en:'last_name_en',
       first_name_ar:'first_name_ar', last_name_ar:'last_name_ar',
-      job_title_en:'job_title_en', department:'department',
+      job_title_id:'job_title_en', job_title_en:'job_title_en',
+      department_id:'department', department:'department',
       basic_salary:'basic_salary', work_email:'work_email',
       phone:'mobile', contract_type:'employment_type',
       nationality:'nationality', civil_id:'civil_id',
-      employment_start_date:'hire_date', status:'status'
+      hire_date:'hire_date', employment_start_date:'hire_date',
+      status:'status'
     };
 
     const sets = [], vals = [];
