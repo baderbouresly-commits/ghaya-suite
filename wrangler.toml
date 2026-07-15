@@ -7,10 +7,6 @@ binding = "DB"
 database_name = "ghaya-db"
 database_id = "548be003-b8ca-417c-b0f1-03dad840fe92"
 
-[[r2_buckets]]
-binding = "R2"
-bucket_name = "ghaya-files"
-
 [vars]
 ENVIRONMENT = "production"
 JWT_SECRET = "ghaya2025xK9mP3nQ7rL2sT8vW4yZ6aB1cD5eF0hJ"
