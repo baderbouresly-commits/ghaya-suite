@@ -1,254 +1,718 @@
-
 <!DOCTYPE html>
-
-<html dir="ltr" lang="en">
-
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="color-scheme" content="light dark">
-<meta name="google" value="notranslate">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ghaya | Employee Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Almarai', sans-serif; background: #e4ddd6; color: #333; display: flex; min-height: 100vh; }
+    .sidebar { width: 240px; background: #1a1a2e; color: white; position: fixed; height: 100vh; display: flex; flex-direction: column; }
+    .sidebar-logo { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .logo-icon { width: 44px; height: 44px; background: #E8472A; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; color: white; margin-bottom: 8px; }
+    .logo-name { font-size: 20px; font-weight: 800; color: white; }
+    .logo-sub { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; }
+    .user-card { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .user-name { font-size: 14px; font-weight: 700; color: white; }
+    .user-role { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: capitalize; margin-top: 2px; }
+    .nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+    .nav-label { padding: 8px 20px 4px; font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 20px; cursor: pointer; transition: background 0.2s; color: rgba(255,255,255,0.7); font-size: 14px; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .nav-item.active { background: rgba(232,71,42,0.2); color: #E8472A; border-right: 3px solid #E8472A; }
+    .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .logout-btn { display: flex; align-items: center; gap: 10px; cursor: pointer; color: rgba(255,255,255,0.5); font-size: 13px; padding: 8px 0; }
+    .logout-btn:hover { color: #E8472A; }
+    .main { margin-left: 240px; flex: 1; padding: 32px; min-height: 100vh; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .page-title { font-size: 24px; font-weight: 800; color: #1a1a2e; }
+    .page-sub { font-size: 14px; color: #888; margin-top: 2px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+    .stat-card { background: #fff; border-radius: 14px; padding: 18px 20px; border: 1px solid #c8bfb6; }
+    .stat-icon { font-size: 24px; margin-bottom: 8px; }
+    .stat-label { font-size: 11px; color: #888; margin-bottom: 4px; font-weight: 700; letter-spacing: 0.3px; }
+    .stat-value { font-size: 26px; font-weight: 800; color: #1a1a2e; }
+    .card { background: #fff; border-radius: 14px; padding: 22px; border: 1px solid #c8bfb6; margin-bottom: 20px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .card-title { font-size: 15px; font-weight: 800; color: #1a1a2e; }
+    .btn { padding: 9px 18px; border: none; border-radius: 9px; cursor: pointer; font-family: 'Almarai', sans-serif; font-size: 13px; font-weight: 700; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: #E8472A; color: white; }
+    .btn-primary:hover { background: #d63d22; }
+    .btn-secondary { background: #ede6df; color: #555; border: 1px solid #c8bfb6; }
+    .btn-secondary:hover { background: #ddd5cc; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .action-btn { padding: 5px 10px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Almarai', sans-serif; font-size: 11px; font-weight: 700; transition: all 0.2s; }
+    .action-btn-edit { background: #e6f0ff; color: #1a4da0; }
+    .action-btn-cancel { background: #ffeee6; color: #c42a00; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 14px; font-size: 11px; color: #888; border-bottom: 1px solid #ede6df; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #f5ede6; }
+    td { padding: 12px 14px; font-size: 13px; color: #333; border-bottom: 1px solid #f0e8e0; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .badge-pending { background: #fff3e6; color: #c46a00; }
+    .badge-approved { background: #e6f7ee; color: #1a7a42; }
+    .badge-rejected { background: #ffeee6; color: #c42a00; }
+    .badge-cancelled { background: #ede6df; color: #666; }
+    .badge-present { background: #e6f7ee; color: #1a7a42; }
+    .badge-late { background: #fff3e6; color: #c46a00; }
+    .badge-absent { background: #ffeee6; color: #c42a00; }
+    .badge-half_day { background: #e6f0ff; color: #1a4da0; }
+    .leave-balance { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .balance-item { text-align: center; padding: 18px; background: #f5ede6; border-radius: 12px; border: 1px solid #c8bfb6; }
+    .balance-num { font-size: 32px; font-weight: 800; color: #E8472A; }
+    .balance-label { font-size: 11px; color: #888; margin-top: 4px; font-weight: 700; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 18px; padding: 28px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-size: 18px; font-weight: 800; color: #1a1a2e; margin-bottom: 20px; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 12px; font-weight: 700; color: #555; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .form-control { width: 100%; padding: 10px 13px; border: 1px solid #c8bfb6; border-radius: 9px; font-family: 'Almarai', sans-serif; font-size: 14px; color: #333; outline: none; transition: border 0.2s; background: #f5ede6; }
+    .form-control:focus { border-color: #E8472A; background: white; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .profile-item-label { font-size: 11px; color: #888; margin-bottom: 3px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+    .profile-item-value { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+    .payslip-row { display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid #ede6df; font-size: 14px; }
+    .payslip-row:last-child { border-bottom: none; }
+    .empty-state { text-align: center; padding: 40px 24px; color: #888; }
+    .empty-icon { font-size: 40px; margin-bottom: 10px; }
+    .empty-text { font-size: 15px; font-weight: 700; color: #555; }
+    .empty-sub { font-size: 13px; margin-top: 4px; }
+    .lang-toggle { display: flex; border: 1px solid #c8bfb6; border-radius: 8px; overflow: hidden; background: white; }
+    .lang-btn { padding: 6px 14px; border: none; cursor: pointer; font-size: 12px; font-weight: 700; font-family: 'Almarai', sans-serif; background: transparent; color: #666; }
+    .lang-btn.active { background: #1a1a2e; color: white; }
+    body.rtl { direction: rtl; }
+    body.rtl .sidebar { left: auto; right: 0; }
+    body.rtl .main { margin-left: 0; margin-right: 240px; }
+    body.rtl .nav-item.active { border-right: none; border-left: 3px solid #E8472A; }
+    body.rtl th { text-align: right; }
+    .alert { padding: 11px 14px; border-radius: 9px; margin-bottom: 14px; font-size: 13px; font-weight: 700; }
+    .alert-error { background: #ffeee6; color: #c42a00; }
+    .alert-success { background: #e6f7ee; color: #1a7a42; }
 
-<script>
-function addRow(name, url, isdir,
-    size, size_string, date_modified, date_modified_string) {
-  if (name == "." || name == "..")
-    return;
-
-  var root = document.location.pathname;
-  if (root.substr(-1) !== "/")
-    root += "/";
-
-  var tbody = document.getElementById("tbody");
-  var row = document.createElement("tr");
-  var file_cell = document.createElement("td");
-  var link = document.createElement("a");
-
-  link.className = isdir ? "icon dir" : "icon file";
-
-  if (isdir) {
-    name = name + "/";
-    url = url + "/";
-    size = 0;
-    size_string = "";
-  } else {
-    link.draggable = "true";
-    link.addEventListener("dragstart", onDragStart, false);
-  }
-  link.innerText = name;
-  link.href = root + url;
-
-  file_cell.dataset.value = name;
-  file_cell.appendChild(link);
-
-  row.appendChild(file_cell);
-  row.appendChild(createCell(size, size_string));
-  row.appendChild(createCell(date_modified, date_modified_string));
-
-  tbody.appendChild(row);
-}
-
-function onDragStart(e) {
-  var el = e.srcElement;
-  var name = el.innerText.replace(":", "");
-  var download_url_data = "application/octet-stream:" + name + ":" + el.href;
-  e.dataTransfer.setData("DownloadURL", download_url_data);
-  e.dataTransfer.effectAllowed = "copy";
-}
-
-function createCell(value, text) {
-  var cell = document.createElement("td");
-  cell.setAttribute("class", "detailsColumn");
-  cell.dataset.value = value;
-  cell.innerText = text;
-  return cell;
-}
-
-function start(location) {
-  var header = document.getElementById("header");
-  header.innerText = header.innerText.replace("LOCATION", location);
-
-  document.getElementById("title").innerText = header.innerText;
-}
-
-function onHasParentDirectory() {
-  var box = document.getElementById("parentDirLinkBox");
-  box.style.display = "block";
-
-  var root = document.location.pathname;
-  if (!root.endsWith("/"))
-    root += "/";
-
-  var link = document.getElementById("parentDirLink");
-  link.href = root + "..";
-}
-
-function sortTable(column) {
-  var theader = document.getElementById("theader");
-  var oldOrder = theader.cells[column].dataset.order || '1';
-  oldOrder = parseInt(oldOrder, 10)
-  var newOrder = 0 - oldOrder;
-  theader.cells[column].dataset.order = newOrder;
-
-  var tbody = document.getElementById("tbody");
-  var rows = tbody.rows;
-  var list = [], i;
-  for (i = 0; i < rows.length; i++) {
-    list.push(rows[i]);
-  }
-
-  list.sort(function(row1, row2) {
-    var a = row1.cells[column].dataset.value;
-    var b = row2.cells[column].dataset.value;
-    if (column) {
-      a = parseInt(a, 10);
-      b = parseInt(b, 10);
-      return a > b ? newOrder : a < b ? oldOrder : 0;
+    /* ── Clock Widget ─────────────────────────── */
+    .clock-widget {
+      background: #faf4ee;
+      border: 1px solid #c8bfb6;
+      border-radius: 14px;
+      padding: 22px 26px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
     }
-
-    // Column 0 is text.
-    if (a > b)
-      return newOrder;
-    if (a < b)
-      return oldOrder;
-    return 0;
-  });
-
-  // Appending an existing child again just moves it.
-  for (i = 0; i < list.length; i++) {
-    tbody.appendChild(list[i]);
-  }
-}
-
-// Add event handlers to column headers.
-function addHandlers(element, column) {
-  element.onclick = (e) => sortTable(column);
-  element.onkeydown = (e) => {
-    if (e.key == 'Enter' || e.key == ' ') {
-      sortTable(column);
-      e.preventDefault();
+    .clock-left { flex: 1; }
+    .clock-date { font-size: 12px; color: #999; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 4px; }
+    .clock-time { font-size: 40px; font-weight: 300; color: #1a1a2e; letter-spacing: 2px; line-height: 1; font-variant-numeric: tabular-nums; }
+    .clock-stats { display: flex; gap: 28px; margin-top: 14px; }
+    .clock-stat-label { font-size: 10px; color: #aaa; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .clock-stat-value { font-size: 15px; font-weight: 800; color: #1a1a2e; margin-top: 2px; }
+    .clock-right { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+    .clock-btn {
+      width: 76px; height: 76px; border-radius: 50%; border: none;
+      cursor: pointer; font-family: 'Almarai', sans-serif; font-size: 12px;
+      font-weight: 800; transition: all 0.2s; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 3px;
     }
-  };
-}
-
-function onLoad() {
-  addHandlers(document.getElementById('nameColumnHeader'), 0);
-  addHandlers(document.getElementById('sizeColumnHeader'), 1);
-  addHandlers(document.getElementById('dateColumnHeader'), 2);
-}
-
-window.addEventListener('DOMContentLoaded', onLoad);
-</script>
-
-<style>
-
-  h1 {
-    border-bottom: 1px solid #c0c0c0;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    white-space: nowrap;
-  }
-
-  table {
-    border-collapse: collapse;
-  }
-
-  th {
-    cursor: pointer;
-  }
-
-  td.detailsColumn {
-    padding-inline-start: 2em;
-    text-align: end;
-    white-space: nowrap;
-  }
-
-  a.icon {
-    padding-inline-start: 1.5em;
-    text-decoration: none;
-    user-select: auto;
-  }
-
-  a.icon:hover {
-    text-decoration: underline;
-  }
-
-  a.file {
-    background : url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABnRSTlMAAAAAAABupgeRAAABEElEQVR42nRRx3HDMBC846AHZ7sP54BmWAyrsP588qnwlhqw/k4v5ZwWxM1hzmGRgV1cYqrRarXoH2w2m6qqiqKIR6cPtzc3xMSML2Te7XZZlnW7Pe/91/dX47WRBHuA9oyGmRknzGDjab1ePzw8bLfb6WRalmW4ip9FDVpYSWZgOp12Oh3nXJ7nxoJSGEciteP9y+fH52q1euv38WosqA6T2gGOT44vry7BEQtJkMAMMpa6JagAMcUfWYa4hkkzAc7fFlSjwqCoOUYAF5RjHZPVCFBOtSBGfgUDji3c3jpibeEMQhIMh8NwshqyRsBJgvF4jMs/YlVR5KhgNpuBLzk0OcUiR3CMhcPaOzsZiAAA/AjmaB3WZIkAAAAASUVORK5CYII=") left top no-repeat;
-  }
-
-  a.dir {
-    background : url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABt0lEQVR42oxStZoWQRCs2cXdHTLcHZ6EjAwnQWIkJyQlRt4Cd3d3d1n5d7q7ju1zv/q+mh6taQsk8fn29kPDRo87SDMQcNAUJgIQkBjdAoRKdXjm2mOH0AqS+PlkP8sfp0h93iu/PDji9s2FzSSJVg5ykZqWgfGRr9rAAAQiDFoB1OfyESZEB7iAI0lHwLREQBcQQKqo8p+gNUCguwCNAAUQAcFOb0NNGjT+BbUC2YsHZpWLhC6/m0chqIoM1LKbQIIBwlTQE1xAo9QDGDPYf6rkTpPc92gCUYVJAZjhyZltJ95f3zuvLYRGWWCUNkDL2333McBh4kaLlxg+aTmyL7c2xTjkN4Bt7oE3DBP/3SRz65R/bkmBRPGzcRNHYuzMjaj+fdnaFoJUEdTSXfaHbe7XNnMPyqryPcmfY+zURaAB7SHk9cXSH4fQ5rojgCAVIuqCNWgRhLYLhJB4k3iZfIPtnQiCpjAzeBIRXMA6emAqoEbQSoDdGxFUrxS1AYcpaNbBgyQBGJEOnYOeENKR/iAd1npusI4C75/c3539+nbUjOgZV5CkAU27df40lH+agUdIuA/EAgDmZnwZlhDc0wAAAABJRU5ErkJggg==") left top no-repeat;
-  }
-
-  a.up {
-    background : url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACM0lEQVR42myTA+w1RxRHz+zftmrbdlTbtq04qRGrCmvbDWp9tq3a7tPcub8mj9XZ3eHOGQdJAHw77/LbZuvnWy+c/CIAd+91CMf3bo+bgcBiBAGIZKXb19/zodsAkFT+3px+ssYfyHTQW5tr05dCOf3xN49KaVX9+2zy1dX4XMk+5JflN5MBPL30oVsvnvEyp+18Nt3ZAErQMSFOfelCFvw0HcUloDayljZkX+MmamTAMTe+d+ltZ+1wEaRAX/MAnkJdcujzZyErIiVSzCEvIiq4O83AG7LAkwsfIgAnbncag82jfPPdd9RQyhPkpNJvKJWQBKlYFmQA315n4YPNjwMAZYy0TgAweedLmLzTJSTLIxkWDaVCVfAbbiKjytgmm+EGpMBYW0WwwbZ7lL8anox/UxekaOW544HO0ANAshxuORT/RG5YSrjlwZ3lM955tlQqbtVMlWIhjwzkAVFB8Q9EAAA3AFJ+DR3DO/Pnd3NPi7H117rAzWjpEs8vfIqsGZpaweOfEAAFJKuM0v6kf2iC5pZ9+fmLSZfWBVaKfLLNOXj6lYY0V2lfyVCIsVzmcRV9Y0fx02eTaEwhl2PDrXcjFdYRAohQmS8QEFLCLKGYA0AeEakhCCFDXqxsE0AQACgAQp5w96o0lAXuNASeDKWIvADiHwigfBINpWKtAXJvCEKWgSJNbRvxf4SmrnKDpvZavePu1K/zu/due1X/6Nj90MBd/J2Cic7WjBp/jUdIuA8AUtd65M+PzXIAAAAASUVORK5CYII=") left top no-repeat;
-  }
-
-  html[dir=rtl] a {
-    background-position-x: right;
-  }
-
-  #parentDirLinkBox {
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-  }
-</style>
-
-<title id="title"></title>
-
+    .clock-btn-in { background: #1a7a42; color: white; box-shadow: 0 4px 12px rgba(26,122,66,0.3); }
+    .clock-btn-in:hover { background: #156234; transform: scale(1.05); }
+    .clock-btn-out { background: #E8472A; color: white; box-shadow: 0 4px 12px rgba(232,71,42,0.3); }
+    .clock-btn-out:hover { background: #d03d22; transform: scale(1.05); }
+    .clock-btn-done { background: #ede6df; color: #bbb; cursor: default; box-shadow: none; }
+    .clock-btn-icon { font-size: 18px; line-height: 1; }
+    .clock-msg { font-size: 11px; color: #999; text-align: center; max-width: 100px; line-height: 1.4; }
+    .clock-error { background: #ffeee6; color: #c42a00; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 700; margin-top: 10px; line-height: 1.5; }
+  </style>
 </head>
-
 <body>
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">غ</div>
+      <div class="logo-name">Ghaya غاية</div>
+      <div class="logo-sub">EMPLOYEE PORTAL</div>
+    </div>
+    <div class="user-card">
+      <div class="user-name" id="user-name">Loading...</div>
+      <div class="user-role" id="user-role">Employee</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">OVERVIEW</div>
+      <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span><span>Dashboard</span></div>
+      <div class="nav-label" style="margin-top:6px;">MY HR</div>
+      <div class="nav-item" onclick="showPage('attendance',this)"><span class="nav-icon">📅</span><span>Attendance</span></div>
+      <div class="nav-item" onclick="showPage('leaves',this)"><span class="nav-icon">🌴</span><span id="nav-leaves">My Leaves</span></div>
+      <div class="nav-item" onclick="showPage('payslips',this)"><span class="nav-icon">💰</span><span>My Payslips</span></div>
+      <div class="nav-item" onclick="showPage('permissions',this)"><span class="nav-icon">🕐</span><span>Permission Hours</span></div>
+      <div class="nav-item" onclick="showPage('documents',this)"><span class="nav-icon">📁</span><span>My Documents</span></div>
+      <div class="nav-item" onclick="showPage('profile',this)"><span class="nav-icon">👤</span><span>My Profile</span></div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="logout-btn" onclick="logout()"><span>🚪</span><span>Sign Out</span></div>
+    </div>
+  </aside>
 
-<h1 id="header">Index of LOCATION</h1>
+  <!-- Language toggle — fixed top right -->
+  <div style="position:fixed;top:20px;right:28px;z-index:200;">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="btn-ar" onclick="setLang('ar')">ع</button>
+    </div>
+  </div>
 
-<div id="parentDirLinkBox" style="display:none">
-  <a id="parentDirLink" class="icon up">
-    <span id="parentDirText">[parent directory]</span>
-  </a>
-</div>
+  <main class="main">
 
-<table>
-  <thead>
-    <tr class="header" id="theader">
-      <th id="nameColumnHeader" tabindex=0 role="button">Name</th>
-      <th id="sizeColumnHeader" class="detailsColumn" tabindex=0 role="button">
-        Size
-      </th>
-      <th id="dateColumnHeader" class="detailsColumn" tabindex=0 role="button">
-        Date Modified
-      </th>
-    </tr>
-  </thead>
-  <tbody id="tbody">
-  </tbody>
-</table>
+    <!-- Dashboard -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-sub" id="sub-dashboard">Welcome back!</div>
+        </div>
+      </div>
 
+      <!-- Clock Widget -->
+      <div class="clock-widget">
+        <div class="clock-left">
+          <div class="clock-date" id="clock-date">—</div>
+          <div class="clock-time" id="clock-time">--:--:--</div>
+          <div class="clock-stats">
+            <div class="clock-stat"><div class="clock-stat-label">Clock In</div><div class="clock-stat-value" id="display-in">—</div></div>
+            <div class="clock-stat"><div class="clock-stat-label">Clock Out</div><div class="clock-stat-value" id="display-out">—</div></div>
+            <div class="clock-stat"><div class="clock-stat-label">Hours</div><div class="clock-stat-value" id="display-hours">—</div></div>
+          </div>
+          <div id="clock-error" class="clock-error" style="display:none;"></div>
+        </div>
+        <div class="clock-right">
+          <button class="clock-btn clock-btn-in" id="clock-btn" onclick="handleClock()">
+            <span class="clock-btn-icon">▶</span>
+            <span id="clock-btn-label">Clock In</span>
+          </button>
+          <div class="clock-msg" id="clock-msg">Tap to clock in</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">🌴</div><div class="stat-label">Annual Leave Remaining</div><div class="stat-value" id="stat-remaining">—</div></div>
+        <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-label">Pending Requests</div><div class="stat-value" id="stat-pending">—</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">Days Taken This Year</div><div class="stat-value" id="stat-taken">—</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">Basic Salary (KWD)</div><div class="stat-value" id="stat-salary">—</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Quick Actions</div></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="showPage('leaves',document.querySelectorAll('.nav-item')[2]);openLeaveModal()">🌴 Request Leave</button>
+          <button class="btn btn-secondary" onclick="showPage('payslips',document.querySelectorAll('.nav-item')[3])">💰 View Payslip</button>
+          <button class="btn btn-secondary" onclick="showPage('profile',document.querySelectorAll('.nav-item')[5])">👤 My Profile</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Recent Leave Requests</div><button class="btn btn-sm btn-secondary" onclick="showPage('leaves',document.querySelectorAll('.nav-item')[2])">View All</button></div>
+        <div id="recent-leaves-body"><div class="empty-state"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests yet</div></div></div>
+      </div>
+    </div>
+
+    <!-- Attendance -->
+    <div id="page-attendance" class="page">
+      <div class="page-header"><div><div class="page-title">Attendance</div><div class="page-sub">Your monthly attendance history</div></div></div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">History</div>
+          <input type="month" class="form-control" id="att-month-filter" style="width:160px;" onchange="loadAttendanceHistory()"/>
+        </div>
+        <div id="att-history-body"><div class="empty-state"><div class="empty-icon">📅</div><div class="empty-text">Loading...</div></div></div>
+      </div>
+    </div>
+
+    <!-- Leaves -->
+    <div id="page-leaves" class="page">
+      <div class="page-header">
+        <div><div class="page-title">My Leaves</div><div class="page-sub">View and manage your leave requests</div></div>
+        <button class="btn btn-primary" onclick="openLeaveModal()">+ Request Leave</button>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px;">Leave Balance</div>
+        <div class="leave-balance">
+          <div class="balance-item"><div class="balance-num" id="bal-remaining">—</div><div class="balance-label">Days Remaining</div></div>
+          <div class="balance-item"><div class="balance-num" id="bal-taken">—</div><div class="balance-label">Taken This Year</div></div>
+          <div class="balance-item"><div class="balance-num" id="bal-pending-days">—</div><div class="balance-label">Pending Days</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Leave History</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-sm btn-primary" id="filter-all" onclick="filterLeaves('all')">All</button>
+            <button class="btn btn-sm btn-secondary" id="filter-pending" onclick="filterLeaves('pending')">Pending</button>
+            <button class="btn btn-sm btn-secondary" id="filter-approved" onclick="filterLeaves('approved')">Approved</button>
+            <button class="btn btn-sm btn-secondary" id="filter-rejected" onclick="filterLeaves('rejected')">Rejected</button>
+          </div>
+        </div>
+        <table><thead><tr><th>Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="leaves-tbody"><tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🌴</div><div class="empty-text">No requests yet</div></div></td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- Payslips -->
+    <div id="page-payslips" class="page">
+      <div class="page-header"><div><div class="page-title">My Payslips</div><div class="page-sub">Monthly salary breakdown</div></div></div>
+      <div class="card">
+        <div class="card-title" id="payslip-month" style="margin-bottom:18px;">Current Month</div>
+        <div id="payslip-content"><div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">Loading...</div></div></div>
+      </div>
+    </div>
+
+    <!-- Permission Hours -->
+    <div id="page-permissions" class="page">
+      <div class="page-header">
+        <div><div class="page-title">Permission Hours <span style="font-size:15px;font-weight:400;color:#888;">استئذان</span></div><div class="page-sub">Request time off during the workday</div></div>
+        <button class="btn btn-primary" onclick="openPermModal()">+ Request Permission</button>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title" style="margin-bottom:14px;">This Month's Balance</div>
+        <div class="leave-balance">
+          <div class="balance-item"><div class="balance-num" id="perm-bal-limit">—</div><div class="balance-label">Monthly Limit</div></div>
+          <div class="balance-item"><div class="balance-num" id="perm-bal-used" style="color:#E8472A">—</div><div class="balance-label">Used</div></div>
+          <div class="balance-item"><div class="balance-num" id="perm-bal-remaining" style="color:#1a7a42">—</div><div class="balance-label">Remaining</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px;">My Requests</div>
+        <table><thead><tr><th>Date</th><th>Time</th><th>Hours</th><th>Reason</th><th>Status</th></tr></thead>
+        <tbody id="perm-tbody"><tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🕐</div><div class="empty-text">No requests yet</div></div></td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- Documents -->
+    <div id="page-documents" class="page">
+      <div class="page-header"><div><div class="page-title">My Documents</div><div class="page-sub">Files uploaded by HR for you</div></div></div>
+      <div class="card" id="docs-card">
+        <div class="empty-state"><div class="empty-icon">📁</div><div class="empty-text">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- Profile -->
+    <div id="page-profile" class="page">
+      <div class="page-header"><div><div class="page-title">My Profile</div><div class="page-sub">Your personal information</div></div></div>
+      <div class="card"><div id="profile-content"><div class="empty-state"><div class="empty-icon">👤</div><div class="empty-text">Loading...</div></div></div></div>
+    </div>
+
+  </main>
+
+  <!-- Leave Modal -->
+  <div class="modal-overlay" id="leave-modal">
+    <div class="modal">
+      <div class="modal-title" id="modal-leave-title">Request Leave</div>
+      <div id="leave-alert"></div>
+      <div class="form-group"><label class="form-label">Leave Type</label>
+        <select class="form-control" id="leave-type"><option value="annual">Annual Leave</option><option value="sick">Sick Leave</option><option value="emergency">Emergency Leave</option><option value="unpaid">Unpaid Leave</option></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Start Date</label><input type="date" class="form-control" id="leave-start"></div>
+        <div class="form-group"><label class="form-label">End Date</label><input type="date" class="form-control" id="leave-end"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Reason (optional)</label><textarea class="form-control" id="leave-reason" rows="3" style="resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button class="btn btn-secondary" onclick="closeLeaveModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitLeave()" id="btn-submit">Submit Request</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permission Modal -->
+  <div class="modal-overlay" id="modal-perm" style="display:none;">
+    <div class="modal">
+      <div class="modal-title">Request Permission Hours <span style="font-size:13px;font-weight:400;color:#888;">استئذان</span></div>
+      <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-control" id="perm-date"/></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Start Time</label><input type="time" class="form-control" id="perm-start-time"/></div>
+        <div class="form-group"><label class="form-label">End Time</label><input type="time" class="form-control" id="perm-end-time"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Reason (optional)</label><textarea class="form-control" id="perm-reason" rows="2" style="resize:vertical;" placeholder="Medical appointment, personal errand..."></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button class="btn btn-secondary" onclick="document.getElementById('modal-perm').style.display='none'">Cancel</button>
+        <button class="btn btn-primary" onclick="submitPerm()">Submit Request</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let token = localStorage.getItem('ghaya_token');
+    let currentUser = null;
+    let employeeData = null;
+    let lang = 'en';
+    let editingLeaveId = null;
+    let leavesCache = [];
+    let todayRecord = null;
+    let clockBusy = false;
+
+    async function api(path, opts = {}) {
+      try {
+        const res = await fetch(path, { ...opts, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...(opts.headers||{}) } });
+        return await res.json();
+      } catch(e) { return { error: e.message }; }
+    }
+
+    // ── CLOCK ─────────────────────────────────────────────
+    function startClock() {
+      function tick() {
+        const kw = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kuwait' }));
+        document.getElementById('clock-time').textContent =
+          String(kw.getHours()).padStart(2,'0') + ':' +
+          String(kw.getMinutes()).padStart(2,'0') + ':' +
+          String(kw.getSeconds()).padStart(2,'0');
+        document.getElementById('clock-date').textContent =
+          kw.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+      }
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    function getLocation() {
+      return new Promise(resolve => {
+        if (!navigator.geolocation) { resolve({ lat: null, lng: null }); return; }
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          () => resolve({ lat: null, lng: null }),
+          { timeout: 7000 }
+        );
+      });
+    }
+
+    function showClockError(msg) {
+      const el = document.getElementById('clock-error');
+      el.textContent = '⚠ ' + msg;
+      el.style.display = '';
+      setTimeout(() => { el.style.display = 'none'; }, 10000);
+    }
+
+    function updateClockUI() {
+      const btn = document.getElementById('clock-btn');
+      const lbl = document.getElementById('clock-btn-label');
+      const msg = document.getElementById('clock-msg');
+      document.getElementById('display-in').textContent = todayRecord?.clock_in?.slice(0,5) || '—';
+      document.getElementById('display-out').textContent = todayRecord?.clock_out?.slice(0,5) || '—';
+      document.getElementById('display-hours').textContent = todayRecord?.hours_worked != null ? todayRecord.hours_worked.toFixed(1) + 'h' : '—';
+      if (!todayRecord || !todayRecord.clock_in) {
+        btn.className = 'clock-btn clock-btn-in'; lbl.textContent = 'Clock In'; msg.textContent = 'Tap to clock in';
+      } else if (!todayRecord.clock_out) {
+        btn.className = 'clock-btn clock-btn-out'; lbl.textContent = 'Clock Out'; msg.textContent = 'Clocked in ✓';
+      } else {
+        btn.className = 'clock-btn clock-btn-done'; lbl.textContent = 'Done'; msg.textContent = 'Completed ✓';
+      }
+    }
+
+    async function handleClock() {
+      if (clockBusy) return;
+      if (todayRecord?.clock_in && todayRecord?.clock_out) return;
+      clockBusy = true;
+      const lbl = document.getElementById('clock-btn-label');
+      const btn = document.getElementById('clock-btn');
+      const origLabel = lbl.textContent;
+      lbl.textContent = '…';
+      btn.style.opacity = '0.6';
+      document.getElementById('clock-error').style.display = 'none';
+
+      const loc = await getLocation();
+      const action = (!todayRecord || !todayRecord.clock_in) ? 'clockin' : 'clockout';
+      const res = await api('/api/attendance/' + action, { method: 'POST', body: JSON.stringify(loc) });
+
+      clockBusy = false;
+      btn.style.opacity = '';
+
+      if (res && !res.error) {
+        todayRecord = res.record;
+        updateClockUI();
+      } else {
+        lbl.textContent = origLabel;
+        showClockError(res?.error || 'Could not record attendance. Please try again.');
+      }
+    }
+
+    async function loadToday() {
+      const data = await api('/api/attendance/today');
+      todayRecord = data?.record || null;
+      updateClockUI();
+    }
+
+    async function loadAttendanceHistory() {
+      const now = new Date();
+      const month = document.getElementById('att-month-filter').value ||
+        `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      document.getElementById('att-month-filter').value = month;
+      const data = await api(`/api/attendance?month=${month}`);
+      const records = data?.records || [];
+      const el = document.getElementById('att-history-body');
+      if (!records.length) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-text">No records this month</div></div>';
+        return;
+      }
+      const sb = { present:'<span class="badge badge-present">Present</span>', late:'<span class="badge badge-late">Late</span>', absent:'<span class="badge badge-absent">Absent</span>', half_day:'<span class="badge badge-half_day">Half Day</span>' };
+      el.innerHTML = `<table><thead><tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Status</th><th>Location</th></tr></thead><tbody>${
+        records.map(r=>`<tr>
+          <td style="font-weight:700">${r.date}</td>
+          <td>${r.clock_in?.slice(0,5)||'—'}</td>
+          <td>${r.clock_out?.slice(0,5)||'—'}</td>
+          <td style="font-weight:700">${r.hours_worked!=null?r.hours_worked.toFixed(1)+' hrs':'—'}</td>
+          <td>${sb[r.status]||r.status||'—'}</td>
+          <td>${r.clock_in_lat?`<a href="https://www.google.com/maps?q=${r.clock_in_lat},${r.clock_in_lng}" target="_blank" style="color:#E8472A;font-size:12px;text-decoration:none;">📍 Map</a>`:'—'}</td>
+        </tr>`).join('')
+      }</tbody></table>`;
+    }
+    // ── END CLOCK ──────────────────────────────────────────
+
+    function showPage(page, navEl) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      if (navEl) navEl.classList.add('active');
+      if (page === 'leaves') loadLeaves('all');
+      if (page === 'payslips') loadPayslip();
+      if (page === 'profile') loadProfile();
+      if (page === 'permissions') loadPermissions();
+      if (page === 'attendance') loadAttendanceHistory();
+      if (page === 'documents') loadMyDocuments();
+    }
+
+    function setLang(l) {
+      lang = l;
+      document.body.classList.toggle('rtl', l === 'ar');
+      document.getElementById('btn-en').classList.toggle('active', l === 'en');
+      document.getElementById('btn-ar').classList.toggle('active', l === 'ar');
+    }
+
+    async function init() {
+      if (!token) { window.location.href = '/'; return; }
+      const data = await api('/api/auth/me');
+      if (!data || data.error) { logout(); return; }
+      currentUser = data.user;
+      document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
+      document.getElementById('user-role').textContent = currentUser.role.replace(/_/g, ' ');
+      document.getElementById('sub-dashboard').textContent = `Welcome back, ${currentUser.name || currentUser.email}!`;
+      startClock();
+      await loadToday();
+      await loadDashboard();
+    }
+
+    async function loadDashboard() {
+      if (currentUser.employee_id) {
+        const d = await api(`/api/employees/${currentUser.employee_id}`);
+        if (!d.error) { employeeData = d.employee || d; document.getElementById('stat-salary').textContent = parseFloat(employeeData.basic_salary || 0).toFixed(3); }
+      }
+      const ldata = await api('/api/leaves');
+      if (!ldata.error) {
+        const leaves = ldata.leaves || ldata.requests || [];
+        const year = new Date().getFullYear().toString();
+        const yearLeaves = leaves.filter(l => (l.start_date||'').startsWith(year));
+        const approvedDays = yearLeaves.filter(l=>l.status==='approved').reduce((s,l)=>s+(parseInt(l.days_count||l.days_requested)||0),0);
+        const pendingCount = leaves.filter(l=>l.status==='pending').length;
+        const pendingDays = leaves.filter(l=>l.status==='pending').reduce((s,l)=>s+(parseInt(l.days_count||l.days_requested)||0),0);
+        const remaining = 30 - approvedDays;
+        document.getElementById('stat-remaining').textContent = remaining;
+        document.getElementById('stat-pending').textContent = pendingCount;
+        document.getElementById('stat-taken').textContent = approvedDays;
+        document.getElementById('bal-remaining').textContent = remaining;
+        document.getElementById('bal-taken').textContent = approvedDays;
+        document.getElementById('bal-pending-days').textContent = pendingDays;
+        const recent = leaves.slice(0,5);
+        if (recent.length > 0) {
+          document.getElementById('recent-leaves-body').innerHTML = `<table><thead><tr><th>Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th></tr></thead><tbody>${recent.map(l=>`<tr><td>${l.type_name||l.leave_type||'—'}</td><td>${l.start_date||'—'}</td><td>${l.end_date||'—'}</td><td>${l.days_count||l.days_requested||'—'}</td><td><span class="badge badge-${l.status}">${l.status}</span></td></tr>`).join('')}</tbody></table>`;
+        }
+      }
+    }
+
+    // ── PERMISSIONS ────────────────────────────────────────
+    async function loadPermissions() {
+      const bal = await api('/api/permissions/balance');
+      if (bal && !bal.error) {
+        document.getElementById('perm-bal-limit').textContent = (bal.monthly_limit||0) + ' hrs';
+        document.getElementById('perm-bal-used').textContent = (bal.used||0).toFixed(1) + ' hrs';
+        document.getElementById('perm-bal-remaining').textContent = (bal.remaining||0).toFixed(1) + ' hrs';
+      }
+      const data = await api('/api/permissions');
+      const list = data?.requests || [];
+      const tbody = document.getElementById('perm-tbody');
+      if (!list.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🕐</div><div class="empty-text">No requests yet</div></div></td></tr>'; return; }
+      const badge = {pending:'<span class="badge badge-pending">Pending</span>',approved:'<span class="badge badge-approved">Approved</span>',rejected:'<span class="badge badge-rejected">Rejected</span>'};
+      tbody.innerHTML = list.map(p=>`<tr><td>${p.date}</td><td style="font-size:12px">${p.start_time} – ${p.end_time}</td><td style="font-weight:700">${parseFloat(p.hours).toFixed(1)} hrs</td><td style="font-size:12px;color:#888">${p.reason||'—'}</td><td>${badge[p.status]||p.status}</td></tr>`).join('');
+    }
+
+    function openPermModal() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('perm-date').value = today;
+      document.getElementById('perm-start-time').value = '09:00';
+      document.getElementById('perm-end-time').value = '10:00';
+      document.getElementById('perm-reason').value = '';
+      document.getElementById('modal-perm').style.display = 'flex';
+    }
+
+    async function submitPerm() {
+      const date = document.getElementById('perm-date').value;
+      const start_time = document.getElementById('perm-start-time').value;
+      const end_time = document.getElementById('perm-end-time').value;
+      const reason = document.getElementById('perm-reason').value.trim();
+      if (!date||!start_time||!end_time) { alert('Please fill all fields'); return; }
+      const res = await api('/api/permissions', { method:'POST', body: JSON.stringify({date,start_time,end_time,reason}) });
+      if (res && !res.error) { document.getElementById('modal-perm').style.display='none'; loadPermissions(); }
+      else alert(res?.error || 'Error submitting request');
+    }
+
+    // ── LEAVES ─────────────────────────────────────────────
+    async function loadLeaves(status) {
+      const url = (!status||status==='all') ? '/api/leaves' : `/api/leaves?status=${status}`;
+      const data = await api(url);
+      const leaves = data.leaves || data.requests || [];
+      leavesCache = leaves;
+      const tbody = document.getElementById('leaves-tbody');
+      if (!leaves.length) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div></td></tr>`; return; }
+      tbody.innerHTML = leaves.map((l,i)=>`<tr><td>${l.type_name||l.leave_type||'—'}</td><td>${l.start_date||'—'}</td><td>${l.end_date||'—'}</td><td>${l.days_count||l.days_requested||'—'}</td><td><span class="badge badge-${l.status}">${l.status}</span></td><td>${l.status==='pending'?`<button class="action-btn action-btn-edit" onclick="editLeaveModal(leavesCache[${i}])">Edit</button> <button class="action-btn action-btn-cancel" onclick="cancelLeave('${l.id}')">Cancel</button>`:'—'}</td></tr>`).join('');
+    }
+
+    function filterLeaves(status) {
+      ['all','pending','approved','rejected'].forEach(s=>{ document.getElementById('filter-'+s).className='btn btn-sm '+(s===status?'btn-primary':'btn-secondary'); });
+      loadLeaves(status);
+    }
+
+    function openLeaveModal() {
+      editingLeaveId = null;
+      document.getElementById('modal-leave-title').textContent = 'Request Leave';
+      document.getElementById('btn-submit').textContent = 'Submit Request';
+      document.getElementById('leave-alert').innerHTML = '';
+      document.getElementById('leave-reason').value = '';
+      document.getElementById('leave-type').disabled = false;
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('leave-start').value = today;
+      document.getElementById('leave-end').value = today;
+      document.getElementById('leave-modal').classList.add('open');
+    }
+
+    function editLeaveModal(l) {
+      editingLeaveId = l.id;
+      document.getElementById('modal-leave-title').textContent = 'Edit Leave Request';
+      document.getElementById('btn-submit').textContent = 'Save Changes';
+      document.getElementById('leave-alert').innerHTML = '';
+      document.getElementById('leave-start').value = l.start_date || '';
+      document.getElementById('leave-end').value = l.end_date || '';
+      document.getElementById('leave-reason').value = l.reason || '';
+      document.getElementById('leave-type').disabled = true;
+      document.getElementById('leave-modal').classList.add('open');
+    }
+
+    async function cancelLeave(id) {
+      if (!confirm('Cancel this leave request?')) return;
+      const data = await api('/api/leaves/'+id, { method:'PUT', body: JSON.stringify({ action:'cancel' }) });
+      if (data?.error) { alert(data.error); return; }
+      await loadDashboard(); loadLeaves('all');
+    }
+
+    function closeLeaveModal() { document.getElementById('leave-modal').classList.remove('open'); document.getElementById('leave-type').disabled = false; }
+
+    async function submitLeave() {
+      const alertEl = document.getElementById('leave-alert');
+      const start = document.getElementById('leave-start').value;
+      const end = document.getElementById('leave-end').value;
+      const type = document.getElementById('leave-type').value;
+      const reason = document.getElementById('leave-reason').value;
+      if (!start||!end) { alertEl.innerHTML = '<div class="alert alert-error">Please select dates.</div>'; return; }
+      if (end < start) { alertEl.innerHTML = '<div class="alert alert-error">End date must be after start date.</div>'; return; }
+      let data;
+      if (editingLeaveId) { data = await api('/api/leaves/'+editingLeaveId, { method:'PUT', body: JSON.stringify({ action:'edit', start_date:start, end_date:end, reason }) }); }
+      else { data = await api('/api/leaves', { method:'POST', body: JSON.stringify({ leave_type:type, start_date:start, end_date:end, reason }) }); }
+      if (data.error) { alertEl.innerHTML = `<div class="alert alert-error">${data.error}</div>`; return; }
+      closeLeaveModal(); await loadDashboard();
+      if (document.getElementById('page-leaves').classList.contains('active')) loadLeaves('all');
+    }
+
+    // ── PAYSLIP ────────────────────────────────────────────
+    async function loadPayslip() {
+      const content = document.getElementById('payslip-content');
+      content.innerHTML = '<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">Loading...</div></div>';
+      const data = await api('/api/payroll');
+      const payslips = data?.payslips || [];
+      if (payslips.length > 0) {
+        const p = payslips[0];
+        const mn = ['January','February','March','April','May','June','July','August','September','October','November','December'][p.period_month-1];
+        document.getElementById('payslip-month').textContent = `${mn} ${p.period_year}`;
+        content.innerHTML = `<div style="max-width:480px;"><div class="payslip-row"><span>Period</span><span style="font-weight:700;">${mn} ${p.period_year}</span></div><div style="height:10px;"></div><div class="payslip-row"><span style="font-weight:700;">Basic Salary</span><span style="font-weight:700;">KWD ${(p.basic_salary||0).toFixed(3)}</span></div>${p.pifss_employee>0?`<div class="payslip-row"><span style="color:#E8472A;">PIFSS Deduction (8%)</span><span style="color:#E8472A;">- KWD ${p.pifss_employee.toFixed(3)}</span></div>`:''}<div class="payslip-row" style="margin-top:8px;padding-top:14px;border-top:2px solid #1a1a2e;font-weight:800;font-size:16px;"><span>Net Pay</span><span style="color:#E8472A;">KWD ${(p.net_salary||0).toFixed(3)}</span></div></div>`;
+        return;
+      }
+      if (!employeeData && currentUser.employee_id) { const d = await api(`/api/employees/${currentUser.employee_id}`); if (!d.error) employeeData = d.employee || d; }
+      const now = new Date();
+      document.getElementById('payslip-month').textContent = now.toLocaleString('en',{month:'long',year:'numeric'});
+      if (!employeeData) { content.innerHTML = '<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">No payslip yet</div><div class="empty-sub">Your HR admin hasn\'t run payroll yet</div></div>'; return; }
+      const basic = parseFloat(employeeData.basic_salary||0);
+      const isKuwaiti = (employeeData.nationality||'').toLowerCase()==='kuwaiti';
+      const pifss = isKuwaiti ? Math.round(basic*0.08*1000)/1000 : 0;
+      const net = Math.round((basic-pifss)*1000)/1000;
+      content.innerHTML = `<div style="max-width:480px;"><div style="background:#fff3e6;border-radius:9px;padding:10px 13px;font-size:12px;color:#c46a00;margin-bottom:14px;font-weight:700;">⏳ Estimated — admin hasn't published payroll yet</div><div class="payslip-row"><span style="font-weight:700;">Basic Salary</span><span style="font-weight:700;">KWD ${basic.toFixed(3)}</span></div>${pifss>0?`<div class="payslip-row"><span style="color:#E8472A;">PIFSS (8%)</span><span style="color:#E8472A;">- KWD ${pifss.toFixed(3)}</span></div>`:''}<div class="payslip-row" style="margin-top:8px;padding-top:14px;border-top:2px solid #1a1a2e;font-weight:800;font-size:16px;"><span>Estimated Net</span><span style="color:#E8472A;">KWD ${net.toFixed(3)}</span></div></div>`;
+    }
+
+    async function loadProfile() {
+      if (!employeeData && currentUser.employee_id) { const d = await api(`/api/employees/${currentUser.employee_id}`); if (!d.error) employeeData = d.employee || d; }
+      const content = document.getElementById('profile-content');
+      if (!employeeData) { content.innerHTML = `<div class="empty-state"><div class="empty-icon">👤</div><div class="empty-text">Profile not found</div><div class="empty-sub">Contact your HR administrator</div></div>`; return; }
+      const e = employeeData;
+      content.innerHTML = `<div style="display:flex;align-items:center;gap:18px;margin-bottom:24px;"><div style="width:64px;height:64px;background:#E8472A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:white;font-weight:800;">${(e.first_name_en||'?').charAt(0)}</div><div><div style="font-size:20px;font-weight:800;color:#1a1a2e;">${e.first_name_en||''} ${e.last_name_en||''}</div><div style="font-size:13px;color:#888;margin-top:2px;">${e.job_title_en||'Employee'}${e.department?' · '+e.department:''}</div></div></div><div class="profile-grid"><div><div class="profile-item-label">Civil ID</div><div class="profile-item-value">${e.civil_id||'—'}</div></div><div><div class="profile-item-label">Nationality</div><div class="profile-item-value">${e.nationality||'—'}</div></div><div><div class="profile-item-label">Work Email</div><div class="profile-item-value">${e.work_email||currentUser.email||'—'}</div></div><div><div class="profile-item-label">Phone</div><div class="profile-item-value">${e.phone||e.mobile||'—'}</div></div><div><div class="profile-item-label">Department</div><div class="profile-item-value">${e.department||'—'}</div></div><div><div class="profile-item-label">Contract Type</div><div class="profile-item-value">${(e.contract_type||e.employment_type||'—').replace(/_/g,' ')}</div></div><div><div class="profile-item-label">Start Date</div><div class="profile-item-value">${e.hire_date||'—'}</div></div><div><div class="profile-item-label">Status</div><div class="profile-item-value">${e.status==='active'||e.is_active?'🟢 Active':'🔴 Inactive'}</div></div></div>`;
+    }
+
+    // ── MY DOCUMENTS ───────────────────────────────────────────
+    const DOC_ICONS = {'Civil ID':'🪪','Passport':'📘','Visa':'✈️','Contract':'📝','Offer Letter':'💼','Warning Letter':'⚠️','Salary Certificate':'💰','Medical':'🏥','Other':'📄'};
+    async function loadMyDocuments() {
+      const card = document.getElementById('docs-card');
+      card.innerHTML = '<div class="empty-state"><div class="empty-icon">📁</div><div class="empty-text">Loading...</div></div>';
+      const data = await api('/api/documents');
+      const docs = data?.documents || [];
+      if (!docs.length) {
+        card.innerHTML = '<div class="empty-state"><div class="empty-icon">📁</div><div class="empty-text">No documents yet</div><div class="empty-sub">HR will upload your contracts, ID copies, and other files here</div></div>';
+        return;
+      }
+      const today = new Date();
+      const soon = new Date(); soon.setDate(soon.getDate() + 30);
+      card.innerHTML = docs.map(d => {
+        const icon = DOC_ICONS[d.doc_type] || '📄';
+        let expBadge = '';
+        if (d.expiry_date) {
+          const exp = new Date(d.expiry_date);
+          if (exp < today) expBadge = '<span style="background:#ffeee6;color:#c42a00;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;margin-left:8px;">Expired</span>';
+          else if (exp <= soon) expBadge = '<span style="background:#fff3e6;color:#c46a00;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;margin-left:8px;">Expiring Soon</span>';
+        }
+        const sizeMB = d.file_size ? (d.file_size/1048576).toFixed(2)+'MB' : '';
+        return `<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #f0ebe4;">
+          <span style="font-size:28px;">${icon}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;color:#1a1a2e;">${d.file_name}${expBadge}</div>
+            <div style="font-size:12px;color:#888;">${d.doc_type}${sizeMB?' · '+sizeMB:''}</div>
+            ${d.expiry_date?`<div style="font-size:12px;color:#888;">Expires: ${d.expiry_date}</div>`:''}
+            ${d.notes?`<div style="font-size:12px;color:#888;">${d.notes}</div>`:''}
+          </div>
+          <button onclick="downloadMyDoc('${d.id}')" style="padding:7px 16px;border-radius:8px;border:1px solid #e8e0d8;background:#f5f0eb;font-family:'Almarai',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">⬇ Download</button>
+        </div>`;
+      }).join('') + '<div style="padding-top:4px;"></div>';
+    }
+    async function downloadMyDoc(id) {
+      const res = await fetch('/api/documents/'+id+'/download', {headers:{Authorization:'Bearer '+token}});
+      if (!res.ok) { alert('Download failed'); return; }
+      const blob = await res.blob();
+      const cd = res.headers.get('Content-Disposition') || '';
+      const match = cd.match(/filename="?([^"]+)"?/);
+      const name = match ? match[1] : 'document';
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download=name; a.click();
+      URL.revokeObjectURL(url);
+    }
+    // ── END MY DOCUMENTS ────────────────────────────────────────
+
+    function logout() { localStorage.removeItem('ghaya_token'); window.location.href = '/'; }
+    document.getElementById('leave-modal').addEventListener('click', function(e) { if (e.target === this) closeLeaveModal(); });
+
+    init();
+  </script>
 </body>
-
 </html>
-<script>// Copyright 2012 The Chromium Authors
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-"use strict";var loadTimeData;class LoadTimeData{constructor(){this.data_=null}set data(value){expect(!this.data_,"Re-setting data.");this.data_=value}valueExists(id){return id in this.data_}getValue(id){expect(this.data_,"No data. Did you remember to include strings.js?");const value=this.data_[id];expect(typeof value!=="undefined","Could not find value for "+id);return value}getString(id){const value=this.getValue(id);expectIsType(id,value,"string");return value}getStringF(id,var_args){const value=this.getString(id);if(!value){return""}const args=Array.prototype.slice.call(arguments);args[0]=value;return this.substituteString.apply(this,args)}substituteString(label,var_args){const varArgs=arguments;return label.replace(/\$(.|$|\n)/g,(function(m){expect(m.match(/\$[$1-9]/),"Unescaped $ found in localized string.");return m==="$$"?"$":varArgs[m[1]]}))}getBoolean(id){const value=this.getValue(id);expectIsType(id,value,"boolean");return value}getInteger(id){const value=this.getValue(id);expectIsType(id,value,"number");expect(value===Math.floor(value),"Number isn't integer: "+value);return value}overrideValues(replacements){expect(typeof replacements==="object","Replacements must be a dictionary object.");for(const key in replacements){this.data_[key]=replacements[key]}}}function expect(condition,message){if(!condition){throw new Error("Unexpected condition on "+document.location.href+": "+message)}}function expectIsType(id,value,type){expect(typeof value===type,"["+value+"] ("+id+") is not a "+type)}expect(!loadTimeData,"should only include this file once");loadTimeData=new LoadTimeData;window.loadTimeData=loadTimeData;console.warn("crbug/1173575, non-JS module files deprecated.");</script><script>loadTimeData.data = {"header":"Index of LOCATION","headerDateModified":"Date Modified","headerName":"Name","headerSize":"Size","language":"en","parentDirText":"[parent directory]","textdirection":"ltr"};</script><script>start("/");</script>
-<script>addRow(".nofollow",".nofollow",1,64,"64 B",1782354543,"6/25/26, 5:29:03 AM");</script>
-<script>addRow(".resolve",".resolve",1,64,"64 B",1782354543,"6/25/26, 5:29:03 AM");</script>
-<script>addRow(".vol",".vol",1,64,"64 B",1782354543,"6/25/26, 5:29:03 AM");</script>
-<script>addRow("AppleInternal","AppleInternal",1,64,"64 B",1647843788,"3/21/22, 9:23:08 AM");</script>
-<script>addRow("Applications","Applications",1,1024,"1.0 kB",1784121728,"7/15/26, 4:22:08 PM");</script>
-<script>addRow("bin","bin",1,1248,"1.2 kB",1782354543,"6/25/26, 5:29:03 AM");</script>
-<script>addRow("cores","cores",1,64,"64 B",1644182531,"2/7/22, 12:22:11 AM");</script>
-<script>addRow("dev","dev",1,4732,"4.6 kB",1784121025,"7/15/26, 4:10:25 PM");</script>
-<script>addRow("etc","etc",1,2464,"2.4 kB",1784121101,"7/15/26, 4:11:41 PM");</script>
-<script>addRow("home","home",1,1,"1 B",1784121101,"7/15/26, 4:11:41 PM");</script>
-<script>addRow("Library","Library",1,2144,"2.1 kB",1784121083,"7/15/26, 4:11:23 PM");</script>
-<script>addRow("opt","opt",1,64,"64 B",1644182531,"2/7/22, 12:22:11 AM");</script>
-<script>addRow("private","private",1,192,"192 B",1784121097,"7/15/26, 4:11:37 PM");</script>
-<script>addRow("sbin","sbin",1,2432,"2.4 kB",1782354543,"6/25/26, 5:29:03 AM");</script>
-<script>addRow("System","System",1,320,"320 B",1782354543,"6/25/26, 5:29:03 AM");</script>
-<script>addRow("tmp","tmp",1,384,"384 B",1784136436,"7/15/26, 8:27:16 PM");</script>
-<script>addRow("Users","Users",1,160,"160 B",1784121057,"7/15/26, 4:10:57 PM");</script>
-<script>addRow("usr","usr",1,352,"352 B",1782354543,"6/25/26, 5:29:03 AM");</script>
-<script>addRow("var","var",1,1152,"1.1 kB",1784121087,"7/15/26, 4:11:27 PM");</script>
-<script>addRow("Volumes","Volumes",1,96,"96 B",1784125896,"7/15/26, 5:31:36 PM");</script>
-<script>addRow(".file",".file",0,0,"0 B",1782354543,"6/25/26, 5:29:03 AM");</script>
