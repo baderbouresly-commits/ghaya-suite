@@ -120,7 +120,7 @@ select.form-input{cursor:pointer}
 .filter-btn.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px}
 .settings-col-title{font-size:13px;font-weight:800;color:#1a1a2e;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #E8472A}
-.tag-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;min-height:30px}
+.tag-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
 .tag-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#faf6f1;border:1px solid #e8e0d8;border-radius:8px;font-size:13px}
 .tag-item-name{font-weight:700;color:#1a1a2e}
 .tag-item-ar{font-size:11px;color:#888;margin-top:2px}
@@ -136,14 +136,8 @@ select.form-input{cursor:pointer}
 .toggle-wrap input:checked+.toggle-slider{background:#1a7a42}
 .toggle-wrap input:checked+.toggle-slider::after{left:19px}
 .info-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#e8e0d8;color:#555;font-size:11px;font-weight:800;cursor:help}
-.sched-row{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;padding:20px 24px 0}
-.sched-field{display:flex;flex-direction:column;gap:5px}
-.sched-label{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.3px}
-.sched-input{padding:9px 13px;border:1px solid #e8e0d8;border-radius:8px;font-family:'Almarai',sans-serif;font-size:13px;background:#faf6f1;color:#1a1a2e}
-.sched-input:focus{outline:none;border-color:#E8472A;background:#fff}
-.workday-lbl{display:inline-flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:5px 10px;border:1px solid #e8e0d8;border-radius:20px;transition:all .2s;font-weight:700;color:#666;margin:2px}
-.workday-lbl:has(input:checked){background:#1a1a2e;color:#fff;border-color:#1a1a2e}
-.workday-lbl input{display:none}
+.doc-card{border:1px solid #e8e0d8;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:10px;background:#fff}
+.doc-card:hover{background:#fdf9f6}
 @media(max-width:768px){.sidebar{display:none}.main{margin-left:0!important;margin-right:0!important}.stats-grid{grid-template-columns:1fr 1fr}.content{padding:16px}.form-grid{grid-template-columns:1fr}.settings-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -168,9 +162,6 @@ select.form-input{cursor:pointer}
     <div class="nav-item" onclick="showPage('employees')" id="nav-employees">
       <span class="nav-icon">👥</span><span data-en="Employees" data-ar="الموظفون">Employees</span>
     </div>
-    <div class="nav-item" onclick="showPage('attendance')" id="nav-attendance">
-      <span class="nav-icon">📅</span><span data-en="Attendance" data-ar="الحضور">Attendance</span>
-    </div>
     <div class="nav-item" onclick="showPage('leaves')" id="nav-leaves">
       <span class="nav-icon">🌴</span><span data-en="Leave Requests" data-ar="طلبات الإجازة">Leave Requests</span>
       <span class="nav-badge" id="leave-badge" style="display:none">0</span>
@@ -178,10 +169,6 @@ select.form-input{cursor:pointer}
     <div class="nav-item" onclick="showPage('permissions')" id="nav-permissions">
       <span class="nav-icon">🕐</span><span data-en="Permission Hours" data-ar="ساعات الاستئذان">Permission Hours</span>
       <span class="nav-badge" id="perm-badge" style="display:none">0</span>
-    </div>
-    <div class="nav-item" onclick="showPage('overtime')" id="nav-overtime">
-      <span class="nav-icon">⏱️</span><span data-en="Overtime" data-ar="العمل الإضافي">Overtime</span>
-      <span class="nav-badge" id="ot-badge" style="display:none">0</span>
     </div>
     <div class="nav-item" onclick="showPage('payroll')" id="nav-payroll">
       <span class="nav-icon">💰</span><span data-en="Payroll" data-ar="الرواتب">Payroll</span>
@@ -225,11 +212,17 @@ select.form-input{cursor:pointer}
         <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">Monthly Payroll (KWD)</div><div class="stat-value" id="s-payroll">—</div></div>
       </div>
       <div class="section-card">
-        <div class="section-header"><div><div class="section-title">Recent Employees</div></div><button class="btn btn-primary btn-sm" onclick="showPage('employees')">View All →</button></div>
+        <div class="section-header">
+          <div><div class="section-title">Recent Employees</div></div>
+          <button class="btn btn-primary btn-sm" onclick="showPage('employees')">View All →</button>
+        </div>
         <div id="dash-employees"><div class="loading"><div class="spinner"></div></div></div>
       </div>
       <div class="section-card">
-        <div class="section-header"><div><div class="section-title">Pending Leave Requests</div></div><button class="btn btn-ghost btn-sm" onclick="showPage('leaves')">View All</button></div>
+        <div class="section-header">
+          <div><div class="section-title">Pending Leave Requests</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="showPage('leaves')">View All</button>
+        </div>
         <div id="dash-leaves"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
@@ -244,36 +237,6 @@ select.form-input{cursor:pointer}
           </div>
         </div>
         <div id="employees-list"><div class="loading"><div class="spinner"></div></div></div>
-      </div>
-    </div>
-    <!-- ATTENDANCE -->
-    <div id="page-attendance" style="display:none">
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">Present</div><div class="stat-value" id="att-present">—</div></div>
-        <div class="stat-card"><div class="stat-icon">⏰</div><div class="stat-label">Late</div><div class="stat-value" id="att-late">—</div></div>
-        <div class="stat-card"><div class="stat-icon">❌</div><div class="stat-label">Absent</div><div class="stat-value" id="att-absent">—</div></div>
-        <div class="stat-card"><div class="stat-icon">🌗</div><div class="stat-label">Half Day</div><div class="stat-value" id="att-half">—</div></div>
-      </div>
-      <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Daily Attendance</div></div>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <input type="date" class="search-bar" id="att-date" style="width:165px;" onchange="loadAttendance()"/>
-            <button class="btn btn-ghost btn-sm" onclick="goToday()">Today</button>
-            <button class="btn btn-primary btn-sm" onclick="openManualAtt()">+ Manual Entry</button>
-          </div>
-        </div>
-        <div id="att-table"><div class="loading"><div class="spinner"></div></div></div>
-      </div>
-      <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Monthly Report</div></div>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <input type="month" class="search-bar" id="att-month" style="width:160px;" onchange="loadMonthlyReport()"/>
-            <button class="btn btn-ghost btn-sm" onclick="loadMonthlyReport()">View</button>
-          </div>
-        </div>
-        <div id="att-monthly"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Select a month above</div></div></div>
       </div>
     </div>
     <!-- LEAVES -->
@@ -291,7 +254,10 @@ select.form-input{cursor:pointer}
         <div id="leaves-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
       <div class="section-card">
-        <div class="section-header"><div><div class="section-title">Leave Balances</div><div class="section-sub">Accrued annual leave per employee (pro-rata)</div></div><button class="btn btn-ghost btn-sm" onclick="loadLeaveBalances()">↻ Refresh</button></div>
+        <div class="section-header">
+          <div><div class="section-title">Leave Balances</div><div class="section-sub">Accrued annual leave per employee (pro-rata)</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="loadLeaveBalances()">↻ Refresh</button>
+        </div>
         <div id="leave-balances-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
@@ -310,36 +276,11 @@ select.form-input{cursor:pointer}
         <div id="perms-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
       <div class="section-card">
-        <div class="section-header"><div><div class="section-title">Monthly Usage by Employee</div><div class="section-sub" id="perm-month-label">This month</div></div><button class="btn btn-ghost btn-sm" onclick="loadPermUsage()">↻ Refresh</button></div>
+        <div class="section-header">
+          <div><div class="section-title">Monthly Usage by Employee</div><div class="section-sub" id="perm-month-label">This month</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="loadPermUsage()">↻ Refresh</button>
+        </div>
         <div id="perm-usage-list"><div class="loading"><div class="spinner"></div></div></div>
-      </div>
-    </div>
-    <!-- OVERTIME -->
-    <div id="page-overtime" style="display:none">
-      <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Overtime Requests (العمل الإضافي)</div><div class="section-sub">Kuwait Labour Law: 1.25× normal days · 1.5× rest days/holidays</div></div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <div class="filter-row">
-              <button class="filter-btn active" onclick="filterOT('pending',this)">Pending</button>
-              <button class="filter-btn" onclick="filterOT('approved',this)">Approved</button>
-              <button class="filter-btn" onclick="filterOT('rejected',this)">Rejected</button>
-              <button class="filter-btn" onclick="filterOT('all',this)">All</button>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="openAddOT()">+ Add Entry</button>
-          </div>
-        </div>
-        <div id="ot-list"><div class="loading"><div class="spinner"></div></div></div>
-      </div>
-      <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Monthly Overtime Summary</div><div class="section-sub" id="ot-month-label">This month</div></div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <input type="month" class="search-bar" id="ot-month" style="width:160px;"/>
-            <button class="btn btn-ghost btn-sm" onclick="loadOTSummary()">View</button>
-          </div>
-        </div>
-        <div id="ot-summary"><div class="empty"><div class="empty-icon">⏱️</div><div class="empty-text">Select a month to view summary</div></div></div>
       </div>
     </div>
     <!-- PAYROLL -->
@@ -349,7 +290,9 @@ select.form-input{cursor:pointer}
           <div class="section-header">
             <div><div class="section-title">Run Payroll</div><div class="section-sub">Calculates salaries + PIFSS for all active employees</div></div>
             <div style="display:flex;gap:10px;align-items:center;">
-              <select class="search-bar" id="payroll-month" style="width:130px;"><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select>
+              <select class="search-bar" id="payroll-month" style="width:130px;">
+                <option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option>
+              </select>
               <select class="search-bar" id="payroll-year" style="width:90px;"></select>
               <div style="display:flex;align-items:center;gap:6px;padding:0 10px;border-left:1px solid #e8e0d8;">
                 <span style="font-size:12px;font-weight:700;color:#555;">PIFSS</span>
@@ -360,13 +303,19 @@ select.form-input{cursor:pointer}
             </div>
           </div>
         </div>
-        <div class="section-card"><div class="section-header"><div class="section-title">Payroll History</div></div><div id="payroll-list"><div class="loading"><div class="spinner"></div></div></div></div>
+        <div class="section-card">
+          <div class="section-header"><div class="section-title">Payroll History</div></div>
+          <div id="payroll-list"><div class="loading"><div class="spinner"></div></div></div>
+        </div>
       </div>
       <div id="payroll-detail-view" style="display:none">
         <div style="margin-bottom:20px;"><button class="btn btn-ghost btn-sm" onclick="showPayrollList()">← Back to History</button></div>
         <div id="payroll-detail-summary" style="margin-bottom:24px;"></div>
         <div class="section-card">
-          <div class="section-header"><div class="section-title" id="payroll-detail-title">Payroll Breakdown</div><div id="payroll-detail-actions" style="display:flex;gap:8px;"></div></div>
+          <div class="section-header">
+            <div class="section-title" id="payroll-detail-title">Payroll Breakdown</div>
+            <div id="payroll-detail-actions" style="display:flex;gap:8px;"></div>
+          </div>
           <div id="payroll-detail-list"><div class="loading"><div class="spinner"></div></div></div>
         </div>
       </div>
@@ -375,66 +324,19 @@ select.form-input{cursor:pointer}
     <div id="page-documents" style="display:none">
       <div class="section-card">
         <div class="section-header">
-          <div><div class="section-title">Employee Documents</div><div class="section-sub">Archive of employee files — contracts, IDs, visas, letters</div></div>
-          <div style="display:flex;gap:10px;align-items:center;">
+          <div><div class="section-title">Employee Documents</div><div class="section-sub">Contracts, IDs, visas, and other employee files</div></div>
+          <div class="section-actions">
             <select class="search-bar" id="doc-emp-filter" style="width:200px;" onchange="loadDocuments()">
               <option value="">All Employees</option>
             </select>
             <button class="btn btn-primary" onclick="openUploadDoc()">+ Upload Document</button>
           </div>
         </div>
-        <div id="docs-list"><div class="loading"><div class="spinner"></div></div></div>
+        <div id="docs-list" style="padding:16px 24px;"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
     <!-- SETTINGS -->
     <div id="page-settings" style="display:none">
-      <!-- Geofencing -->
-      <div class="section-card" style="margin-bottom:24px;">
-        <div class="section-header">
-          <div><div class="section-title">Workplace Geofencing</div><div class="section-sub">Restrict clock in/out to within a set distance of your workplace</div></div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <label class="toggle-wrap"><input type="checkbox" id="geofence-enabled" onchange="toggleGeofenceFields()"/><span class="toggle-slider"></span></label>
-            <span style="font-size:13px;font-weight:700;color:#1a1a2e;" id="geofence-toggle-label">Off</span>
-          </div>
-        </div>
-        <div id="geofence-fields" style="display:none;padding:20px 24px;">
-          <div class="form-grid" style="margin-bottom:14px;">
-            <div class="form-row" style="margin-bottom:0"><label class="form-label">Latitude</label><input class="form-input" id="geo-lat" type="number" step="0.000001" placeholder="29.378586"/></div>
-            <div class="form-row" style="margin-bottom:0"><label class="form-label">Longitude</label><input class="form-input" id="geo-lng" type="number" step="0.000001" placeholder="47.990341"/></div>
-          </div>
-          <div style="margin-bottom:16px;"><button class="btn btn-ghost btn-sm" onclick="useMyLocation()">📍 Use My Location</button></div>
-          <div style="margin-bottom:16px;">
-            <label class="form-label">Radius: <span id="geo-radius-val">200m</span></label>
-            <input type="range" id="geo-radius" min="50" max="1000" step="10" value="200" style="width:100%;margin-top:6px;" oninput="document.getElementById('geo-radius-val').textContent=this.value+'m'"/>
-            <div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-top:4px;"><span>50m</span><span>500m</span><span>1000m</span></div>
-          </div>
-        </div>
-        <div id="geofence-off-hint" style="padding:14px 24px;font-size:13px;color:#888;">Toggle on to configure your workplace location and radius.</div>
-        <div style="padding:0 24px 20px;"><button class="btn btn-primary" onclick="saveGeofenceSettings()">Save Geofencing</button></div>
-      </div>
-      <!-- Work Schedule -->
-      <div class="section-card" style="margin-bottom:24px;">
-        <div class="section-header"><div class="section-title">Work Schedule</div><div class="section-sub">Default hours used for attendance tracking</div></div>
-        <div class="sched-row">
-          <div class="sched-field"><span class="sched-label">Start Time</span><input class="sched-input" type="time" id="work-start" value="08:00"/></div>
-          <div class="sched-field"><span class="sched-label">End Time</span><input class="sched-input" type="time" id="work-end" value="17:00"/></div>
-          <div class="sched-field"><span class="sched-label">Late After (mins)</span><input class="sched-input" type="number" id="late-threshold" value="15" min="0" max="120" style="width:90px;"/></div>
-        </div>
-        <div style="padding:12px 24px 0;">
-          <div class="sched-label" style="margin-bottom:10px;">Work Days</div>
-          <div style="display:flex;flex-wrap:wrap;gap:0;margin-bottom:16px;">
-            <label class="workday-lbl"><input type="checkbox" class="work-day-cb" value="sun" checked/>Sun</label>
-            <label class="workday-lbl"><input type="checkbox" class="work-day-cb" value="mon" checked/>Mon</label>
-            <label class="workday-lbl"><input type="checkbox" class="work-day-cb" value="tue" checked/>Tue</label>
-            <label class="workday-lbl"><input type="checkbox" class="work-day-cb" value="wed" checked/>Wed</label>
-            <label class="workday-lbl"><input type="checkbox" class="work-day-cb" value="thu" checked/>Thu</label>
-            <label class="workday-lbl"><input type="checkbox" class="work-day-cb" value="fri"/>Fri</label>
-            <label class="workday-lbl"><input type="checkbox" class="work-day-cb" value="sat"/>Sat</label>
-          </div>
-        </div>
-        <div style="padding:0 24px 20px;"><button class="btn btn-primary" onclick="saveWorkSchedule()">Save Schedule</button></div>
-      </div>
-      <!-- Permission Limit -->
       <div class="section-card" style="margin-bottom:24px;">
         <div class="section-header"><div class="section-title">Permission Hours Limit</div><div class="section-sub">Monthly استئذان allowance per employee</div></div>
         <div style="padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
@@ -448,13 +350,12 @@ select.form-input{cursor:pointer}
           </div>
         </div>
       </div>
-      <!-- Departments & Job Titles -->
       <div class="section-card">
         <div class="section-header"><div class="section-title">Departments &amp; Job Titles</div><div class="section-sub">Manage your company structure</div></div>
         <div class="settings-grid">
           <div>
             <div class="settings-col-title">🏢 Departments</div>
-            <div class="tag-list" id="dept-list"></div>
+            <div class="tag-list" id="dept-list"><div class="loading"><div class="spinner"></div></div></div>
             <div class="add-tag-row">
               <input class="add-tag-input" id="new-dept-en" placeholder="Name (EN)"/>
               <input class="add-tag-input" id="new-dept-ar" placeholder="الاسم (AR)" dir="rtl"/>
@@ -463,7 +364,7 @@ select.form-input{cursor:pointer}
           </div>
           <div>
             <div class="settings-col-title">💼 Job Titles</div>
-            <div class="tag-list" id="jt-list"></div>
+            <div class="tag-list" id="jt-list"><div class="loading"><div class="spinner"></div></div></div>
             <div class="add-tag-row">
               <input class="add-tag-input" id="new-jt-en" placeholder="Title (EN)"/>
               <input class="add-tag-input" id="new-jt-ar" placeholder="المسمى (AR)" dir="rtl"/>
@@ -478,7 +379,10 @@ select.form-input{cursor:pointer}
 <!-- MODAL: Add/Edit Employee -->
 <div class="modal-overlay" id="modal-employee">
   <div class="modal">
-    <div class="modal-header"><div class="modal-title" id="modal-emp-title">Add Employee</div><button class="modal-close" onclick="closeModal('modal-employee')">✕</button></div>
+    <div class="modal-header">
+      <div class="modal-title" id="modal-emp-title">Add Employee</div>
+      <button class="modal-close" onclick="closeModal('modal-employee')">✕</button>
+    </div>
     <div class="modal-body">
       <input type="hidden" id="emp-id"/>
       <div class="form-grid">
@@ -492,12 +396,18 @@ select.form-input{cursor:pointer}
       <div class="form-grid">
         <div class="form-row"><label class="form-label">Civil ID</label><input class="form-input" id="emp-civil-id" placeholder="28012345678"/></div>
         <div class="form-row"><label class="form-label">Nationality</label>
-          <select class="form-input" id="emp-nationality"><option value="Kuwaiti">Kuwaiti</option><option value="Saudi">Saudi</option><option value="Egyptian">Egyptian</option><option value="Indian">Indian</option><option value="Pakistani">Pakistani</option><option value="Bangladeshi">Bangladeshi</option><option value="Filipino">Filipino</option><option value="Sri Lankan">Sri Lankan</option><option value="Nepalese">Nepalese</option><option value="Other">Other</option></select>
+          <select class="form-input" id="emp-nationality">
+            <option value="Kuwaiti">Kuwaiti</option><option value="Saudi">Saudi</option><option value="Egyptian">Egyptian</option><option value="Indian">Indian</option><option value="Pakistani">Pakistani</option><option value="Bangladeshi">Bangladeshi</option><option value="Filipino">Filipino</option><option value="Sri Lankan">Sri Lankan</option><option value="Nepalese">Nepalese</option><option value="Other">Other</option>
+          </select>
         </div>
       </div>
       <div class="form-grid">
-        <div class="form-row"><label class="form-label">Department</label><select class="form-input" id="emp-dept-id"><option value="">— Select —</option></select></div>
-        <div class="form-row"><label class="form-label">Job Title</label><select class="form-input" id="emp-job-title-id"><option value="">— Select —</option></select></div>
+        <div class="form-row"><label class="form-label">Department</label>
+          <select class="form-input" id="emp-dept-id"><option value="">— Select —</option></select>
+        </div>
+        <div class="form-row"><label class="form-label">Job Title</label>
+          <select class="form-input" id="emp-job-title-id"><option value="">— Select —</option></select>
+        </div>
       </div>
       <div class="form-grid">
         <div class="form-row"><label class="form-label">Basic Salary (KWD)</label><input class="form-input" id="emp-salary" type="number" step="0.001" placeholder="350.000"/></div>
@@ -507,7 +417,11 @@ select.form-input{cursor:pointer}
         <div class="form-row"><label class="form-label">Work Email</label><input class="form-input" id="emp-email" type="email" placeholder="ahmed@company.com"/></div>
         <div class="form-row"><label class="form-label">Phone</label><input class="form-input" id="emp-phone" placeholder="+965 9999 9999"/></div>
       </div>
-      <div class="form-row"><label class="form-label">Contract Type</label><select class="form-input" id="emp-contract"><option value="full_time">Full Time</option><option value="part_time">Part Time</option><option value="contract">Contract</option></select></div>
+      <div class="form-row"><label class="form-label">Contract Type</label>
+        <select class="form-input" id="emp-contract">
+          <option value="full_time">Full Time</option><option value="part_time">Part Time</option><option value="contract">Contract</option>
+        </select>
+      </div>
       <div class="form-row"><label class="form-label">Login Password</label><input class="form-input" id="emp-password" type="password" placeholder="Employee portal login password"/></div>
     </div>
     <div class="modal-footer">
@@ -516,11 +430,14 @@ select.form-input{cursor:pointer}
     </div>
   </div>
 </div>
-<!-- MODAL: EOS Calculator -->
+<!-- MODAL: End of Service Calculator -->
 <div class="modal-overlay" id="modal-eos">
   <div class="modal" style="max-width:600px">
     <div class="modal-header">
-      <div><div class="modal-title" id="eos-emp-name">End of Service Indemnity</div><div style="font-size:11px;color:#888;margin-top:3px;">مكافأة نهاية الخدمة · Kuwait Labour Law Art. 51</div></div>
+      <div>
+        <div class="modal-title" id="eos-emp-name">End of Service Indemnity</div>
+        <div style="font-size:11px;color:#888;margin-top:3px;">مكافأة نهاية الخدمة · Kuwait Labour Law Art. 51</div>
+      </div>
       <button class="modal-close" onclick="closeModal('modal-eos')">✕</button>
     </div>
     <div class="modal-body">
@@ -532,81 +449,48 @@ select.form-input{cursor:pointer}
     </div>
   </div>
 </div>
-<!-- MODAL: Manual Attendance Entry -->
-<div class="modal-overlay" id="modal-att">
-  <div class="modal" style="max-width:440px">
-    <div class="modal-header"><div class="modal-title" id="modal-att-title">Manual Attendance Entry</div><button class="modal-close" onclick="closeModal('modal-att')">✕</button></div>
-    <div class="modal-body">
-      <div class="form-row"><label class="form-label">Employee</label><select class="form-input" id="att-emp-id"><option value="">— Select Employee —</option></select></div>
-      <div class="form-row"><label class="form-label">Date</label><input class="form-input" id="att-entry-date" type="date"/></div>
-      <div class="form-grid">
-        <div class="form-row"><label class="form-label">Clock In</label><input class="form-input" id="att-clock-in" type="time"/></div>
-        <div class="form-row"><label class="form-label">Clock Out</label><input class="form-input" id="att-clock-out" type="time"/></div>
-      </div>
-      <div class="form-row"><label class="form-label">Status</label><select class="form-input" id="att-status"><option value="present">Present</option><option value="late">Late</option><option value="half_day">Half Day</option><option value="absent">Absent</option></select></div>
-      <div class="form-row"><label class="form-label">Notes</label><input class="form-input" id="att-notes" placeholder="Optional notes"/></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-att')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveManualAtt()" id="att-save-btn">Save Entry</button>
-    </div>
-  </div>
-</div>
-<!-- MODAL: Add Overtime -->
-<div class="modal-overlay" id="modal-ot">
-  <div class="modal" style="max-width:440px">
-    <div class="modal-header"><div class="modal-title">Add Overtime Entry</div><button class="modal-close" onclick="closeModal('modal-ot')">✕</button></div>
-    <div class="modal-body">
-      <div class="form-row"><label class="form-label">Employee</label><select class="form-input" id="ot-emp-id"><option value="">— Select Employee —</option></select></div>
-      <div class="form-row"><label class="form-label">Date</label><input class="form-input" id="ot-date" type="date"/></div>
-      <div class="form-grid">
-        <div class="form-row"><label class="form-label">Hours</label><input class="form-input" id="ot-hours" type="number" min="0.5" max="16" step="0.5" placeholder="2"/></div>
-        <div class="form-row"><label class="form-label">Day Type</label>
-          <select class="form-input" id="ot-day-type">
-            <option value="normal">Normal Day (1.25×)</option>
-            <option value="holiday">Holiday/Rest Day (1.5×)</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row"><label class="form-label">Reason</label><input class="form-input" id="ot-reason" placeholder="e.g. Month-end closing, urgent delivery"/></div>
-      <div id="ot-pay-preview" style="background:#faf6f1;border:1px solid #e8e0d8;border-radius:8px;padding:12px 16px;font-size:13px;display:none;margin-top:4px;">
-        <div style="color:#888;font-size:11px;font-weight:700;margin-bottom:4px;">ESTIMATED OVERTIME PAY</div>
-        <div id="ot-pay-amount" style="font-size:20px;font-weight:800;color:#1a7a42"></div>
-        <div id="ot-pay-formula" style="font-size:11px;color:#888;margin-top:2px;"></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-ot')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveOTEntry()">Save (Auto-Approved)</button>
-    </div>
-  </div>
-</div>
 <!-- MODAL: Upload Document -->
-<div class="modal-overlay" id="modal-doc">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header"><div class="modal-title">Upload Document</div><button class="modal-close" onclick="closeModal('modal-doc')">✕</button></div>
+<div class="modal-overlay" id="modal-upload-doc">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Upload Document</div>
+      <button class="modal-close" onclick="closeModal('modal-upload-doc')">✕</button>
+    </div>
     <div class="modal-body">
-      <div class="form-row"><label class="form-label">Employee</label><select class="form-input" id="doc-emp-id"><option value="">— Select Employee —</option></select></div>
-      <div class="form-row"><label class="form-label">Document Type</label>
-        <select class="form-input" id="doc-type">
-          <option value="Civil ID">Civil ID</option>
-          <option value="Passport">Passport</option>
-          <option value="Visa">Visa / Residency</option>
-          <option value="Contract">Employment Contract</option>
-          <option value="Offer Letter">Offer Letter</option>
-          <option value="Warning Letter">Warning Letter</option>
-          <option value="Salary Certificate">Salary Certificate</option>
-          <option value="Medical">Medical Report</option>
-          <option value="Other">Other</option>
+      <div class="form-row">
+        <label class="form-label">Employee</label>
+        <select class="form-input" id="upload-doc-emp"><option value="">— Select Employee —</option></select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Document Type</label>
+        <select class="form-input" id="upload-doc-type">
+          <option value="Civil ID">🪪 Civil ID</option>
+          <option value="Passport">📘 Passport</option>
+          <option value="Visa">✈️ Visa</option>
+          <option value="Contract">📝 Contract</option>
+          <option value="Offer Letter">💼 Offer Letter</option>
+          <option value="Warning Letter">⚠️ Warning Letter</option>
+          <option value="Salary Certificate">💰 Salary Certificate</option>
+          <option value="Medical">🏥 Medical</option>
+          <option value="Other">📄 Other</option>
         </select>
       </div>
-      <div class="form-row"><label class="form-label">File (PDF, JPG, PNG, Word — max 10MB)</label><input class="form-input" id="doc-file" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="padding:8px;"/></div>
-      <div class="form-row"><label class="form-label">Expiry Date (optional — for IDs, visas)</label><input class="form-input" id="doc-expiry" type="date"/></div>
-      <div class="form-row"><label class="form-label">Notes (optional)</label><input class="form-input" id="doc-notes" placeholder="e.g. Original submitted to HR"/></div>
+      <div class="form-row">
+        <label class="form-label">File (max 10MB — PDF, JPG, PNG, DOC, DOCX)</label>
+        <input class="form-input" id="upload-doc-file" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="padding:8px;"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Expiry Date (optional)</label>
+        <input class="form-input" id="upload-doc-expiry" type="date"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Notes (optional)</label>
+        <input class="form-input" id="upload-doc-notes" placeholder="Any notes about this document"/>
+      </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-doc')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveDocument()" id="doc-save-btn">Upload</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-upload-doc')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDocument()">Upload</button>
     </div>
   </div>
 </div>
@@ -617,7 +501,7 @@ let token=localStorage.getItem('ghaya_token');
 let currentUser=null,currentLang=localStorage.getItem('ghaya_lang')||'en';
 let employeesData=[],leavesData=[],currentLeaveFilter='pending',editingEmpId=null;
 let deptsData=[],jobTitlesData=[];
-let currentEOSId=null,editingAttId=null;
+let currentEOSId=null;
 if(!token){window.location.href='/';}
 async function apicall(method,path,body){
   try{
@@ -636,21 +520,11 @@ async function init(){
     document.getElementById('user-avatar').textContent=(me.user.name||me.user.email)[0].toUpperCase();
     if(me.user.company_id){
       const co=await apicall('GET','/companies/'+me.user.company_id);
-      if(co&&co.company){
-        document.getElementById('company-name').textContent=currentLang==='ar'?(co.company.name_ar||co.company.name_en):co.company.name_en;
-      }else{
-        document.getElementById('company-name').textContent='My Company';
-      }
+      if(co&&co.company)document.getElementById('company-name').textContent=currentLang==='ar'?(co.company.name_ar||co.company.name_en):co.company.name_en;
     }
   }catch(e){logout();return;}
   await loadDeptsAndTitles();
-  const yr=document.getElementById('payroll-year');
-  const now=new Date();
-  for(let y=now.getFullYear();y>=now.getFullYear()-3;y--){const o=document.createElement('option');o.value=y;o.textContent=y;yr.appendChild(o);}
-  document.getElementById('payroll-month').value=now.getMonth()+1;
   setLang(currentLang,false);
-  const saved=localStorage.getItem('ghaya_page')||'dashboard';
-  showPage(saved);
 }
 async function loadDeptsAndTitles(){
   const[d,j]=await Promise.all([apicall('GET','/departments'),apicall('GET','/job-titles')]);
@@ -659,27 +533,25 @@ async function loadDeptsAndTitles(){
 }
 function showPage(page){
   localStorage.setItem('ghaya_page',page);
-  ['dashboard','employees','attendance','leaves','permissions','overtime','payroll','documents','settings'].forEach(p=>{
+  ['dashboard','employees','leaves','permissions','payroll','documents','settings'].forEach(p=>{
     document.getElementById('page-'+p).style.display=p===page?'':'none';
     const nav=document.getElementById('nav-'+p);
     if(nav)nav.classList.toggle('active',p===page);
   });
-  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},overtime:{en:'Overtime',ar:'العمل الإضافي'},payroll:{en:'Payroll',ar:'الرواتب'},documents:{en:'Documents',ar:'الوثائق'},settings:{en:'Settings',ar:'الإعدادات'}};
+  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},payroll:{en:'Payroll',ar:'الرواتب'},documents:{en:'Documents',ar:'الوثائق'},settings:{en:'Settings',ar:'الإعدادات'}};
   document.getElementById('page-title').textContent=titles[page]?.[currentLang]||titles[page]?.en;
   if(page==='dashboard')loadDashboard();
   if(page==='employees')loadEmployees();
-  if(page==='attendance')loadAttendance();
   if(page==='leaves'){loadLeaves();loadLeaveBalances();}
   if(page==='permissions'){loadPerms();loadPermUsage();}
-  if(page==='overtime')loadOT();
   if(page==='payroll')loadPayroll();
   if(page==='documents')loadDocuments();
-  if(page==='settings'){renderSettings();loadAllSettings();}
+  if(page==='settings'){renderSettings();loadPermSettings();}
 }
-/* ── DASHBOARD ── */
 async function loadDashboard(){
   const[emps,leaves]=await Promise.all([apicall('GET','/employees'),apicall('GET','/leaves?status=pending')]);
-  const employees=emps?.employees||[];const pendingLeaves=leaves?.requests||[];
+  const employees=emps?.employees||[];
+  const pendingLeaves=leaves?.requests||[];
   const active=employees.filter(e=>e.status==='active');
   const totalSalary=active.reduce((s,e)=>s+(parseFloat(e.basic_salary)||0),0);
   document.getElementById('s-total').textContent=employees.length;
@@ -687,7 +559,8 @@ async function loadDashboard(){
   document.getElementById('s-leaves').textContent=pendingLeaves.length;
   document.getElementById('s-payroll').textContent=totalSalary.toFixed(3);
   if(pendingLeaves.length>0){document.getElementById('leave-badge').style.display='';document.getElementById('leave-badge').textContent=pendingLeaves.length;}
-  renderDashEmployees(employees.slice(0,5));renderDashLeaves(pendingLeaves.slice(0,3));
+  renderDashEmployees(employees.slice(0,5));
+  renderDashLeaves(pendingLeaves.slice(0,3));
 }
 function getDeptName(id){return deptsData.find(d=>d.id===id)?.name_en||id||'—';}
 function getJobTitle(id){return jobTitlesData.find(j=>j.id===id)?.title_en||id||'—';}
@@ -701,7 +574,6 @@ function renderDashLeaves(list){
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">No pending leave requests</div></div>';return;}
   el.innerHTML=list.map(l=>`<div class="leave-card"><div class="leave-avatar">${(l.employee_name||'?')[0]}</div><div class="leave-info"><div class="leave-name">${l.employee_name||'—'}</div><div class="leave-detail">${l.type_name||'Annual'} · ${l.start_date} → ${l.end_date} · ${l.days_count||'?'} days</div></div><div class="leave-actions"><button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕</button></div></div>`).join('');
 }
-/* ── EMPLOYEES ── */
 async function loadEmployees(){
   document.getElementById('employees-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/employees');
@@ -718,7 +590,12 @@ function renderEmployeesTable(list){
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees found</div><div class="empty-sub">Add your first employee using the button above</div></div>';return;}
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Title / Dept</th><th>Nationality</th><th>Basic Salary</th><th>Hire Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((e,i)=>`<tr><td style="color:#888;font-size:12px">${i+1}</td><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></td><td><div>${getJobTitle(e.job_title_en)}</div><div style="font-size:11px;color:#888">${getDeptName(e.department)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="font-size:12px;color:#888">${e.hire_date||'—'}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button><button class="btn btn-purple btn-sm" onclick="viewEOS('${e.id}')">EOS</button></td></tr>`).join('')}</tbody></table></div>`;
 }
-function viewEOS(id){currentEOSId=id;document.getElementById('modal-eos').classList.add('open');loadEOS(id,'termination');}
+/* ── EOS Calculator ── */
+function viewEOS(id){
+  currentEOSId=id;
+  document.getElementById('modal-eos').classList.add('open');
+  loadEOS(id,'termination');
+}
 async function loadEOS(id,type){
   document.getElementById('eos-btn-termination').className='btn '+(type==='termination'?'btn-primary':'btn-ghost');
   document.getElementById('eos-btn-termination').style.cssText='flex:1;justify-content:center;';
@@ -726,480 +603,390 @@ async function loadEOS(id,type){
   document.getElementById('eos-btn-resignation').style.cssText='flex:1;justify-content:center;';
   document.getElementById('eos-content').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET',`/eos?employee_id=${id}&type=${type}`);
-  if(!data||data.error){document.getElementById('eos-content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">${data?.error||'Error loading EOS'}</div><div class="empty-sub">Make sure this employee has a hire date set</div></div>`;return;}
+  if(!data||data.error){
+    document.getElementById('eos-content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">${data?.error||'Error loading EOS'}</div><div class="empty-sub">Make sure this employee has a hire date set</div></div>`;
+    return;
+  }
   document.getElementById('eos-emp-name').textContent=`EOS — ${data.employee.name}`;
   const kwd=n=>`KWD ${parseFloat(n).toFixed(3)}`;
-  const ac=data.final_indemnity>0?'#1a7a42':'#c46a00';
-  document.getElementById('eos-content').innerHTML=`<div style="background:#faf6f1;border-radius:10px;padding:16px 20px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"><div><div style="font-size:11px;color:#888;font-weight:700;">Service Years</div><div style="font-size:20px;font-weight:800">${data.years_of_service.toFixed(2)}</div></div><div><div style="font-size:11px;color:#888;font-weight:700;">Basic Salary</div><div style="font-size:20px;font-weight:800">${kwd(data.basic_salary)}</div></div><div><div style="font-size:11px;color:#888;font-weight:700;">Final Indemnity</div><div style="font-size:20px;font-weight:800;color:${ac}">${kwd(data.final_indemnity)}</div></div></div><table><thead><tr><th>Period</th><th>Days/Year</th><th>Years</th><th>Daily Rate</th><th>Amount</th></tr></thead><tbody>${(data.breakdown||[]).map(b=>`<tr><td>${b.label}</td><td>${b.days_per_year}</td><td>${b.years.toFixed(2)}</td><td>${kwd(b.daily_rate)}</td><td style="font-weight:700">${kwd(b.amount)}</td></tr>`).join('')}</tbody></table><div style="border-top:2px solid #1a1a2e;margin-top:12px;padding-top:12px;display:flex;justify-content:space-between;font-weight:800;font-size:15px;"><span>Total Indemnity</span><span style="color:${ac}">${kwd(data.final_indemnity)}</span></div>`;
+  const accentColor=data.final_indemnity>0?'#1a7a42':'#c46a00';
+  const bgColor=data.final_indemnity>0?'#e6f7ee':'#fff3e6';
+  document.getElementById('eos-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;">
+      <div class="stat-card" style="padding:14px;"><div class="stat-label">Hire Date</div><div style="font-size:15px;font-weight:800;margin-top:4px;">${data.employee.hire_date}</div></div>
+      <div class="stat-card" style="padding:14px;"><div class="stat-label">Years of Service</div><div style="font-size:20px;font-weight:800;margin-top:4px;">${data.years_of_service} yrs</div></div>
+      <div class="stat-card" style="padding:14px;"><div class="stat-label">Daily Wage</div><div style="font-size:15px;font-weight:800;margin-top:4px;">${kwd(data.daily_wage)}</div></div>
+    </div>
+    <div class="section-card" style="margin-bottom:14px;">
+      <div style="padding:16px 20px;">
+        <div style="font-size:13px;font-weight:800;margin-bottom:12px;color:#1a1a2e;">Indemnity Breakdown</div>
+        <table width="100%" style="border-collapse:collapse;font-size:13px;">
+          <tr><td style="padding:8px 0;color:#555;">First 5 years &nbsp;<span style="color:#888;font-size:11px;">(${Math.min(data.years_of_service,5).toFixed(2)} yrs × 15 days × ${kwd(data.daily_wage)}/day)</span></td><td style="text-align:right;font-weight:700;">${kwd(data.first_5_years_amount)}</td></tr>
+          ${data.beyond_5_years>0?`<tr><td style="padding:8px 0;color:#555;">Beyond 5 years &nbsp;<span style="color:#888;font-size:11px;">(${data.beyond_5_years.toFixed(2)} yrs × 30 days × ${kwd(data.daily_wage)}/day)</span></td><td style="text-align:right;font-weight:700;">${kwd(data.beyond_5_years_amount)}</td></tr>`:''}
+          <tr style="border-top:2px solid #e8e0d8;"><td style="padding:12px 0 6px;font-weight:800;">Full Indemnity (before factor)</td><td style="text-align:right;font-weight:800;font-size:15px;">${kwd(data.full_indemnity)}</td></tr>
+          <tr><td style="padding:4px 0;font-size:12px;color:#888;">${data.factor_reason}</td><td style="text-align:right;font-size:12px;color:#888;">× ${data.factor===(2/3)?'2/3 (66.7%)':data.factor*100+'%'}</td></tr>
+        </table>
+      </div>
+    </div>
+    <div style="background:${bgColor};border-radius:12px;padding:22px;text-align:center;">
+      <div style="font-size:11px;font-weight:700;color:#888;letter-spacing:1px;margin-bottom:8px;">TOTAL END OF SERVICE INDEMNITY</div>
+      <div style="font-size:36px;font-weight:800;color:${accentColor};">${kwd(data.final_indemnity)}</div>
+      <div style="font-size:12px;color:#888;margin-top:6px;">Based on basic salary of ${kwd(data.employee.basic_salary)}/month · as of today</div>
+    </div>`;
 }
-/* ── ATTENDANCE ── */
-async function loadAttendance(){
-  const dateEl=document.getElementById('att-date');
-  if(!dateEl.value)dateEl.value=new Date().toISOString().split('T')[0];
-  const date=dateEl.value;
-  document.getElementById('att-table').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET','/attendance?date='+date);
-  const records=data?.records||[];
-  const cnt={present:0,late:0,absent:0,half_day:0};
-  records.forEach(r=>{
-    if(r.status==='present'||r.status==='left_early') cnt.present++;
-    else if(r.status==='late'||r.status==='late_left_early') cnt.late++;
-    else if(cnt[r.status]!==undefined) cnt[r.status]++;
-  });
-  document.getElementById('att-present').textContent=cnt.present;
-  document.getElementById('att-late').textContent=cnt.late;
-  document.getElementById('att-absent').textContent=cnt.absent;
-  document.getElementById('att-half').textContent=cnt.half_day;
-  const el=document.getElementById('att-table');
-  if(!records.length){el.innerHTML='<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">No attendance records for this date</div><div class="empty-sub">Employees who clock in will appear here</div></div>';return;}
-  const sb={present:'<span class="badge badge-green">Present</span>',late:'<span class="badge badge-orange">Late</span>',absent:'<span class="badge badge-red">Absent</span>',half_day:'<span class="badge badge-blue">Half Day</span>',left_early:'<span class="badge badge-orange">Left Early</span>',late_left_early:'<span class="badge badge-red">Late + Left Early</span>'};
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Status</th><th>Location</th><th>Actions</th></tr></thead><tbody>${records.map(r=>`<tr><td style="font-weight:700">${`${r.first_name_en||''} ${r.last_name_en||''}`.trim()||'—'}</td><td>${r.clock_in?.slice(0,5)||'—'}</td><td>${r.clock_out?.slice(0,5)||'—'}</td><td>${r.hours_worked!=null?r.hours_worked.toFixed(1)+' hrs':'—'}</td><td>${sb[r.status]||r.status||'—'}</td><td>${r.clock_in_lat?`<a href="https://www.google.com/maps?q=${r.clock_in_lat},${r.clock_in_lng}" target="_blank" style="color:#E8472A;font-size:12px;text-decoration:none;">📍 Map</a>`:'—'}</td><td><button class="btn btn-ghost btn-sm" onclick="editAttRecord('${r.id}','${r.employee_id||''}','${r.clock_in||''}','${r.clock_out||''}','${r.status||'present'}')">Edit</button></td></tr>`).join('')}</tbody></table></div>`;
-}
-function goToday(){document.getElementById('att-date').value=new Date().toISOString().split('T')[0];loadAttendance();}
-async function loadMonthlyReport(){
-  const month=document.getElementById('att-month').value;
-  if(!month)return;
-  document.getElementById('att-monthly').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET','/attendance?month='+month);
-  const records=data?.records||[];
-  const el=document.getElementById('att-monthly');
-  if(!records.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No records for this month</div></div>';return;}
-  const byEmp={};
-  records.forEach(r=>{
-    const name=`${r.first_name_en||''} ${r.last_name_en||''}`.trim()||'—';
-    if(!byEmp[r.employee_id]){byEmp[r.employee_id]={name,present:0,late:0,absent:0,half_day:0,hours:0};}
-    const e=byEmp[r.employee_id];
-    if(r.status==='present'||r.status==='left_early') e.present++;
-    else if(r.status==='late'||r.status==='late_left_early') e.late++;
-    else if(e[r.status]!==undefined) e[r.status]++;
-    e.hours+=(r.hours_worked||0);
-  });
-  const rows=Object.values(byEmp).map(e=>`<tr><td style="font-weight:700">${e.name}</td><td style="color:#1a7a42;font-weight:700">${e.present}</td><td style="color:#c46a00;font-weight:700">${e.late}</td><td style="color:#1a4da0;font-weight:700">${e.half_day}</td><td style="color:#c42a00;font-weight:700">${e.absent}</td><td style="font-weight:700">${e.hours.toFixed(1)} hrs</td></tr>`).join('');
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th style="color:#1a7a42">Present</th><th style="color:#c46a00">Late</th><th style="color:#1a4da0">Half Day</th><th style="color:#c42a00">Absent</th><th>Total Hours</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-}
-async function openManualAtt(){
-  editingAttId=null;
-  document.getElementById('modal-att-title').textContent='Manual Attendance Entry';
-  document.getElementById('att-save-btn').textContent='Save Entry';
-  document.getElementById('att-entry-date').value=document.getElementById('att-date').value||new Date().toISOString().split('T')[0];
-  document.getElementById('att-clock-in').value='08:00';
-  document.getElementById('att-clock-out').value='17:00';
-  document.getElementById('att-status').value='present';
-  document.getElementById('att-notes').value='';
-  document.getElementById('att-emp-id').disabled=false;
-  if(!employeesData.length){const d=await apicall('GET','/employees');employeesData=d?.employees||[];}
-  const sel=document.getElementById('att-emp-id');
-  sel.innerHTML='<option value="">— Select Employee —</option>'+employeesData.filter(e=>e.status==='active').map(e=>`<option value="${e.id}">${e.first_name_en} ${e.last_name_en}</option>`).join('');
-  document.getElementById('modal-att').classList.add('open');
-}
-function editAttRecord(id,empId,clockIn,clockOut,status){
-  editingAttId=id;
-  document.getElementById('modal-att-title').textContent='Edit Attendance Record';
-  document.getElementById('att-save-btn').textContent='Save Changes';
-  const empName=(employeesData.find(e=>e.id===empId)||{}).first_name_en||empId;
-  document.getElementById('att-emp-id').innerHTML=`<option value="${empId}">${empName}</option>`;
-  document.getElementById('att-emp-id').disabled=true;
-  document.getElementById('att-clock-in').value=clockIn?.slice(0,5)||'';
-  document.getElementById('att-clock-out').value=clockOut?.slice(0,5)||'';
-  document.getElementById('att-status').value=status||'present';
-  document.getElementById('att-notes').value='';
-  document.getElementById('modal-att').classList.add('open');
-}
-async function saveManualAtt(){
-  const clock_in=document.getElementById('att-clock-in').value;
-  const clock_out=document.getElementById('att-clock-out').value;
-  const status=document.getElementById('att-status').value;
-  const notes=document.getElementById('att-notes').value.trim();
-  let res;
-  if(editingAttId){
-    res=await apicall('PUT','/attendance/'+editingAttId,{clock_in,clock_out,status,notes});
-  }else{
-    const employee_id=document.getElementById('att-emp-id').value;
-    const date=document.getElementById('att-entry-date').value;
-    if(!employee_id||!date){showToast('Select employee and date','error');return;}
-    res=await apicall('POST','/attendance',{employee_id,date,clock_in,clock_out,status,notes});
-  }
-  if(res&&!res.error){closeModal('modal-att');showToast('Saved ✓','success');loadAttendance();}
-  else showToast(res?.error||'Error saving','error');
-}
-/* ── LEAVES ── */
-async function loadLeaves(status){
-  status=status||currentLeaveFilter;currentLeaveFilter=status;
+async function loadLeaves(){
   document.getElementById('leaves-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const url=status==='all'?'/leaves':'/leaves?status='+status;
-  const data=await apicall('GET',url);const list=data?.requests||[];
+  const data=await apicall('GET','/leaves?status='+currentLeaveFilter);
+  leavesData=data?.requests||[];
+  renderLeavesList(leavesData);
+}
+function filterLeaves(status,btn){currentLeaveFilter=status;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');loadLeaves();}
+function renderLeavesList(list){
   const el=document.getElementById('leaves-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div>';return;}
-  const sb={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>',cancelled:'<span class="badge badge-gray">Cancelled</span>'};
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map(l=>`<tr><td style="font-weight:700">${l.employee_name||'—'}</td><td>${l.type_name||l.leave_type||'—'}</td><td>${l.start_date||'—'}</td><td>${l.end_date||'—'}</td><td>${l.days_count||'—'}</td><td>${sb[l.status]||l.status}</td><td style="display:flex;gap:6px;">${l.status==='pending'?`<button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕ Reject</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;
+  const statusBadge={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>'};
+  el.innerHTML=list.map(l=>`<div class="leave-card"><div class="leave-avatar">${(l.employee_name||'?')[0]}</div><div class="leave-info"><div class="leave-name">${l.employee_name||'—'} ${statusBadge[l.status]||''}</div><div class="leave-detail">${l.leave_type||l.type_name||'Annual'} · ${l.start_date} → ${l.end_date} · ${l.days_count||l.days_requested||'?'} days${l.reason?' · '+l.reason:''}</div></div>${l.status==='pending'?`<div class="leave-actions"><button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕ Reject</button></div>`:''}</div>`).join('');
 }
-function filterLeaves(status,btn){document.querySelectorAll('#page-leaves .filter-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');loadLeaves(status);}
 async function loadLeaveBalances(){
-  document.getElementById('leave-balances-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET','/leaves/balances');const list=data?.balances||[];
   const el=document.getElementById('leave-balances-list');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No data</div></div>';return;}
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Hire Date</th><th>Accrued (days)</th><th>Taken</th><th>Remaining</th></tr></thead><tbody>${list.map(b=>`<tr><td style="font-weight:700">${b.employee_name||'—'}</td><td style="color:#888;font-size:12px">${b.hire_date||'—'}</td><td style="font-weight:700;color:#1a7a42">${typeof b.accrued==='number'?b.accrued.toFixed(1):'—'}</td><td>${b.taken||0}</td><td style="font-weight:700;color:${(b.remaining||0)>0?'#1a7a42':'#c42a00'}">${typeof b.remaining==='number'?b.remaining.toFixed(1):'—'}</td></tr>`).join('')}</tbody></table></div>`;
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const[empsData,allLeavesData]=await Promise.all([apicall('GET','/employees'),apicall('GET','/leaves')]);
+  const employees=empsData?.employees||[];
+  const allLeaves=allLeavesData?.requests||[];
+  const year=new Date().getFullYear().toString();
+  if(!employees.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌴</div><div class="empty-text">No employees yet</div></div>';return;}
+  function calcBal(hireDate){
+    if(!hireDate)return null;
+    const now=new Date(),hire=new Date(hireDate);
+    if(isNaN(hire))return null;
+    const yearStart=new Date(now.getFullYear(),0,1);
+    const msPerYear=1000*60*60*24*365.25;
+    const yearsOfService=(now-hire)/msPerYear;
+    const entitlement=yearsOfService>=5?35:30;
+    const accrualStart=hire>yearStart?hire:yearStart;
+    const daysAccruing=Math.max(0,(now-accrualStart)/(1000*60*60*24));
+    const isLeap=new Date(now.getFullYear(),1,29).getDate()===29;
+    const accrued=(daysAccruing/(isLeap?366:365))*entitlement;
+    return{yearsOfService:Math.round(yearsOfService*10)/10,entitlement,accrued:Math.round(accrued*10)/10};
+  }
+  const rows=employees.map(emp=>{
+    const empLeaves=allLeaves.filter(l=>l.employee_id===emp.id&&l.status==='approved'&&(l.start_date||'').startsWith(year)&&(l.leave_type==='annual'||!l.leave_type));
+    const taken=empLeaves.reduce((s,l)=>s+(parseFloat(l.days_count||l.days_requested)||0),0);
+    const bal=calcBal(emp.hire_date);
+    const remaining=bal?Math.max(0,Math.round((bal.accrued-taken)*10)/10):'—';
+    const remainingColor=bal&&remaining<5?'#c42a00':bal&&remaining<10?'#c46a00':'#1a7a42';
+    return`<tr><td><div style="font-weight:700">${emp.first_name_en} ${emp.last_name_en}</div><div style="font-size:11px;color:#888">${getDeptName(emp.department)}</div></td><td style="font-size:12px;color:#888">${bal?bal.yearsOfService+' yrs':'No hire date'}</td><td><span class="badge badge-blue">${bal?bal.entitlement+' days':'—'}</span></td><td style="font-weight:700;color:#E8472A">${bal?bal.accrued:'—'}</td><td>${taken||0}</td><td style="font-weight:800;color:${remainingColor}">${remaining}</td></tr>`;
+  }).join('');
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Service</th><th>Entitlement</th><th>Accrued</th><th>Taken</th><th>Remaining</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
-async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'approved'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
-async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'rejected'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
-/* ── PERMISSIONS ── */
-async function loadPerms(status){
-  status=status||'pending';
-  document.getElementById('perms-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const url=status==='all'?'/permissions':'/permissions?status='+status;
-  const data=await apicall('GET',url);const list=data?.requests||[];
-  const el=document.getElementById('perms-list');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🕐</div><div class="empty-text">No permission requests</div></div>';return;}
-  const sb={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>'};
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Date</th><th>Time</th><th>Hours</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map(p=>`<tr><td style="font-weight:700">${p.employee_name||'—'}</td><td>${p.date||'—'}</td><td style="font-size:12px">${p.start_time||''}–${p.end_time||''}</td><td style="font-weight:700">${parseFloat(p.hours||0).toFixed(1)} hrs</td><td style="font-size:12px;color:#888;max-width:150px">${p.reason||'—'}</td><td>${sb[p.status]||p.status}</td><td style="display:flex;gap:6px;">${p.status==='pending'?`<button class="btn btn-success btn-sm" onclick="approvePerm('${p.id}')">✓</button><button class="btn btn-danger btn-sm" onclick="rejectPerm('${p.id}')">✕</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;
-}
-function filterPerms(status,btn){document.querySelectorAll('#page-permissions .filter-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');loadPerms(status);}
-async function approvePerm(id){const res=await apicall('PUT','/permissions/'+id,{status:'approved'});if(res&&!res.error){showToast('Approved ✓','success');loadPerms();}else showToast('Error','error');}
-async function rejectPerm(id){const res=await apicall('PUT','/permissions/'+id,{status:'rejected'});if(res&&!res.error){showToast('Rejected','');loadPerms();}else showToast('Error','error');}
-async function loadPermUsage(){
-  document.getElementById('perm-usage-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const now=new Date();const month=now.toISOString().slice(0,7);
-  document.getElementById('perm-month-label').textContent=now.toLocaleString('en',{month:'long',year:'numeric'});
-  const data=await apicall('GET','/permissions/usage?month='+month);const list=data?.usage||[];
-  const el=document.getElementById('perm-usage-list');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No data this month</div></div>';return;}
-  const limit=data?.monthly_limit||4;
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Used This Month</th><th>Remaining</th><th>Usage</th></tr></thead><tbody>${list.map(u=>{const pct=Math.min(100,((u.used||0)/limit)*100);return`<tr><td style="font-weight:700">${u.employee_name||'—'}</td><td style="font-weight:700;color:#E8472A">${parseFloat(u.used||0).toFixed(1)} hrs</td><td style="color:${(limit-(u.used||0))>=0?'#1a7a42':'#c42a00'};font-weight:700">${Math.max(0,limit-(u.used||0)).toFixed(1)} hrs</td><td style="min-width:120px"><div style="height:6px;background:#f0ebe4;border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${pct>=100?'#c42a00':'#E8472A'};border-radius:3px;"></div></div></td></tr>`;}).join('')}</tbody></table></div>`;
-}
-/* ── PAYROLL ── */
+async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'approve'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none'){loadLeaves();loadLeaveBalances();}}else showToast(res?.error||'Error','error');}
+async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'reject'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none'){loadLeaves();loadLeaveBalances();}}else showToast(res?.error||'Error','error');}
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
 async function loadPayroll(){
-  document.getElementById('payroll-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET','/payroll');const runs=data?.runs||data?.payslips||[];
+  const now=new Date();
+  const yearSel=document.getElementById('payroll-year');
+  yearSel.innerHTML='';
+  for(let y=now.getFullYear();y>=now.getFullYear()-3;y--){yearSel.innerHTML+=`<option value="${y}">${y}</option>`;}
+  document.getElementById('payroll-month').value=now.getMonth()+1;
+  const data=await apicall('GET','/payroll');
+  const runs=data?.runs||[];
   const el=document.getElementById('payroll-list');
-  if(!runs.length){el.innerHTML='<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">No payroll runs yet</div><div class="empty-sub">Use Run Payroll above to generate payroll</div></div>';return;}
-  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Period</th><th>Employees</th><th>Total Gross</th><th>Total Net</th><th>Status</th><th>Actions</th></tr></thead><tbody>${runs.map(r=>`<tr><td style="font-weight:700">${months[(r.period_month||1)-1]} ${r.period_year}</td><td>${r.employee_count||'—'}</td><td>KWD ${parseFloat(r.total_gross||0).toFixed(3)}</td><td style="font-weight:700;color:#1a7a42">KWD ${parseFloat(r.total_net||0).toFixed(3)}</td><td><span class="badge ${r.status==='published'?'badge-green':'badge-orange'}">${r.status||'draft'}</span></td><td><button class="btn btn-ghost btn-sm" onclick="viewPayrollDetail('${r.id}')">View →</button></td></tr>`).join('')}</tbody></table></div>`;
-}
-function showPayrollList(){document.getElementById('payroll-runs-view').style.display='';document.getElementById('payroll-detail-view').style.display='none';}
-async function viewPayrollDetail(id){
-  document.getElementById('payroll-runs-view').style.display='none';document.getElementById('payroll-detail-view').style.display='';
-  document.getElementById('payroll-detail-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET','/payroll/'+id);
-  if(!data||data.error){document.getElementById('payroll-detail-list').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error loading payroll</div></div>';return;}
-  const run=data.run||{};const entries=data.entries||[];
-  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  document.getElementById('payroll-detail-title').textContent=`${months[(run.period_month||1)-1]} ${run.period_year} Payroll`;
-  document.getElementById('payroll-detail-actions').innerHTML=run.status!=='published'?`<button class="btn btn-success btn-sm" onclick="publishPayroll('${id}')">✓ Publish</button>`:'<span class="badge badge-green">Published</span>';
-  if(!entries.length){document.getElementById('payroll-detail-list').innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No entries</div></div>';return;}
-  document.getElementById('payroll-detail-list').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Basic Salary</th><th>PIFSS Employee</th><th>PIFSS Employer</th><th>Net Pay</th></tr></thead><tbody>${entries.map(e=>`<tr><td style="font-weight:700">${e.employee_name||'—'}</td><td>KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="color:${e.pifss_employee>0?'#c42a00':'#888'}">${e.pifss_employee>0?'− KWD '+parseFloat(e.pifss_employee).toFixed(3):'—'}</td><td style="color:#888">${e.pifss_employer>0?'KWD '+parseFloat(e.pifss_employer).toFixed(3):'—'}</td><td style="font-weight:800;color:#1a7a42">KWD ${parseFloat(e.net_salary||0).toFixed(3)}</td></tr>`).join('')}</tbody></table></div>`;
+  if(!runs.length){el.innerHTML='<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">No payroll runs yet</div><div class="empty-sub">Select a month and click Run Payroll</div></div>';return;}
+  const statusBadge={draft:'<span class="badge badge-orange">Draft</span>',approved:'<span class="badge badge-blue">Published</span>',paid:'<span class="badge badge-green">Paid</span>'};
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Period</th><th>Gross (KWD)</th><th>PIFSS Deducted</th><th>Net Pay (KWD)</th><th>Status</th><th>Actions</th></tr></thead><tbody>${runs.map(r=>`<tr><td style="font-weight:700">${MONTH_NAMES[r.period_month-1]} ${r.period_year}</td><td>KWD ${(r.total_gross||0).toFixed(3)}</td><td style="color:#E8472A">- KWD ${(r.total_pifss_employee||0).toFixed(3)}</td><td style="font-weight:800;color:#1a7a42">KWD ${(r.total_net||0).toFixed(3)}</td><td>${statusBadge[r.status]||r.status}</td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="viewPayrollRun('${r.id}')">View</button>${r.status==='draft'?`<button class="btn btn-primary btn-sm" onclick="publishPayslips('${r.id}')">Publish</button>`:''}${r.status==='approved'?`<button class="btn btn-success btn-sm" onclick="markAsPaid('${r.id}')">Mark Paid</button>`:''}${r.status!=='paid'?`<button class="btn btn-danger btn-sm" onclick="deletePayrollRun('${r.id}')">Delete</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;
 }
 async function runPayroll(){
   const month=parseInt(document.getElementById('payroll-month').value);
   const year=parseInt(document.getElementById('payroll-year').value);
   const apply_pifss=document.getElementById('pifss-toggle').checked;
-  if(!month||!year){showToast('Select month and year','error');return;}
-  const res=await apicall('POST','/payroll',{period_month:month,period_year:year,apply_pifss});
-  if(res&&!res.error){showToast('Payroll run complete ✓','success');loadPayroll();}
-  else showToast(res?.error||'Error running payroll','error');
+  const res=await apicall('POST','/payroll',{month,year,apply_pifss});
+  if(!res||res.error){showToast(res?.error||'Error running payroll','error');return;}
+  showToast(`✓ Payroll for ${MONTH_NAMES[month-1]} ${year} created`,'success');
+  loadPayroll();
 }
-async function publishPayroll(id){const res=await apicall('PUT','/payroll/'+id,{status:'published'});if(res&&!res.error){showToast('Payroll published ✓','success');viewPayrollDetail(id);}else showToast(res?.error||'Error','error');}
-/* ── DOCUMENTS ── */
+async function viewPayrollRun(id){
+  document.getElementById('payroll-runs-view').style.display='none';
+  document.getElementById('payroll-detail-view').style.display='';
+  document.getElementById('payroll-detail-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const data=await apicall('GET','/payroll/'+id);
+  if(!data||data.error){showToast('Error loading run','error');return;}
+  const{run,entries}=data;
+  document.getElementById('payroll-detail-title').textContent=`${MONTH_NAMES[run.period_month-1]} ${run.period_year} — Breakdown`;
+  document.getElementById('payroll-detail-summary').innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;"><div class="stat-card"><div class="stat-label">Total Gross</div><div class="stat-value" style="font-size:22px">KWD ${(run.total_gross||0).toFixed(3)}</div></div><div class="stat-card"><div class="stat-label">PIFSS Deducted (8%)</div><div class="stat-value" style="font-size:22px;color:#E8472A">-${(run.total_pifss_employee||0).toFixed(3)}</div></div><div class="stat-card"><div class="stat-label">Net Salaries</div><div class="stat-value" style="font-size:22px;color:#1a7a42">KWD ${(run.total_net||0).toFixed(3)}</div></div><div class="stat-card"><div class="stat-label">Company PIFSS (11%)</div><div class="stat-value" style="font-size:22px;color:#888">KWD ${(run.total_pifss_employer||0).toFixed(3)}</div></div></div>`;
+  const actionsEl=document.getElementById('payroll-detail-actions');
+  if(run.status==='draft'){actionsEl.innerHTML=`<button class="btn btn-primary" onclick="publishPayslips('${id}')">📤 Publish Payslips</button><button class="btn btn-danger" onclick="deletePayrollRun('${id}')">Delete</button>`;}
+  else if(run.status==='approved'){actionsEl.innerHTML=`<button class="btn btn-success" onclick="markAsPaid('${id}')">✓ Mark as Paid</button>`;}
+  else{actionsEl.innerHTML=`<span class="badge badge-green" style="padding:8px 16px;font-size:13px;">✓ Paid</span>`;}
+  document.getElementById('payroll-detail-list').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Nationality</th><th>Basic Salary</th><th>PIFSS (8%)</th><th>Net Pay</th><th>Payslip</th></tr></thead><tbody>${(entries||[]).map(e=>`<tr><td style="font-weight:700">${e.first_name_en} ${e.last_name_en}</td><td style="font-size:12px">${e.nationality||'—'}</td><td>KWD ${(e.basic_salary||0).toFixed(3)}</td><td style="color:${e.pifss_employee>0?'#E8472A':'#888'}">${e.pifss_employee>0?`- KWD ${e.pifss_employee.toFixed(3)}`:'—'}</td><td style="font-weight:800;color:#1a7a42">KWD ${(e.net_salary||0).toFixed(3)}</td><td>${e.payslip_published?'<span class="badge badge-green">Published</span>':'<span class="badge badge-gray">Pending</span>'}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function showPayrollList(){document.getElementById('payroll-runs-view').style.display='';document.getElementById('payroll-detail-view').style.display='none';}
+async function publishPayslips(id){const res=await apicall('PUT','/payroll/'+id,{action:'publish'});if(!res||res.error){showToast(res?.error||'Error','error');return;}showToast('Payslips published ✓','success');loadPayroll();viewPayrollRun(id);}
+async function markAsPaid(id){const res=await apicall('PUT','/payroll/'+id,{action:'pay'});if(!res||res.error){showToast(res?.error||'Error','error');return;}showToast('Marked as paid ✓','success');loadPayroll();viewPayrollRun(id);}
+async function deletePayrollRun(id){if(!confirm('Delete this payroll run?'))return;const res=await apicall('DELETE','/payroll/'+id);if(!res||res.error){showToast(res?.error||'Error','error');return;}showToast('Deleted','success');showPayrollList();loadPayroll();}
+/* ── DOCUMENTS ─────────────────────────────────────────────── */
 const DOC_TYPES={'Civil ID':'🪪','Passport':'📘','Visa':'✈️','Contract':'📝','Offer Letter':'💼','Warning Letter':'⚠️','Salary Certificate':'💰','Medical':'🏥','Other':'📄'};
+let docEmpsCached=false;
 async function loadDocuments(){
-  if(!employeesData.length){const d=await apicall('GET','/employees');employeesData=d?.employees||[];}
-  const filter=document.getElementById('doc-emp-filter');
-  if(filter.options.length<=1){
-    employeesData.forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=`${e.first_name_en} ${e.last_name_en}`;filter.appendChild(o);});
+  const filterEl=document.getElementById('doc-emp-filter');
+  if(filterEl&&!docEmpsCached){
+    const ed=await apicall('GET','/employees');
+    (ed?.employees||[]).forEach(e=>{
+      const o=document.createElement('option');
+      o.value=e.id;
+      o.textContent=`${e.first_name_en} ${e.last_name_en}`;
+      filterEl.appendChild(o);
+    });
+    docEmpsCached=true;
   }
-  const empId=document.getElementById('doc-emp-filter').value;
-  const url=empId?`/documents?employee_id=${empId}`:'/documents';
-  document.getElementById('docs-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const empId=filterEl?filterEl.value:'';
+  const url='/documents'+(empId?'?employee_id='+empId:'');
   const data=await apicall('GET',url);
   const docs=data?.documents||[];
-  const el=document.getElementById('docs-list');
-  if(!docs.length){el.innerHTML='<div class="empty"><div class="empty-icon">📁</div><div class="empty-text">No documents yet</div><div class="empty-sub">Upload the first document using the button above</div></div>';return;}
-  const today=new Date().toISOString().split('T')[0];
-  const soon=new Date(Date.now()+30*24*60*60*1000).toISOString().split('T')[0];
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Type</th><th>File</th><th>Expiry</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody>${docs.map(d=>{
-    const emp=employeesData.find(e=>e.id===d.employee_id);
-    const empName=emp?`${emp.first_name_en} ${emp.last_name_en}`:'—';
+  const list=document.getElementById('docs-list');
+  if(!list)return;
+  if(!docs.length){list.innerHTML='<div class="empty"><div class="empty-icon">📁</div><div class="empty-text">No documents found</div><div class="empty-sub">Upload your first document using the button above</div></div>';return;}
+  const today=new Date();
+  const soon=new Date();soon.setDate(soon.getDate()+30);
+  list.innerHTML=docs.map(d=>{
     const icon=DOC_TYPES[d.doc_type]||'📄';
-    let expiryHtml='—';
+    let expBadge='';
     if(d.expiry_date){
-      if(d.expiry_date<today) expiryHtml=`<span style="color:#c42a00;font-weight:700">⚠️ ${d.expiry_date} (Expired)</span>`;
-      else if(d.expiry_date<=soon) expiryHtml=`<span style="color:#c46a00;font-weight:700">⏳ ${d.expiry_date} (Soon)</span>`;
-      else expiryHtml=`<span style="color:#888">${d.expiry_date}</span>`;
+      const exp=new Date(d.expiry_date);
+      if(exp<today) expBadge='<span class="badge badge-red" style="margin-left:6px;">Expired</span>';
+      else if(exp<=soon) expBadge='<span class="badge badge-orange" style="margin-left:6px;">Expiring Soon</span>';
     }
-    const size=d.file_size?`${(d.file_size/1024).toFixed(0)} KB`:'';
-    return`<tr>
-      <td style="font-weight:700">${empName}</td>
-      <td><span class="badge badge-blue">${icon} ${d.doc_type}</span></td>
-      <td><div style="font-size:13px;font-weight:600">${d.file_name}</div><div style="font-size:11px;color:#aaa">${size}</div></td>
-      <td>${expiryHtml}</td>
-      <td style="font-size:11px;color:#888">${d.created_at?.slice(0,10)||'—'}</td>
-      <td style="display:flex;gap:6px;">
+    const empName=`${d.first_name_en||''} ${d.last_name_en||''}`.trim();
+    const sizeMB=d.file_size?(d.file_size/1048576).toFixed(2)+'MB':'';
+    return `<div class="doc-card">
+      <span style="font-size:28px;">${icon}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;">${d.file_name}${expBadge}</div>
+        <div style="font-size:12px;color:#888;">${d.doc_type} · ${empName||'—'}${sizeMB?' · '+sizeMB:''}</div>
+        ${d.expiry_date?`<div style="font-size:12px;color:#888;">Expires: ${d.expiry_date}</div>`:''}
+        ${d.notes?`<div style="font-size:12px;color:#888;">${d.notes}</div>`:''}
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0;">
         <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.id}')">⬇ Download</button>
         <button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.id}')">🗑</button>
-      </td>
-    </tr>`;
-  }).join('')}</tbody></table></div>`;
+      </div>
+    </div>`;
+  }).join('');
 }
 async function openUploadDoc(){
-  if(!employeesData.length){const d=await apicall('GET','/employees');employeesData=d?.employees||[];}
-  const sel=document.getElementById('doc-emp-id');
-  sel.innerHTML='<option value="">— Select Employee —</option>'+employeesData.filter(e=>e.status==='active').map(e=>`<option value="${e.id}">${e.first_name_en} ${e.last_name_en}</option>`).join('');
-  document.getElementById('doc-file').value='';
-  document.getElementById('doc-expiry').value='';
-  document.getElementById('doc-notes').value='';
-  document.getElementById('doc-type').value='Civil ID';
-  document.getElementById('modal-doc').classList.add('open');
+  const sel=document.getElementById('upload-doc-emp');
+  sel.innerHTML='<option value="">— Select Employee —</option>';
+  const ed=await apicall('GET','/employees');
+  (ed?.employees||[]).forEach(e=>{
+    const o=document.createElement('option');
+    o.value=e.id;
+    o.textContent=`${e.first_name_en} ${e.last_name_en}`;
+    sel.appendChild(o);
+  });
+  document.getElementById('upload-doc-file').value='';
+  document.getElementById('upload-doc-expiry').value='';
+  document.getElementById('upload-doc-notes').value='';
+  document.getElementById('modal-upload-doc').classList.add('open');
 }
 async function saveDocument(){
-  const empId=document.getElementById('doc-emp-id').value;
-  const docType=document.getElementById('doc-type').value;
-  const fileInput=document.getElementById('doc-file');
-  const expiry=document.getElementById('doc-expiry').value;
-  const notes=document.getElementById('doc-notes').value.trim();
-  if(!empId){showToast('Select an employee','error');return;}
-  if(!fileInput.files[0]){showToast('Select a file','error');return;}
-  const btn=document.getElementById('doc-save-btn');
-  btn.disabled=true;btn.textContent='Uploading…';
+  const empId=document.getElementById('upload-doc-emp').value;
+  const docType=document.getElementById('upload-doc-type').value;
+  const fileInput=document.getElementById('upload-doc-file');
+  const expiry=document.getElementById('upload-doc-expiry').value;
+  const notes=document.getElementById('upload-doc-notes').value.trim();
+  if(!empId||!docType||!fileInput.files[0]){showToast('Employee, type and file are required','error');return;}
+  const file=fileInput.files[0];
+  if(file.size>10*1024*1024){showToast('File must be under 10MB','error');return;}
   const form=new FormData();
-  form.append('file',fileInput.files[0]);
   form.append('employee_id',empId);
   form.append('doc_type',docType);
+  form.append('file',file);
   if(expiry)form.append('expiry_date',expiry);
   if(notes)form.append('notes',notes);
   try{
-    const res=await fetch('/api/documents',{method:'POST',headers:{'Authorization':'Bearer '+token},body:form});
+    const res=await fetch(API+'/documents',{method:'POST',headers:{Authorization:'Bearer '+token},body:form});
     const data=await res.json();
-    btn.disabled=false;btn.textContent='Upload';
-    if(data.document){closeModal('modal-doc');showToast('Document uploaded ✓','success');loadDocuments();}
-    else showToast(data.error||'Upload failed','error');
-  }catch(e){btn.disabled=false;btn.textContent='Upload';showToast('Upload error','error');}
+    if(data?.document||data?.id){
+      showToast('Document uploaded ✓','success');
+      closeModal('modal-upload-doc');
+      docEmpsCached=false;
+      loadDocuments();
+    } else showToast(data?.error||'Upload failed','error');
+  }catch(e){showToast('Upload error','error');}
 }
 async function downloadDoc(id){
-  const res=await fetch(`/api/documents/${id}/download`,{headers:{'Authorization':'Bearer '+token}});
+  const res=await fetch(API+'/documents/'+id+'/download',{headers:{Authorization:'Bearer '+token}});
   if(!res.ok){showToast('Download failed','error');return;}
   const blob=await res.blob();
   const cd=res.headers.get('Content-Disposition')||'';
-  const name=cd.match(/filename="(.+)"/)?.[1]||'document';
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  const match=cd.match(/filename="?([^"]+)"?/);
+  const name=match?match[1]:'document';
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=name;a.click();
+  URL.revokeObjectURL(url);
 }
 async function deleteDoc(id){
-  if(!confirm('Delete this document? This cannot be undone.'))return;
+  if(!confirm('Delete this document permanently?'))return;
   const res=await apicall('DELETE','/documents/'+id);
-  if(res?.success){showToast('Deleted','success');loadDocuments();}
-  else showToast('Error deleting','error');
+  if(res?.success){showToast('Document deleted','success');loadDocuments();}
+  else showToast(res?.error||'Delete failed','error');
 }
-/* ── SETTINGS ── */
+/* ── END DOCUMENTS ─────────────────────────────────────────── */
 function renderSettings(){renderDeptList();renderJTList();}
-function renderDeptList(){
-  const el=document.getElementById('dept-list');
-  if(!deptsData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No departments yet. Add one below.</div>';return;}
-  el.innerHTML=deptsData.map(d=>`<div class="tag-item"><div><div class="tag-item-name">${d.name_en}</div><div class="tag-item-ar">${d.name_ar||''}</div></div><button class="tag-delete" onclick="deleteDept('${d.id}')">✕</button></div>`).join('');
+function renderDeptList(){const el=document.getElementById('dept-list');if(!deptsData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No departments yet</div>';return;}el.innerHTML=deptsData.map(d=>`<div class="tag-item"><div><div class="tag-item-name">${d.name_en}</div><div class="tag-item-ar">${d.name_ar||''}</div></div><button class="tag-delete" onclick="deleteDept('${d.id}')">✕</button></div>`).join('');}
+function renderJTList(){const el=document.getElementById('jt-list');if(!jobTitlesData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No job titles yet</div>';return;}el.innerHTML=jobTitlesData.map(j=>`<div class="tag-item"><div><div class="tag-item-name">${j.title_en}</div><div class="tag-item-ar">${j.title_ar||''}</div></div><button class="tag-delete" onclick="deleteJobTitle('${j.id}')">✕</button></div>`).join('');}
+async function addDept(){const en=document.getElementById('new-dept-en').value.trim();const ar=document.getElementById('new-dept-ar').value.trim();if(!en){showToast('Enter department name','error');return;}const res=await apicall('POST','/departments',{name_en:en,name_ar:ar});if(res&&res.department){deptsData.push(res.department);renderDeptList();document.getElementById('new-dept-en').value='';document.getElementById('new-dept-ar').value='';showToast('Department added ✓','success');}else showToast('Error adding department','error');}
+async function addJobTitle(){const en=document.getElementById('new-jt-en').value.trim();const ar=document.getElementById('new-jt-ar').value.trim();if(!en){showToast('Enter job title','error');return;}const res=await apicall('POST','/job-titles',{title_en:en,title_ar:ar});if(res&&res.job_title){jobTitlesData.push(res.job_title);renderJTList();document.getElementById('new-jt-en').value='';document.getElementById('new-jt-ar').value='';showToast('Job title added ✓','success');}else showToast('Error adding job title','error');}
+async function deleteDept(id){const res=await apicall('DELETE','/departments/'+id);if(res&&res.success){deptsData=deptsData.filter(d=>d.id!==id);renderDeptList();showToast('Deleted','success');}else showToast('Error','error');}
+async function deleteJobTitle(id){const res=await apicall('DELETE','/job-titles/'+id);if(res&&res.success){jobTitlesData=jobTitlesData.filter(j=>j.id!==id);renderJTList();showToast('Deleted','success');}else showToast('Error','error');}
+function populateDropdowns(){
+  const deptSel=document.getElementById('emp-dept-id');
+  const jtSel=document.getElementById('emp-job-title-id');
+  deptSel.innerHTML='<option value="">— Select Department —</option>'+deptsData.map(d=>`<option value="${d.id}">${d.name_en}</option>`).join('');
+  jtSel.innerHTML='<option value="">— Select Job Title —</option>'+jobTitlesData.map(j=>`<option value="${j.id}">${j.title_en}</option>`).join('');
 }
-function renderJTList(){
-  const el=document.getElementById('jt-list');
-  if(!jobTitlesData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No job titles yet. Add one below.</div>';return;}
-  el.innerHTML=jobTitlesData.map(j=>`<div class="tag-item"><div><div class="tag-item-name">${j.title_en}</div><div class="tag-item-ar">${j.title_ar||''}</div></div><button class="tag-delete" onclick="deleteJobTitle('${j.id}')">✕</button></div>`).join('');
-}
-async function addDept(){
-  const en=document.getElementById('new-dept-en').value.trim();const ar=document.getElementById('new-dept-ar').value.trim();
-  if(!en){showToast('Enter department name','error');return;}
-  const res=await apicall('POST','/departments',{name_en:en,name_ar:ar});
-  if(res&&res.department){deptsData.push(res.department);renderDeptList();document.getElementById('new-dept-en').value='';document.getElementById('new-dept-ar').value='';showToast('Department added ✓','success');}
-  else showToast('Error adding department','error');
-}
-async function deleteDept(id){
-  if(!confirm('Delete this department?'))return;
-  const res=await apicall('DELETE','/departments/'+id);
-  if(res&&res.success){deptsData=deptsData.filter(d=>d.id!==id);renderDeptList();showToast('Deleted','success');}
-  else showToast('Error deleting','error');
-}
-async function addJobTitle(){
-  const en=document.getElementById('new-jt-en').value.trim();const ar=document.getElementById('new-jt-ar').value.trim();
-  if(!en){showToast('Enter job title','error');return;}
-  const res=await apicall('POST','/job-titles',{title_en:en,title_ar:ar});
-  if(res&&res.job_title){jobTitlesData.push(res.job_title);renderJTList();document.getElementById('new-jt-en').value='';document.getElementById('new-jt-ar').value='';showToast('Job title added ✓','success');}
-  else showToast('Error adding job title','error');
-}
-async function deleteJobTitle(id){
-  if(!confirm('Delete this job title?'))return;
-  const res=await apicall('DELETE','/job-titles/'+id);
-  if(res&&res.success){jobTitlesData=jobTitlesData.filter(j=>j.id!==id);renderJTList();showToast('Deleted','success');}
-  else showToast('Error deleting','error');
-}
-async function loadAllSettings(){
-  if(!currentUser?.company_id)return;
-  const co=await apicall('GET','/companies/'+currentUser.company_id);
-  if(!co?.company)return;
-  const c=co.company;
-  if(c.work_start_time)document.getElementById('work-start').value=c.work_start_time;
-  if(c.work_end_time)document.getElementById('work-end').value=c.work_end_time;
-  document.getElementById('late-threshold').value=c.late_threshold_minutes??15;
-  const days=(c.work_days||'sun,mon,tue,wed,thu').split(',');
-  document.querySelectorAll('.work-day-cb').forEach(cb=>{cb.checked=days.includes(cb.value);});
-  document.getElementById('geofence-enabled').checked=!!c.geofence_enabled;
-  if(c.workplace_lat)document.getElementById('geo-lat').value=c.workplace_lat;
-  if(c.workplace_lng)document.getElementById('geo-lng').value=c.workplace_lng;
-  const radius=c.geofence_radius_meters||200;
-  document.getElementById('geo-radius').value=radius;
-  document.getElementById('geo-radius-val').textContent=radius+'m';
-  toggleGeofenceFields();
-  document.getElementById('perm-hours-limit').value=c.permission_hours_monthly??4;
-}
-async function saveWorkSchedule(){
-  const work_start_time=document.getElementById('work-start').value;
-  const work_end_time=document.getElementById('work-end').value;
-  const late_threshold_minutes=parseInt(document.getElementById('late-threshold').value)||15;
-  const work_days=[...document.querySelectorAll('.work-day-cb:checked')].map(cb=>cb.value).join(',');
-  const res=await apicall('PUT','/companies/'+currentUser.company_id,{work_start_time,work_end_time,late_threshold_minutes,work_days});
-  if(res?.company)showToast('Work schedule saved ✓','success');
-  else showToast(res?.error||'Error saving','error');
-}
-function toggleGeofenceFields(){
-  const enabled=document.getElementById('geofence-enabled').checked;
-  document.getElementById('geofence-fields').style.display=enabled?'':'none';
-  document.getElementById('geofence-off-hint').style.display=enabled?'none':'';
-  document.getElementById('geofence-toggle-label').textContent=enabled?'On':'Off';
-  if(!enabled) saveGeofenceSettings();
-}
-async function saveGeofenceSettings(){
-  const geofence_enabled=document.getElementById('geofence-enabled').checked;
-  const lat=document.getElementById('geo-lat').value;const lng=document.getElementById('geo-lng').value;
-  const workplace_lat=lat?parseFloat(lat):null;const workplace_lng=lng?parseFloat(lng):null;
-  const geofence_radius_meters=parseInt(document.getElementById('geo-radius').value)||200;
-  if(geofence_enabled&&(!workplace_lat||!workplace_lng)){showToast('Enter workplace location first','error');return;}
-  const res=await apicall('PUT','/companies/'+currentUser.company_id,{geofence_enabled,workplace_lat,workplace_lng,geofence_radius_meters});
-  if(res?.company)showToast('Geofencing saved ✓','success');
-  else showToast(res?.error||'Error saving','error');
-}
-function useMyLocation(){
-  if(!navigator.geolocation){showToast('GPS not available','error');return;}
-  navigator.geolocation.getCurrentPosition(pos=>{
-    document.getElementById('geo-lat').value=pos.coords.latitude.toFixed(6);
-    document.getElementById('geo-lng').value=pos.coords.longitude.toFixed(6);
-    showToast('Location captured ✓','success');
-  },()=>showToast('Could not get location','error'),{timeout:7000});
-}
-async function savePermLimit(){
-  const val=parseFloat(document.getElementById('perm-hours-limit').value);
-  if(isNaN(val)||val<0){showToast('Enter a valid number','error');return;}
-  const res=await apicall('PUT','/companies/'+currentUser.company_id,{permission_hours_monthly:val});
-  if(res?.company)showToast(`Limit set to ${val} hrs/month ✓`,'success');
-  else showToast(res?.error||'Error saving limit','error');
-}
-/* ── OVERTIME ── */
-async function loadOT(status){
-  status=status||'pending';
-  document.getElementById('ot-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const url=status==='all'?'/overtime':'/overtime?status='+status;
-  const data=await apicall('GET',url);
-  const list=data?.requests||[];
-  const pending=data?.pending_count||0;
-  if(pending>0){document.getElementById('ot-badge').style.display='';document.getElementById('ot-badge').textContent=pending;}
-  else document.getElementById('ot-badge').style.display='none';
-  const el=document.getElementById('ot-list');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">⏱️</div><div class="empty-text">No overtime records</div></div>';return;}
-  const sb={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>'};
-  const dt={normal:'Normal (1.25×)',holiday:'Holiday (1.5×)'};
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Date</th><th>Hours</th><th>Day Type</th><th>OT Pay (KWD)</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map(r=>`<tr>
-    <td style="font-weight:700">${r.employee_name||'—'}</td>
-    <td style="font-size:12px;color:#888">${r.date||'—'}</td>
-    <td style="font-weight:700">${parseFloat(r.hours||0).toFixed(1)} hrs</td>
-    <td style="font-size:12px">${dt[r.day_type]||r.day_type}</td>
-    <td style="font-weight:700;color:#1a7a42">KWD ${parseFloat(r.overtime_pay||0).toFixed(3)}</td>
-    <td style="font-size:12px;color:#888;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.reason||'—'}</td>
-    <td>${sb[r.status]||r.status}</td>
-    <td style="display:flex;gap:6px;">${r.status==='pending'?`<button class="btn btn-success btn-sm" onclick="approveOT('${r.id}')">✓</button><button class="btn btn-danger btn-sm" onclick="rejectOT('${r.id}')">✕</button>`:`<button class="btn btn-ghost btn-sm" onclick="deleteOT('${r.id}')">🗑</button>`}</td>
-  </tr>`).join('')}</tbody></table></div>`;
-}
-function filterOT(status,btn){document.querySelectorAll('#page-overtime .filter-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');loadOT(status);}
-async function approveOT(id){const res=await apicall('PUT','/overtime/'+id,{status:'approved'});if(res&&!res.error){showToast('Overtime approved ✓','success');loadOT();}else showToast('Error','error');}
-async function rejectOT(id){const res=await apicall('PUT','/overtime/'+id,{status:'rejected'});if(res&&!res.error){showToast('Rejected','');loadOT();}else showToast('Error','error');}
-async function deleteOT(id){if(!confirm('Delete this overtime record?'))return;const res=await apicall('DELETE','/overtime/'+id);if(res?.success){showToast('Deleted','success');loadOT();}else showToast('Error','error');}
-async function loadOTSummary(){
-  const month=document.getElementById('ot-month').value;
-  if(!month){showToast('Select a month','error');return;}
-  document.getElementById('ot-month-label').textContent=new Date(month+'-01').toLocaleString('en',{month:'long',year:'numeric'});
-  document.getElementById('ot-summary').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET','/overtime/summary?month='+month);
-  const list=data?.summary||[];
-  const el=document.getElementById('ot-summary');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No approved overtime this month</div></div>';return;}
-  const total=list.reduce((s,r)=>s+(parseFloat(r.total_overtime_pay)||0),0);
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Records</th><th>Total Hours</th><th>Total OT Pay (KWD)</th></tr></thead><tbody>${list.map(r=>`<tr>
-    <td style="font-weight:700">${r.employee_name||'—'}</td>
-    <td style="color:#888">${r.records_count||0}</td>
-    <td style="font-weight:700">${parseFloat(r.total_hours||0).toFixed(1)} hrs</td>
-    <td style="font-weight:800;color:#1a7a42">KWD ${parseFloat(r.total_overtime_pay||0).toFixed(3)}</td>
-  </tr>`).join('')}</tbody></table>
-  <div style="padding:14px 20px;border-top:2px solid #1a1a2e;display:flex;justify-content:space-between;font-weight:800;font-size:14px;">
-    <span>Total Overtime Cost</span><span style="color:#1a7a42">KWD ${total.toFixed(3)}</span>
-  </div></div>`;
-}
-async function openAddOT(){
-  if(!employeesData.length){const d=await apicall('GET','/employees');employeesData=d?.employees||[];}
-  const sel=document.getElementById('ot-emp-id');
-  sel.innerHTML='<option value="">— Select Employee —</option>'+employeesData.filter(e=>e.status==='active').map(e=>`<option value="${e.id}" data-salary="${e.basic_salary||0}">${e.first_name_en} ${e.last_name_en}</option>`).join('');
-  document.getElementById('ot-date').value=new Date().toISOString().split('T')[0];
-  document.getElementById('ot-hours').value='';
-  document.getElementById('ot-day-type').value='normal';
-  document.getElementById('ot-reason').value='';
-  document.getElementById('ot-pay-preview').style.display='none';
-  ['ot-emp-id','ot-hours','ot-day-type'].forEach(id=>document.getElementById(id).addEventListener('input',previewOTPay));
-  document.getElementById('modal-ot').classList.add('open');
-}
-function previewOTPay(){
-  const sel=document.getElementById('ot-emp-id');
-  const opt=sel.options[sel.selectedIndex];
-  const salary=parseFloat(opt?.dataset?.salary||0);
-  const hours=parseFloat(document.getElementById('ot-hours').value||0);
-  const dayType=document.getElementById('ot-day-type').value;
-  if(!salary||!hours){document.getElementById('ot-pay-preview').style.display='none';return;}
-  const hourlyRate=salary/208;
-  const multiplier=dayType==='holiday'?1.5:1.25;
-  const pay=(hours*hourlyRate*multiplier).toFixed(3);
-  document.getElementById('ot-pay-preview').style.display='';
-  document.getElementById('ot-pay-amount').textContent='KWD '+pay;
-  document.getElementById('ot-pay-formula').textContent=`${hours} hrs × KWD ${hourlyRate.toFixed(4)}/hr × ${multiplier}× = KWD ${pay}`;
-}
-async function saveOTEntry(){
-  const employee_id=document.getElementById('ot-emp-id').value;
-  const date=document.getElementById('ot-date').value;
-  const hours=parseFloat(document.getElementById('ot-hours').value);
-  const day_type=document.getElementById('ot-day-type').value;
-  const reason=document.getElementById('ot-reason').value.trim();
-  if(!employee_id){showToast('Select an employee','error');return;}
-  if(!date){showToast('Select a date','error');return;}
-  if(!hours||hours<=0){showToast('Enter valid hours','error');return;}
-  const res=await apicall('POST','/overtime',{employee_id,date,hours,day_type,reason});
-  if(res&&!res.error){closeModal('modal-ot');showToast('Overtime entry saved ✓','success');loadOT('approved');}
-  else showToast(res?.error||'Error saving','error');
-}
-/* ── EMPLOYEE MODAL ── */
 function openAddEmployee(){
   editingEmpId=null;
   document.getElementById('modal-emp-title').textContent='Add Employee';
   document.getElementById('save-emp-btn').textContent='Add Employee';
   ['emp-id','emp-first-en','emp-last-en','emp-first-ar','emp-last-ar','emp-civil-id','emp-salary','emp-email','emp-phone','emp-password'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('emp-start').value='';
-  document.getElementById('emp-nationality').value='Kuwaiti';
-  document.getElementById('emp-contract').value='full_time';
-  populateEmpDropdowns();
+  document.getElementById('emp-start').value=new Date().toISOString().split('T')[0];
+  populateDropdowns();
   document.getElementById('modal-employee').classList.add('open');
 }
-function populateEmpDropdowns(){
-  document.getElementById('emp-dept-id').innerHTML='<option value="">— Select —</option>'+deptsData.map(d=>`<option value="${d.id}">${d.name_en}</option>`).join('');
-  document.getElementById('emp-job-title-id').innerHTML='<option value="">— Select —</option>'+jobTitlesData.map(j=>`<option value="${j.id}">${j.title_en}</option>`).join('');
-}
-async function editEmployee(id){
+function editEmployee(id){
+  const emp=employeesData.find(e=>e.id===id);if(!emp)return;
   editingEmpId=id;
-  const data=await apicall('GET','/employees/'+id);const emp=data?.employee||data;
-  if(!emp){showToast('Error loading employee','error');return;}
   document.getElementById('modal-emp-title').textContent='Edit Employee';
   document.getElementById('save-emp-btn').textContent='Save Changes';
-  document.getElementById('emp-id').value=emp.id||'';
-  document.getElementById('emp-first-en').value=emp.first_name_en||'';document.getElementById('emp-last-en').value=emp.last_name_en||'';
-  document.getElementById('emp-first-ar').value=emp.first_name_ar||'';document.getElementById('emp-last-ar').value=emp.last_name_ar||'';
-  document.getElementById('emp-civil-id').value=emp.civil_id||'';document.getElementById('emp-nationality').value=emp.nationality||'Kuwaiti';
-  document.getElementById('emp-salary').value=emp.basic_salary||'';document.getElementById('emp-start').value=emp.hire_date||'';
-  document.getElementById('emp-email').value=emp.work_email||'';document.getElementById('emp-phone').value=emp.phone||emp.mobile||'';
-  document.getElementById('emp-contract').value=emp.contract_type||
+  document.getElementById('emp-id').value=emp.id;
+  document.getElementById('emp-first-en').value=emp.first_name_en||'';
+  document.getElementById('emp-last-en').value=emp.last_name_en||'';
+  document.getElementById('emp-first-ar').value=emp.first_name_ar||'';
+  document.getElementById('emp-last-ar').value=emp.last_name_ar||'';
+  document.getElementById('emp-civil-id').value=emp.civil_id||'';
+  document.getElementById('emp-nationality').value=emp.nationality||'Kuwaiti';
+  document.getElementById('emp-salary').value=emp.basic_salary||'';
+  document.getElementById('emp-start').value=emp.hire_date||'';
+  document.getElementById('emp-email').value=emp.work_email||'';
+  document.getElementById('emp-phone').value=emp.mobile||'';
+  document.getElementById('emp-contract').value=emp.employment_type||'full_time';
+  document.getElementById('emp-password').value='';
+  populateDropdowns();
+  document.getElementById('emp-dept-id').value=emp.department||'';
+  document.getElementById('emp-job-title-id').value=emp.job_title_en||'';
+  document.getElementById('modal-employee').classList.add('open');
+}
+async function saveEmployee(){
+  const body={
+    first_name_en:document.getElementById('emp-first-en').value.trim(),
+    last_name_en:document.getElementById('emp-last-en').value.trim(),
+    first_name_ar:document.getElementById('emp-first-ar').value.trim(),
+    last_name_ar:document.getElementById('emp-last-ar').value.trim(),
+    civil_id:document.getElementById('emp-civil-id').value.trim(),
+    nationality:document.getElementById('emp-nationality').value,
+    department_id:document.getElementById('emp-dept-id').value||null,
+    job_title_id:document.getElementById('emp-job-title-id').value||null,
+    basic_salary:parseFloat(document.getElementById('emp-salary').value)||0,
+    hire_date:document.getElementById('emp-start').value,
+    work_email:document.getElementById('emp-email').value.trim(),
+    mobile:document.getElementById('emp-phone').value.trim(),
+    employment_type:document.getElementById('emp-contract').value,
+    initial_password:document.getElementById('emp-password')?.value||''
+  };
+  if(!body.first_name_en||!body.last_name_en){showToast('First and last name required','error');return;}
+  const res=editingEmpId?await apicall('PUT','/employees/'+editingEmpId,body):await apicall('POST','/employees',body);
+  if(res&&!res.error){showToast(editingEmpId?'Employee updated ✓':'Employee added ✓','success');closeModal('modal-employee');loadEmployees();loadDashboard();}
+  else showToast(res?.error||'Error saving employee','error');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+/* ── PERMISSION HOURS ────────────────────────────────────────── */
+let permsData=[], currentPermFilter='pending';
+async function loadPerms(){
+  document.getElementById('perms-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const status=currentPermFilter==='all'?'':('?status='+currentPermFilter);
+  const data=await apicall('GET','/permissions'+(status));
+  permsData=data?.requests||[];
+  renderPermsList(permsData);
+  const pending=await apicall('GET','/permissions?status=pending');
+  const count=(pending?.requests||[]).length;
+  const badge=document.getElementById('perm-badge');
+  if(count>0){badge.style.display='';badge.textContent=count;}else{badge.style.display='none';}
+}
+function filterPerms(status,btn){
+  currentPermFilter=status;
+  document.querySelectorAll('#page-permissions .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  loadPerms();
+}
+function renderPermsList(list){
+  const el=document.getElementById('perms-list');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🕐</div><div class="empty-text">No permission requests</div></div>';return;}
+  const statusBadge={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>'};
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Date</th><th>Time</th><th>Hours</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map(p=>{
+    const name=p.first_name_en?`${p.first_name_en} ${p.last_name_en}`:'—';
+    const time=`${p.start_time} – ${p.end_time}`;
+    return`<tr><td style="font-weight:700">${name}</td><td style="font-size:12px">${p.date}</td><td style="font-size:12px">${time}</td><td style="font-weight:700">${parseFloat(p.hours).toFixed(1)} hrs</td><td style="font-size:12px;color:#888;max-width:160px">${p.reason||'—'}</td><td>${statusBadge[p.status]||p.status}</td><td style="display:flex;gap:6px;">${p.status==='pending'?`<button class="btn btn-success btn-sm" onclick="approvePerm('${p.id}')">✓</button><button class="btn btn-danger btn-sm" onclick="rejectPerm('${p.id}')">✕</button>`:'—'}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+async function approvePerm(id){
+  const res=await apicall('PUT','/permissions/'+id,{action:'approve'});
+  if(res&&!res.error){showToast('Approved ✓','success');loadPerms();loadPermUsage();}
+  else showToast(res?.error||'Error','error');
+}
+async function rejectPerm(id){
+  const res=await apicall('PUT','/permissions/'+id,{action:'reject'});
+  if(res&&!res.error){showToast('Rejected','');loadPerms();loadPermUsage();}
+  else showToast(res?.error||'Error','error');
+}
+async function loadPermUsage(){
+  const el=document.getElementById('perm-usage-list');
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const now=new Date();
+  const month=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('perm-month-label').textContent=`${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`;
+  const[empsRes,permsRes]=await Promise.all([apicall('GET','/employees'),apicall('GET',`/permissions?month=${month}`)]);
+  const employees=empsRes?.employees||[];
+  const allPerms=permsRes?.requests||[];
+  if(!employees.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees yet</div></div>';return;}
+  const coRes=await apicall('GET','/companies/'+(currentUser?.company_id||''));
+  const limit=coRes?.company?.permission_hours_monthly??4;
+  const rows=employees.map(emp=>{
+    const empPerms=allPerms.filter(p=>p.employee_id===emp.id&&p.status==='approved');
+    const used=empPerms.reduce((s,p)=>s+(parseFloat(p.hours)||0),0);
+    const remaining=Math.max(0,limit-used);
+    const usedColor=used>=limit?'#c42a00':used>=limit*0.75?'#c46a00':'#1a1a2e';
+    const pct=Math.min(100,Math.round((used/limit)*100));
+    return`<tr><td><div style="font-weight:700">${emp.first_name_en} ${emp.last_name_en}</div></td><td style="font-weight:700;color:${usedColor}">${used.toFixed(1)} hrs</td><td>${remaining.toFixed(1)} hrs</td><td style="width:140px"><div style="background:#f0ebe4;border-radius:4px;height:8px;overflow:hidden"><div style="width:${pct}%;background:${usedColor};height:100%"></div></div><div style="font-size:10px;color:#888;margin-top:2px">${pct}% of ${limit} hrs</div></td></tr>`;
+  }).join('');
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Used This Month</th><th>Remaining</th><th>Usage</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+async function savePermLimit(){
+  const val=parseFloat(document.getElementById('perm-hours-limit').value);
+  if(isNaN(val)||val<0){showToast('Enter a valid number','error');return;}
+  const res=await apicall('PUT','/companies/'+currentUser.company_id,{permission_hours_monthly:val});
+  if(res&&!res.error){showToast(`Limit set to ${val} hrs/month ✓`,'success');}
+  else showToast(res?.error||'Error saving limit','error');
+}
+async function loadPermSettings(){
+  if(!currentUser?.company_id)return;
+  const co=await apicall('GET','/companies/'+currentUser.company_id);
+  if(co?.company){document.getElementById('perm-hours-limit').value=co.company.permission_hours_monthly??4;}
+}
+/* ── END PERMISSION HOURS ───────────────────────────────────── */
+function setLang(lang,save=true){currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);document.documentElement.lang=lang;document.body.classList.toggle('ar',lang==='ar');document.getElementById('btn-en').classList.toggle('active',lang==='en');document.getElementById('btn-ar').classList.toggle('active',lang==='ar');document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.dataset[lang]||el.dataset.en;});}
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3000);}
+function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem('ghaya_user');localStorage.removeItem('ghaya_page');window.location.href='/';}
+document.querySelectorAll('.info-icon').forEach(icon=>{
+  icon.addEventListener('mouseenter',function(){
+    const tip=document.createElement('div');tip.id='gtip';tip.style.cssText='position:fixed;background:#1a1a2e;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;line-height:1.5;width:210px;z-index:9999;pointer-events:none';
+    tip.textContent=this.dataset.tip;document.body.appendChild(tip);
+    const r=this.getBoundingClientRect();tip.style.left=Math.max(10,r.right-215)+'px';tip.style.top=(r.bottom+8)+'px';
+  });
+  icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
+});
+const saved=localStorage.getItem('ghaya_page')||'dashboard';
+showPage(saved);
+init();
+</script>
+</body>
+</html>
