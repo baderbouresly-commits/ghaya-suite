@@ -186,6 +186,9 @@ select.form-input{cursor:pointer}
     <div class="nav-item" onclick="showPage('payroll')" id="nav-payroll">
       <span class="nav-icon">💰</span><span data-en="Payroll" data-ar="الرواتب">Payroll</span>
     </div>
+    <div class="nav-item" onclick="showPage('documents')" id="nav-documents">
+      <span class="nav-icon">📁</span><span data-en="Documents" data-ar="الوثائق">Documents</span>
+    </div>
     <div class="nav-section" style="margin-top:8px">SETTINGS</div>
     <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
       <span class="nav-icon">⚙️</span><span data-en="Settings" data-ar="الإعدادات">Settings</span>
@@ -366,6 +369,21 @@ select.form-input{cursor:pointer}
           <div class="section-header"><div class="section-title" id="payroll-detail-title">Payroll Breakdown</div><div id="payroll-detail-actions" style="display:flex;gap:8px;"></div></div>
           <div id="payroll-detail-list"><div class="loading"><div class="spinner"></div></div></div>
         </div>
+      </div>
+    </div>
+    <!-- DOCUMENTS -->
+    <div id="page-documents" style="display:none">
+      <div class="section-card">
+        <div class="section-header">
+          <div><div class="section-title">Employee Documents</div><div class="section-sub">Archive of employee files — contracts, IDs, visas, letters</div></div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <select class="search-bar" id="doc-emp-filter" style="width:200px;" onchange="loadDocuments()">
+              <option value="">All Employees</option>
+            </select>
+            <button class="btn btn-primary" onclick="openUploadDoc()">+ Upload Document</button>
+          </div>
+        </div>
+        <div id="docs-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
     <!-- SETTINGS -->
@@ -563,6 +581,35 @@ select.form-input{cursor:pointer}
     </div>
   </div>
 </div>
+<!-- MODAL: Upload Document -->
+<div class="modal-overlay" id="modal-doc">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><div class="modal-title">Upload Document</div><button class="modal-close" onclick="closeModal('modal-doc')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">Employee</label><select class="form-input" id="doc-emp-id"><option value="">— Select Employee —</option></select></div>
+      <div class="form-row"><label class="form-label">Document Type</label>
+        <select class="form-input" id="doc-type">
+          <option value="Civil ID">Civil ID</option>
+          <option value="Passport">Passport</option>
+          <option value="Visa">Visa / Residency</option>
+          <option value="Contract">Employment Contract</option>
+          <option value="Offer Letter">Offer Letter</option>
+          <option value="Warning Letter">Warning Letter</option>
+          <option value="Salary Certificate">Salary Certificate</option>
+          <option value="Medical">Medical Report</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-row"><label class="form-label">File (PDF, JPG, PNG, Word — max 10MB)</label><input class="form-input" id="doc-file" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="padding:8px;"/></div>
+      <div class="form-row"><label class="form-label">Expiry Date (optional — for IDs, visas)</label><input class="form-input" id="doc-expiry" type="date"/></div>
+      <div class="form-row"><label class="form-label">Notes (optional)</label><input class="form-input" id="doc-notes" placeholder="e.g. Original submitted to HR"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-doc')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDocument()" id="doc-save-btn">Upload</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <script>
 const API='/api';
@@ -572,7 +619,6 @@ let employeesData=[],leavesData=[],currentLeaveFilter='pending',editingEmpId=nul
 let deptsData=[],jobTitlesData=[];
 let currentEOSId=null,editingAttId=null;
 if(!token){window.location.href='/';}
-
 async function apicall(method,path,body){
   try{
     const res=await fetch(API+path,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:body?JSON.stringify(body):undefined});
@@ -580,7 +626,6 @@ async function apicall(method,path,body){
     return await res.json();
   }catch(e){return null;}
 }
-
 async function init(){
   try{
     const me=await apicall('GET','/auth/me');
@@ -607,21 +652,19 @@ async function init(){
   const saved=localStorage.getItem('ghaya_page')||'dashboard';
   showPage(saved);
 }
-
 async function loadDeptsAndTitles(){
   const[d,j]=await Promise.all([apicall('GET','/departments'),apicall('GET','/job-titles')]);
   deptsData=d?.departments||[];
   jobTitlesData=j?.job_titles||[];
 }
-
 function showPage(page){
   localStorage.setItem('ghaya_page',page);
-  ['dashboard','employees','attendance','leaves','permissions','overtime','payroll','settings'].forEach(p=>{
+  ['dashboard','employees','attendance','leaves','permissions','overtime','payroll','documents','settings'].forEach(p=>{
     document.getElementById('page-'+p).style.display=p===page?'':'none';
     const nav=document.getElementById('nav-'+p);
     if(nav)nav.classList.toggle('active',p===page);
   });
-  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},overtime:{en:'Overtime',ar:'العمل الإضافي'},payroll:{en:'Payroll',ar:'الرواتب'},settings:{en:'Settings',ar:'الإعدادات'}};
+  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},overtime:{en:'Overtime',ar:'العمل الإضافي'},payroll:{en:'Payroll',ar:'الرواتب'},documents:{en:'Documents',ar:'الوثائق'},settings:{en:'Settings',ar:'الإعدادات'}};
   document.getElementById('page-title').textContent=titles[page]?.[currentLang]||titles[page]?.en;
   if(page==='dashboard')loadDashboard();
   if(page==='employees')loadEmployees();
@@ -630,9 +673,9 @@ function showPage(page){
   if(page==='permissions'){loadPerms();loadPermUsage();}
   if(page==='overtime')loadOT();
   if(page==='payroll')loadPayroll();
+  if(page==='documents')loadDocuments();
   if(page==='settings'){renderSettings();loadAllSettings();}
 }
-
 /* ── DASHBOARD ── */
 async function loadDashboard(){
   const[emps,leaves]=await Promise.all([apicall('GET','/employees'),apicall('GET','/leaves?status=pending')]);
@@ -658,7 +701,6 @@ function renderDashLeaves(list){
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">No pending leave requests</div></div>';return;}
   el.innerHTML=list.map(l=>`<div class="leave-card"><div class="leave-avatar">${(l.employee_name||'?')[0]}</div><div class="leave-info"><div class="leave-name">${l.employee_name||'—'}</div><div class="leave-detail">${l.type_name||'Annual'} · ${l.start_date} → ${l.end_date} · ${l.days_count||'?'} days</div></div><div class="leave-actions"><button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕</button></div></div>`).join('');
 }
-
 /* ── EMPLOYEES ── */
 async function loadEmployees(){
   document.getElementById('employees-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
@@ -690,7 +732,6 @@ async function loadEOS(id,type){
   const ac=data.final_indemnity>0?'#1a7a42':'#c46a00';
   document.getElementById('eos-content').innerHTML=`<div style="background:#faf6f1;border-radius:10px;padding:16px 20px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"><div><div style="font-size:11px;color:#888;font-weight:700;">Service Years</div><div style="font-size:20px;font-weight:800">${data.years_of_service.toFixed(2)}</div></div><div><div style="font-size:11px;color:#888;font-weight:700;">Basic Salary</div><div style="font-size:20px;font-weight:800">${kwd(data.basic_salary)}</div></div><div><div style="font-size:11px;color:#888;font-weight:700;">Final Indemnity</div><div style="font-size:20px;font-weight:800;color:${ac}">${kwd(data.final_indemnity)}</div></div></div><table><thead><tr><th>Period</th><th>Days/Year</th><th>Years</th><th>Daily Rate</th><th>Amount</th></tr></thead><tbody>${(data.breakdown||[]).map(b=>`<tr><td>${b.label}</td><td>${b.days_per_year}</td><td>${b.years.toFixed(2)}</td><td>${kwd(b.daily_rate)}</td><td style="font-weight:700">${kwd(b.amount)}</td></tr>`).join('')}</tbody></table><div style="border-top:2px solid #1a1a2e;margin-top:12px;padding-top:12px;display:flex;justify-content:space-between;font-weight:800;font-size:15px;"><span>Total Indemnity</span><span style="color:${ac}">${kwd(data.final_indemnity)}</span></div>`;
 }
-
 /* ── ATTENDANCE ── */
 async function loadAttendance(){
   const dateEl=document.getElementById('att-date');
@@ -699,7 +740,7 @@ async function loadAttendance(){
   document.getElementById('att-table').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/attendance?date='+date);
   const records=data?.records||[];
-const cnt={present:0,late:0,absent:0,half_day:0};
+  const cnt={present:0,late:0,absent:0,half_day:0};
   records.forEach(r=>{
     if(r.status==='present'||r.status==='left_early') cnt.present++;
     else if(r.status==='late'||r.status==='late_left_early') cnt.late++;
@@ -711,7 +752,8 @@ const cnt={present:0,late:0,absent:0,half_day:0};
   document.getElementById('att-half').textContent=cnt.half_day;
   const el=document.getElementById('att-table');
   if(!records.length){el.innerHTML='<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">No attendance records for this date</div><div class="empty-sub">Employees who clock in will appear here</div></div>';return;}
-const sb={present:'<span class="badge badge-green">Present</span>',late:'<span class="badge badge-orange">Late</span>',absent:'<span class="badge badge-red">Absent</span>',half_day:'<span class="badge badge-blue">Half Day</span>',left_early:'<span class="badge badge-orange">Left Early</span>',late_left_early:'<span class="badge badge-red">Late + Left Early</span>'};  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Status</th><th>Location</th><th>Actions</th></tr></thead><tbody>${records.map(r=>`<tr><td style="font-weight:700">${`${r.first_name_en||''} ${r.last_name_en||''}`.trim()||'—'}</td><td>${r.clock_in?.slice(0,5)||'—'}</td><td>${r.clock_out?.slice(0,5)||'—'}</td><td>${r.hours_worked!=null?r.hours_worked.toFixed(1)+' hrs':'—'}</td><td>${sb[r.status]||r.status||'—'}</td><td>${r.clock_in_lat?`<a href="https://www.google.com/maps?q=${r.clock_in_lat},${r.clock_in_lng}" target="_blank" style="color:#E8472A;font-size:12px;text-decoration:none;">📍 Map</a>`:'—'}</td><td><button class="btn btn-ghost btn-sm" onclick="editAttRecord('${r.id}','${r.employee_id||''}','${r.clock_in||''}','${r.clock_out||''}','${r.status||'present'}')">Edit</button></td></tr>`).join('')}</tbody></table></div>`;
+  const sb={present:'<span class="badge badge-green">Present</span>',late:'<span class="badge badge-orange">Late</span>',absent:'<span class="badge badge-red">Absent</span>',half_day:'<span class="badge badge-blue">Half Day</span>',left_early:'<span class="badge badge-orange">Left Early</span>',late_left_early:'<span class="badge badge-red">Late + Left Early</span>'};
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Status</th><th>Location</th><th>Actions</th></tr></thead><tbody>${records.map(r=>`<tr><td style="font-weight:700">${`${r.first_name_en||''} ${r.last_name_en||''}`.trim()||'—'}</td><td>${r.clock_in?.slice(0,5)||'—'}</td><td>${r.clock_out?.slice(0,5)||'—'}</td><td>${r.hours_worked!=null?r.hours_worked.toFixed(1)+' hrs':'—'}</td><td>${sb[r.status]||r.status||'—'}</td><td>${r.clock_in_lat?`<a href="https://www.google.com/maps?q=${r.clock_in_lat},${r.clock_in_lng}" target="_blank" style="color:#E8472A;font-size:12px;text-decoration:none;">📍 Map</a>`:'—'}</td><td><button class="btn btn-ghost btn-sm" onclick="editAttRecord('${r.id}','${r.employee_id||''}','${r.clock_in||''}','${r.clock_out||''}','${r.status||'present'}')">Edit</button></td></tr>`).join('')}</tbody></table></div>`;
 }
 function goToday(){document.getElementById('att-date').value=new Date().toISOString().split('T')[0];loadAttendance();}
 async function loadMonthlyReport(){
@@ -723,7 +765,7 @@ async function loadMonthlyReport(){
   const el=document.getElementById('att-monthly');
   if(!records.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No records for this month</div></div>';return;}
   const byEmp={};
-records.forEach(r=>{
+  records.forEach(r=>{
     const name=`${r.first_name_en||''} ${r.last_name_en||''}`.trim()||'—';
     if(!byEmp[r.employee_id]){byEmp[r.employee_id]={name,present:0,late:0,absent:0,half_day:0,hours:0};}
     const e=byEmp[r.employee_id];
@@ -731,7 +773,8 @@ records.forEach(r=>{
     else if(r.status==='late'||r.status==='late_left_early') e.late++;
     else if(e[r.status]!==undefined) e[r.status]++;
     e.hours+=(r.hours_worked||0);
-  });  const rows=Object.values(byEmp).map(e=>`<tr><td style="font-weight:700">${e.name}</td><td style="color:#1a7a42;font-weight:700">${e.present}</td><td style="color:#c46a00;font-weight:700">${e.late}</td><td style="color:#1a4da0;font-weight:700">${e.half_day}</td><td style="color:#c42a00;font-weight:700">${e.absent}</td><td style="font-weight:700">${e.hours.toFixed(1)} hrs</td></tr>`).join('');
+  });
+  const rows=Object.values(byEmp).map(e=>`<tr><td style="font-weight:700">${e.name}</td><td style="color:#1a7a42;font-weight:700">${e.present}</td><td style="color:#c46a00;font-weight:700">${e.late}</td><td style="color:#1a4da0;font-weight:700">${e.half_day}</td><td style="color:#c42a00;font-weight:700">${e.absent}</td><td style="font-weight:700">${e.hours.toFixed(1)} hrs</td></tr>`).join('');
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th style="color:#1a7a42">Present</th><th style="color:#c46a00">Late</th><th style="color:#1a4da0">Half Day</th><th style="color:#c42a00">Absent</th><th>Total Hours</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 async function openManualAtt(){
@@ -779,7 +822,6 @@ async function saveManualAtt(){
   if(res&&!res.error){closeModal('modal-att');showToast('Saved ✓','success');loadAttendance();}
   else showToast(res?.error||'Error saving','error');
 }
-
 /* ── LEAVES ── */
 async function loadLeaves(status){
   status=status||currentLeaveFilter;currentLeaveFilter=status;
@@ -801,7 +843,6 @@ async function loadLeaveBalances(){
 }
 async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'approved'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
 async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'rejected'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
-
 /* ── PERMISSIONS ── */
 async function loadPerms(status){
   status=status||'pending';
@@ -826,7 +867,6 @@ async function loadPermUsage(){
   const limit=data?.monthly_limit||4;
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Used This Month</th><th>Remaining</th><th>Usage</th></tr></thead><tbody>${list.map(u=>{const pct=Math.min(100,((u.used||0)/limit)*100);return`<tr><td style="font-weight:700">${u.employee_name||'—'}</td><td style="font-weight:700;color:#E8472A">${parseFloat(u.used||0).toFixed(1)} hrs</td><td style="color:${(limit-(u.used||0))>=0?'#1a7a42':'#c42a00'};font-weight:700">${Math.max(0,limit-(u.used||0)).toFixed(1)} hrs</td><td style="min-width:120px"><div style="height:6px;background:#f0ebe4;border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${pct>=100?'#c42a00':'#E8472A'};border-radius:3px;"></div></div></td></tr>`;}).join('')}</tbody></table></div>`;
 }
-
 /* ── PAYROLL ── */
 async function loadPayroll(){
   document.getElementById('payroll-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
@@ -859,7 +899,95 @@ async function runPayroll(){
   else showToast(res?.error||'Error running payroll','error');
 }
 async function publishPayroll(id){const res=await apicall('PUT','/payroll/'+id,{status:'published'});if(res&&!res.error){showToast('Payroll published ✓','success');viewPayrollDetail(id);}else showToast(res?.error||'Error','error');}
-
+/* ── DOCUMENTS ── */
+const DOC_TYPES={'Civil ID':'🪪','Passport':'📘','Visa':'✈️','Contract':'📝','Offer Letter':'💼','Warning Letter':'⚠️','Salary Certificate':'💰','Medical':'🏥','Other':'📄'};
+async function loadDocuments(){
+  if(!employeesData.length){const d=await apicall('GET','/employees');employeesData=d?.employees||[];}
+  const filter=document.getElementById('doc-emp-filter');
+  if(filter.options.length<=1){
+    employeesData.forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=`${e.first_name_en} ${e.last_name_en}`;filter.appendChild(o);});
+  }
+  const empId=document.getElementById('doc-emp-filter').value;
+  const url=empId?`/documents?employee_id=${empId}`:'/documents';
+  document.getElementById('docs-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const data=await apicall('GET',url);
+  const docs=data?.documents||[];
+  const el=document.getElementById('docs-list');
+  if(!docs.length){el.innerHTML='<div class="empty"><div class="empty-icon">📁</div><div class="empty-text">No documents yet</div><div class="empty-sub">Upload the first document using the button above</div></div>';return;}
+  const today=new Date().toISOString().split('T')[0];
+  const soon=new Date(Date.now()+30*24*60*60*1000).toISOString().split('T')[0];
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Type</th><th>File</th><th>Expiry</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody>${docs.map(d=>{
+    const emp=employeesData.find(e=>e.id===d.employee_id);
+    const empName=emp?`${emp.first_name_en} ${emp.last_name_en}`:'—';
+    const icon=DOC_TYPES[d.doc_type]||'📄';
+    let expiryHtml='—';
+    if(d.expiry_date){
+      if(d.expiry_date<today) expiryHtml=`<span style="color:#c42a00;font-weight:700">⚠️ ${d.expiry_date} (Expired)</span>`;
+      else if(d.expiry_date<=soon) expiryHtml=`<span style="color:#c46a00;font-weight:700">⏳ ${d.expiry_date} (Soon)</span>`;
+      else expiryHtml=`<span style="color:#888">${d.expiry_date}</span>`;
+    }
+    const size=d.file_size?`${(d.file_size/1024).toFixed(0)} KB`:'';
+    return`<tr>
+      <td style="font-weight:700">${empName}</td>
+      <td><span class="badge badge-blue">${icon} ${d.doc_type}</span></td>
+      <td><div style="font-size:13px;font-weight:600">${d.file_name}</div><div style="font-size:11px;color:#aaa">${size}</div></td>
+      <td>${expiryHtml}</td>
+      <td style="font-size:11px;color:#888">${d.created_at?.slice(0,10)||'—'}</td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.id}')">⬇ Download</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+async function openUploadDoc(){
+  if(!employeesData.length){const d=await apicall('GET','/employees');employeesData=d?.employees||[];}
+  const sel=document.getElementById('doc-emp-id');
+  sel.innerHTML='<option value="">— Select Employee —</option>'+employeesData.filter(e=>e.status==='active').map(e=>`<option value="${e.id}">${e.first_name_en} ${e.last_name_en}</option>`).join('');
+  document.getElementById('doc-file').value='';
+  document.getElementById('doc-expiry').value='';
+  document.getElementById('doc-notes').value='';
+  document.getElementById('doc-type').value='Civil ID';
+  document.getElementById('modal-doc').classList.add('open');
+}
+async function saveDocument(){
+  const empId=document.getElementById('doc-emp-id').value;
+  const docType=document.getElementById('doc-type').value;
+  const fileInput=document.getElementById('doc-file');
+  const expiry=document.getElementById('doc-expiry').value;
+  const notes=document.getElementById('doc-notes').value.trim();
+  if(!empId){showToast('Select an employee','error');return;}
+  if(!fileInput.files[0]){showToast('Select a file','error');return;}
+  const btn=document.getElementById('doc-save-btn');
+  btn.disabled=true;btn.textContent='Uploading…';
+  const form=new FormData();
+  form.append('file',fileInput.files[0]);
+  form.append('employee_id',empId);
+  form.append('doc_type',docType);
+  if(expiry)form.append('expiry_date',expiry);
+  if(notes)form.append('notes',notes);
+  try{
+    const res=await fetch('/api/documents',{method:'POST',headers:{'Authorization':'Bearer '+token},body:form});
+    const data=await res.json();
+    btn.disabled=false;btn.textContent='Upload';
+    if(data.document){closeModal('modal-doc');showToast('Document uploaded ✓','success');loadDocuments();}
+    else showToast(data.error||'Upload failed','error');
+  }catch(e){btn.disabled=false;btn.textContent='Upload';showToast('Upload error','error');}
+}
+async function downloadDoc(id){
+  const res=await fetch(`/api/documents/${id}/download`,{headers:{'Authorization':'Bearer '+token}});
+  if(!res.ok){showToast('Download failed','error');return;}
+  const blob=await res.blob();
+  const cd=res.headers.get('Content-Disposition')||'';
+  const name=cd.match(/filename="(.+)"/)?.[1]||'document';
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
+}
+async function deleteDoc(id){
+  if(!confirm('Delete this document? This cannot be undone.'))return;
+  const res=await apicall('DELETE','/documents/'+id);
+  if(res?.success){showToast('Deleted','success');loadDocuments();}
+  else showToast('Error deleting','error');
+}
 /* ── SETTINGS ── */
 function renderSettings(){renderDeptList();renderJTList();}
 function renderDeptList(){
@@ -931,7 +1059,6 @@ function toggleGeofenceFields(){
   document.getElementById('geofence-fields').style.display=enabled?'':'none';
   document.getElementById('geofence-off-hint').style.display=enabled?'none':'';
   document.getElementById('geofence-toggle-label').textContent=enabled?'On':'Off';
-  // Auto-save when toggling OFF so it persists without clicking Save
   if(!enabled) saveGeofenceSettings();
 }
 async function saveGeofenceSettings(){
@@ -959,7 +1086,6 @@ async function savePermLimit(){
   if(res?.company)showToast(`Limit set to ${val} hrs/month ✓`,'success');
   else showToast(res?.error||'Error saving limit','error');
 }
-
 /* ── OVERTIME ── */
 async function loadOT(status){
   status=status||'pending';
@@ -1048,7 +1174,6 @@ async function saveOTEntry(){
   if(res&&!res.error){closeModal('modal-ot');showToast('Overtime entry saved ✓','success');loadOT('approved');}
   else showToast(res?.error||'Error saving','error');
 }
-
 /* ── EMPLOYEE MODAL ── */
 function openAddEmployee(){
   editingEmpId=null;
@@ -1077,42 +1202,4 @@ async function editEmployee(id){
   document.getElementById('emp-civil-id').value=emp.civil_id||'';document.getElementById('emp-nationality').value=emp.nationality||'Kuwaiti';
   document.getElementById('emp-salary').value=emp.basic_salary||'';document.getElementById('emp-start').value=emp.hire_date||'';
   document.getElementById('emp-email').value=emp.work_email||'';document.getElementById('emp-phone').value=emp.phone||emp.mobile||'';
-  document.getElementById('emp-contract').value=emp.contract_type||'full_time';document.getElementById('emp-password').value='';
-  populateEmpDropdowns();
-  document.getElementById('emp-dept-id').value=emp.department||emp.department_id||'';
-  document.getElementById('emp-job-title-id').value=emp.job_title_en||emp.job_title_id||'';
-  document.getElementById('modal-employee').classList.add('open');
-}
-async function saveEmployee(){
-  const body={
-    first_name_en:document.getElementById('emp-first-en').value.trim(),last_name_en:document.getElementById('emp-last-en').value.trim(),
-    first_name_ar:document.getElementById('emp-first-ar').value.trim(),last_name_ar:document.getElementById('emp-last-ar').value.trim(),
-    civil_id:document.getElementById('emp-civil-id').value.trim(),nationality:document.getElementById('emp-nationality').value,
-    department:document.getElementById('emp-dept-id').value,job_title_en:document.getElementById('emp-job-title-id').value,
-    basic_salary:parseFloat(document.getElementById('emp-salary').value)||0,hire_date:document.getElementById('emp-start').value,
-    work_email:document.getElementById('emp-email').value.trim(),phone:document.getElementById('emp-phone').value.trim(),
-    contract_type:document.getElementById('emp-contract').value
-  };
-  const pwd=document.getElementById('emp-password').value;if(pwd)body.password=pwd;
-  if(!body.first_name_en||!body.last_name_en){showToast('First and last name required','error');return;}
-  const res=editingEmpId?await apicall('PUT','/employees/'+editingEmpId,body):await apicall('POST','/employees',body);
-  if(res&&!res.error){closeModal('modal-employee');showToast(editingEmpId?'Employee updated ✓':'Employee added ✓','success');loadEmployees();}
-  else showToast(res?.error||'Error saving employee','error');
-}
-
-/* ── UTILS ── */
-function closeModal(id){
-  document.getElementById(id).classList.remove('open');
-  const attEmp=document.getElementById('att-emp-id');if(attEmp)attEmp.disabled=false;
-}
-function setLang(lang,save=true){currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);document.documentElement.lang=lang;document.body.classList.toggle('ar',lang==='ar');document.getElementById('btn-en').classList.toggle('active',lang==='en');document.getElementById('btn-ar').classList.toggle('active',lang==='ar');document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.dataset[lang]||el.dataset.en;});}
-function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3000);}
-function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem('ghaya_user');localStorage.removeItem('ghaya_page');window.location.href='/';}
-document.querySelectorAll('.info-icon').forEach(icon=>{
-  icon.addEventListener('mouseenter',function(){const tip=document.createElement('div');tip.id='gtip';tip.style.cssText='position:fixed;background:#1a1a2e;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;line-height:1.5;width:210px;z-index:9999;pointer-events:none';tip.textContent=this.dataset.tip;document.body.appendChild(tip);const r=this.getBoundingClientRect();tip.style.left=Math.max(10,r.right-215)+'px';tip.style.top=(r.bottom+8)+'px';});
-  icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
-});
-init();
-</script>
-</body>
-</html>
+  document.getElementById('emp-contract').value=emp.contract_type||
