@@ -31,7 +31,7 @@
     .lang-btn{padding:4px 8px;border:1px solid rgba(255,255,255,.2);border-radius:5px;background:transparent;color:rgba(255,255,255,.6);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
     .lang-btn.active{background:var(--coral);border-color:var(--coral);color:white}
     .page{max-width:800px;margin:0 auto;padding:24px 20px 48px}
-    .greeting{margin-bottom:28px}
+    .greeting{margin-bottom:24px}
     .greeting-hello{font-family:'Almarai',sans-serif;font-size:22px;font-weight:700;color:var(--navy)}
     .greeting-date{font-size:13px;color:var(--gray);margin-top:2px}
     .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
@@ -50,7 +50,7 @@
     .action-title{font-family:'Almarai',sans-serif;font-size:15px;font-weight:700;color:var(--navy)}
     .action-desc{font-size:12px;color:var(--gray);margin-top:2px}
     .cards-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
-    .card{background:var(--white);border-radius:16px;padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+    .card{background:var(--white);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
     .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
     .card-title{font-family:'Almarai',sans-serif;font-size:15px;font-weight:700;color:var(--navy)}
     .card-link{font-size:12px;color:var(--coral);text-decoration:none;font-weight:500}
@@ -106,7 +106,6 @@
 </head>
 <body>
 
-<!-- Loading -->
 <div class="loading-overlay" id="loading">
   <div class="loading-spinner"></div>
   <div class="loading-text" id="loading-text">Loading your dashboard…</div>
@@ -198,34 +197,45 @@
   </div>
 </nav>
 
-<!-- Page Content -->
 <div class="page" id="page-content" style="display:none;">
+
   <div class="greeting">
     <div class="greeting-hello" id="greeting-hello"></div>
     <div class="greeting-date" id="greeting-date"></div>
   </div>
+
+  <!-- Alerts -->
   <div class="alerts" id="alerts-section"></div>
+
   <!-- Clock In / Out -->
-<div style="background:linear-gradient(135deg,#0A2540,#1a3a5c);border-radius:16px;padding:22px 24px;margin-bottom:24px;box-shadow:var(--shadow);">
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
-    <div>
-      <div style="font-size:12px;color:rgba(255,255,255,.5);font-weight:600;letter-spacing:.5px;margin-bottom:6px;" id="clock-status-label">NOT CLOCKED IN</div>
-      <div style="font-family:'Almarai',sans-serif;font-size:36px;font-weight:800;color:#fff;line-height:1;" id="live-clock">--:--:--</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:4px;" id="clock-date-label"></div>
+  <div style="background:linear-gradient(135deg,#0A2540,#1a3a5c);border-radius:16px;padding:22px 24px;margin-bottom:24px;box-shadow:var(--shadow);">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+      <div>
+        <div style="font-size:11px;color:rgba(255,255,255,.45);font-weight:700;letter-spacing:1px;margin-bottom:6px;" id="clock-status-label">NOT CLOCKED IN</div>
+        <div style="font-family:'Almarai',sans-serif;font-size:38px;font-weight:800;color:#fff;line-height:1;letter-spacing:1px;" id="live-clock">--:--:--</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:5px;" id="clock-date-label"></div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button id="clock-in-btn" onclick="clockIn()" style="display:none;background:#E8472A;border:none;border-radius:10px;color:#fff;font-family:'Almarai',sans-serif;font-weight:700;font-size:15px;padding:13px 32px;cursor:pointer;">
+          ✓ Clock In
+        </button>
+        <button id="clock-out-btn" onclick="clockOut()" style="display:none;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);border-radius:10px;color:#fff;font-family:'Almarai',sans-serif;font-weight:700;font-size:15px;padding:13px 32px;cursor:pointer;">
+          ✗ Clock Out
+        </button>
+      </div>
     </div>
-    <div style="display:flex;gap:10px;">
-      <button id="clock-in-btn" onclick="clockIn()" style="display:none;background:#E8472A;border:none;border-radius:10px;color:#fff;font-family:'Almarai',sans-serif;font-weight:700;font-size:14px;padding:12px 28px;cursor:pointer;">✓ Clock In</button>
-      <button id="clock-out-btn" onclick="clockOut()" style="display:none;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);border-radius:10px;color:#fff;font-family:'Almarai',sans-serif;font-weight:700;font-size:14px;padding:12px 28px;cursor:pointer;">✗ Clock Out</button>
-    </div>
+    <div id="clock-info" style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.4);min-height:16px;"></div>
   </div>
-  <div id="clock-info" style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.4);"></div>
-</div>
+
+  <!-- Stats Row -->
   <div class="stats-row">
     <div class="stat-card"><div class="stat-value" id="stat-leave-remaining">—</div><div class="stat-label" id="lbl-leave-remaining">Leave Days Left</div></div>
     <div class="stat-card"><div class="stat-value coral" id="stat-leave-used">—</div><div class="stat-label" id="lbl-leave-used">Days Used</div></div>
     <div class="stat-card"><div class="stat-value teal" id="stat-leave-pending">—</div><div class="stat-label" id="lbl-leave-pending">Pending</div></div>
     <div class="stat-card"><div class="stat-value" id="stat-net-salary">—</div><div class="stat-label" id="lbl-net-salary">Last Net Pay</div></div>
   </div>
+
+  <!-- Actions -->
   <div class="actions-row">
     <button class="action-btn" onclick="openLeaveModal()">
       <div class="action-icon coral">
@@ -246,6 +256,8 @@
       </div>
     </button>
   </div>
+
+  <!-- Cards Row -->
   <div class="cards-row">
     <div class="card">
       <div class="card-header">
@@ -256,7 +268,7 @@
         <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading…</div>
       </div>
     </div>
-    <div class="card" id="payslip-card">
+    <div class="card">
       <div class="card-header">
         <div class="card-title" id="card-payslip-title">Latest Payslip</div>
       </div>
@@ -265,7 +277,9 @@
       </div>
     </div>
   </div>
-  <div class="card" id="overtime-card">
+
+  <!-- Overtime Card -->
+  <div class="card" style="margin-bottom:24px;">
     <div class="card-header">
       <div class="card-title">My Overtime (العمل الإضافي)</div>
       <button onclick="openOTModal()" style="background:#E8472A;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">+ Submit</button>
@@ -274,7 +288,9 @@
       <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading…</div>
     </div>
   </div>
-  <div class="card" id="recent-leaves-card">
+
+  <!-- Recent Leave Requests -->
+  <div class="card">
     <div class="card-header">
       <div class="card-title" id="card-recent-title">Recent Leave Requests</div>
     </div>
@@ -282,7 +298,9 @@
       <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading…</div>
     </div>
   </div>
+
 </div>
+
 <script>
   const API = '';
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -344,7 +362,11 @@
   const user = JSON.parse(localStorage.getItem('ghaya_user') || 'null');
   if (!token || !user) { window.location.href = '/'; }
 
-  function logout() { localStorage.removeItem('ghaya_token'); localStorage.removeItem('ghaya_user'); window.location.href = '/'; }
+  function logout() {
+    localStorage.removeItem('ghaya_token');
+    localStorage.removeItem('ghaya_user');
+    window.location.href = '/';
+  }
 
   async function apiFetch(path, opts = {}) {
     const res = await fetch(API + path, {
@@ -408,7 +430,6 @@
       document.getElementById('stat-leave-used').textContent = annualBalance.used_days;
       document.getElementById('stat-leave-pending').textContent = annualBalance.pending_days;
     }
-
     if (data.latest_payslip) {
       document.getElementById('stat-net-salary').textContent = `KWD ${Number(data.latest_payslip.net_salary).toFixed(0)}`;
     }
@@ -433,7 +454,7 @@
           <span class="leave-name">${lang === 'ar' && b.type_name_ar ? b.type_name_ar : b.type_name}</span>
           <span class="leave-count"><strong>${remaining}</strong> / ${b.entitled_days} days</span>
         </div>
-        <div class="leave-bar"><div class="leave-bar-fill ${colors[i] || ''}" style="width:${Math.min(100,pct)}%"></div></div>
+        <div class="leave-bar"><div class="leave-bar-fill ${colors[i]||''}" style="width:${Math.min(100,pct)}%"></div></div>
       </div>`;
     }).join('');
   }
@@ -497,7 +518,93 @@
   function viewDocuments() { alert('Documents page coming soon!'); }
   function downloadPayslip() { alert('Payslip download coming soon!'); }
 
-  /* ── OVERTIME ── */
+  // ── Clock In / Out ────────────────────────────
+  let currentAttRecord = null;
+
+  function startLiveClock() {
+    function tick() {
+      const now = new Date();
+      const el = document.getElementById('live-clock');
+      if (el) el.textContent = now.toLocaleTimeString('en-GB');
+      const dl = document.getElementById('clock-date-label');
+      if (dl) dl.textContent = now.toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  async function loadClockStatus() {
+    const data = await apiFetch('/api/attendance/today');
+    const rec = data?.record || null;
+    currentAttRecord = rec;
+    const inBtn = document.getElementById('clock-in-btn');
+    const outBtn = document.getElementById('clock-out-btn');
+    const label = document.getElementById('clock-status-label');
+    const info = document.getElementById('clock-info');
+    if (!rec || !rec.clock_in) {
+      label.textContent = 'NOT CLOCKED IN';
+      inBtn.style.display = '';
+      outBtn.style.display = 'none';
+      info.textContent = '';
+    } else if (rec.clock_in && !rec.clock_out) {
+      label.textContent = rec.status === 'late' ? 'CLOCKED IN — LATE ⚠️' : 'CLOCKED IN ✓';
+      inBtn.style.display = 'none';
+      outBtn.style.display = '';
+      info.textContent = `Since ${rec.clock_in.slice(0,5)}`;
+    } else {
+      label.textContent = 'DONE FOR TODAY ✓';
+      inBtn.style.display = 'none';
+      outBtn.style.display = 'none';
+      info.textContent = `${rec.clock_in.slice(0,5)} → ${rec.clock_out.slice(0,5)} · ${rec.hours_worked != null ? rec.hours_worked + ' hrs worked' : ''}`;
+    }
+  }
+
+  async function getLocation() {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) return resolve({lat:null, lng:null});
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve({lat: pos.coords.latitude, lng: pos.coords.longitude}),
+        () => resolve({lat:null, lng:null}),
+        {timeout: 7000}
+      );
+    });
+  }
+
+  async function clockIn() {
+    const btn = document.getElementById('clock-in-btn');
+    btn.textContent = '…'; btn.disabled = true;
+    const {lat, lng} = await getLocation();
+    const res = await apiFetch('/api/attendance/clockin', {
+      method: 'POST',
+      body: JSON.stringify({lat, lng})
+    });
+    btn.textContent = '✓ Clock In'; btn.disabled = false;
+    if (res && !res.error) {
+      await loadClockStatus();
+      if (res.message) document.getElementById('clock-info').textContent = res.message;
+    } else {
+      alert(res?.error || 'Error clocking in');
+    }
+  }
+
+  async function clockOut() {
+    const btn = document.getElementById('clock-out-btn');
+    btn.textContent = '…'; btn.disabled = true;
+    const {lat, lng} = await getLocation();
+    const res = await apiFetch('/api/attendance/clockout', {
+      method: 'POST',
+      body: JSON.stringify({lat, lng})
+    });
+    btn.textContent = '✗ Clock Out'; btn.disabled = false;
+    if (res && !res.error) {
+      await loadClockStatus();
+      if (res.message) document.getElementById('clock-info').textContent = res.message;
+    } else {
+      alert(res?.error || 'Error clocking out');
+    }
+  }
+
+  // ── Overtime ──────────────────────────────────
   async function loadOTHistory() {
     const data = await apiFetch('/api/overtime');
     const list = data?.requests || [];
@@ -551,88 +658,9 @@
     if (res && !res.error) { closeOTModal(); loadOTHistory(); alert('Overtime request submitted!'); }
     else alert(res?.error || 'Error submitting');
   }
-/* ── CLOCK IN / OUT ── */
-  let currentAttRecord = null;
 
-  function startLiveClock() {
-    function tick() {
-      const now = new Date();
-      const el = document.getElementById('live-clock');
-      if (el) el.textContent = now.toLocaleTimeString('en-GB');
-      const dl = document.getElementById('clock-date-label');
-      if (dl) dl.textContent = now.toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
-    }
-    tick();
-    setInterval(tick, 1000);
-  }
-
-  async function loadClockStatus() {
-    const today = new Date().toISOString().split('T')[0];
-    const data = await apiFetch('/api/attendance?date=' + today);
-    const records = data?.records || [];
-    const rec = records[0] || null; // employee API returns only their own records
-
-    const inBtn = document.getElementById('clock-in-btn');
-    const outBtn = document.getElementById('clock-out-btn');
-    const label = document.getElementById('clock-status-label');
-    const info = document.getElementById('clock-info');
-
-    if (!rec || !rec.clock_in) {
-      currentAttRecord = null;
-      label.textContent = 'NOT CLOCKED IN';
-      inBtn.style.display = '';
-      outBtn.style.display = 'none';
-      info.textContent = '';
-    } else if (rec.clock_in && !rec.clock_out) {
-      currentAttRecord = rec;
-      label.textContent = 'CLOCKED IN';
-      inBtn.style.display = 'none';
-      outBtn.style.display = '';
-      info.textContent = `Since ${rec.clock_in.slice(0,5)}`;
-    } else {
-      currentAttRecord = rec;
-      label.textContent = 'DONE FOR TODAY ✓';
-      inBtn.style.display = 'none';
-      outBtn.style.display = 'none';
-      info.textContent = `${rec.clock_in.slice(0,5)} → ${rec.clock_out.slice(0,5)} · ${rec.hours_worked ? rec.hours_worked.toFixed(1)+' hrs' : ''}`;
-    }
-  }
-
-  async function clockIn() {
-    const btn = document.getElementById('clock-in-btn');
-    btn.textContent = '…'; btn.disabled = true;
-    let lat = null, lng = null;
-    try {
-      const pos = await new Promise((res,rej) => navigator.geolocation.getCurrentPosition(res, rej, {timeout:6000}));
-      lat = pos.coords.latitude; lng = pos.coords.longitude;
-    } catch(e) {}
-    const today = new Date().toISOString().split('T')[0];
-    const now = new Date().toTimeString().slice(0,5);
-    const res = await apiFetch('/api/attendance', {
-      method:'POST',
-      body: JSON.stringify({date:today, clock_in:now, clock_in_lat:lat, clock_in_lng:lng, status:'present'})
-    });
-    btn.textContent = '✓ Clock In'; btn.disabled = false;
-    if (res && !res.error) loadClockStatus();
-    else alert(res?.error || 'Error clocking in');
-  }
-
-  async function clockOut() {
-    if (!currentAttRecord) return;
-    const btn = document.getElementById('clock-out-btn');
-    btn.textContent = '…'; btn.disabled = true;
-    const now = new Date().toTimeString().slice(0,5);
-    const res = await apiFetch('/api/attendance/' + currentAttRecord.id, {
-      method:'PUT',
-      body: JSON.stringify({clock_out:now, status:currentAttRecord.status||'present'})
-    });
-    btn.textContent = '✗ Clock Out'; btn.disabled = false;
-    if (res && !res.error) loadClockStatus();
-    else alert(res?.error || 'Error clocking out');
-  }
-
-  startLiveClock();
   applyLang();
+  startLiveClock();
   loadDashboard();
 </script>
 </body>
