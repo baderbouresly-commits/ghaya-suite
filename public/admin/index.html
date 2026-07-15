@@ -699,16 +699,19 @@ async function loadAttendance(){
   document.getElementById('att-table').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/attendance?date='+date);
   const records=data?.records||[];
-  const cnt={present:0,late:0,absent:0,half_day:0};
-  records.forEach(r=>{if(cnt[r.status]!==undefined)cnt[r.status]++;});
+const cnt={present:0,late:0,absent:0,half_day:0};
+  records.forEach(r=>{
+    if(r.status==='present'||r.status==='left_early') cnt.present++;
+    else if(r.status==='late'||r.status==='late_left_early') cnt.late++;
+    else if(cnt[r.status]!==undefined) cnt[r.status]++;
+  });
   document.getElementById('att-present').textContent=cnt.present;
   document.getElementById('att-late').textContent=cnt.late;
   document.getElementById('att-absent').textContent=cnt.absent;
   document.getElementById('att-half').textContent=cnt.half_day;
   const el=document.getElementById('att-table');
   if(!records.length){el.innerHTML='<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">No attendance records for this date</div><div class="empty-sub">Employees who clock in will appear here</div></div>';return;}
-  const sb={present:'<span class="badge badge-green">Present</span>',late:'<span class="badge badge-orange">Late</span>',absent:'<span class="badge badge-red">Absent</span>',half_day:'<span class="badge badge-blue">Half Day</span>'};
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Status</th><th>Location</th><th>Actions</th></tr></thead><tbody>${records.map(r=>`<tr><td style="font-weight:700">${r.employee_name||'—'}</td><td>${r.clock_in?.slice(0,5)||'—'}</td><td>${r.clock_out?.slice(0,5)||'—'}</td><td>${r.hours_worked!=null?r.hours_worked.toFixed(1)+' hrs':'—'}</td><td>${sb[r.status]||r.status||'—'}</td><td>${r.clock_in_lat?`<a href="https://www.google.com/maps?q=${r.clock_in_lat},${r.clock_in_lng}" target="_blank" style="color:#E8472A;font-size:12px;text-decoration:none;">📍 Map</a>`:'—'}</td><td><button class="btn btn-ghost btn-sm" onclick="editAttRecord('${r.id}','${r.employee_id||''}','${r.clock_in||''}','${r.clock_out||''}','${r.status||'present'}')">Edit</button></td></tr>`).join('')}</tbody></table></div>`;
+const sb={present:'<span class="badge badge-green">Present</span>',late:'<span class="badge badge-orange">Late</span>',absent:'<span class="badge badge-red">Absent</span>',half_day:'<span class="badge badge-blue">Half Day</span>',left_early:'<span class="badge badge-orange">Left Early</span>',late_left_early:'<span class="badge badge-red">Late + Left Early</span>'};  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Status</th><th>Location</th><th>Actions</th></tr></thead><tbody>${records.map(r=>`<tr><td style="font-weight:700">${`${r.first_name_en||''} ${r.last_name_en||''}`.trim()||'—'}</td><td>${r.clock_in?.slice(0,5)||'—'}</td><td>${r.clock_out?.slice(0,5)||'—'}</td><td>${r.hours_worked!=null?r.hours_worked.toFixed(1)+' hrs':'—'}</td><td>${sb[r.status]||r.status||'—'}</td><td>${r.clock_in_lat?`<a href="https://www.google.com/maps?q=${r.clock_in_lat},${r.clock_in_lng}" target="_blank" style="color:#E8472A;font-size:12px;text-decoration:none;">📍 Map</a>`:'—'}</td><td><button class="btn btn-ghost btn-sm" onclick="editAttRecord('${r.id}','${r.employee_id||''}','${r.clock_in||''}','${r.clock_out||''}','${r.status||'present'}')">Edit</button></td></tr>`).join('')}</tbody></table></div>`;
 }
 function goToday(){document.getElementById('att-date').value=new Date().toISOString().split('T')[0];loadAttendance();}
 async function loadMonthlyReport(){
@@ -720,8 +723,15 @@ async function loadMonthlyReport(){
   const el=document.getElementById('att-monthly');
   if(!records.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No records for this month</div></div>';return;}
   const byEmp={};
-  records.forEach(r=>{if(!byEmp[r.employee_id]){byEmp[r.employee_id]={name:r.employee_name||'—',present:0,late:0,absent:0,half_day:0,hours:0};}const e=byEmp[r.employee_id];if(e[r.status]!==undefined)e[r.status]++;e.hours+=(r.hours_worked||0);});
-  const rows=Object.values(byEmp).map(e=>`<tr><td style="font-weight:700">${e.name}</td><td style="color:#1a7a42;font-weight:700">${e.present}</td><td style="color:#c46a00;font-weight:700">${e.late}</td><td style="color:#1a4da0;font-weight:700">${e.half_day}</td><td style="color:#c42a00;font-weight:700">${e.absent}</td><td style="font-weight:700">${e.hours.toFixed(1)} hrs</td></tr>`).join('');
+records.forEach(r=>{
+    const name=`${r.first_name_en||''} ${r.last_name_en||''}`.trim()||'—';
+    if(!byEmp[r.employee_id]){byEmp[r.employee_id]={name,present:0,late:0,absent:0,half_day:0,hours:0};}
+    const e=byEmp[r.employee_id];
+    if(r.status==='present'||r.status==='left_early') e.present++;
+    else if(r.status==='late'||r.status==='late_left_early') e.late++;
+    else if(e[r.status]!==undefined) e[r.status]++;
+    e.hours+=(r.hours_worked||0);
+  });  const rows=Object.values(byEmp).map(e=>`<tr><td style="font-weight:700">${e.name}</td><td style="color:#1a7a42;font-weight:700">${e.present}</td><td style="color:#c46a00;font-weight:700">${e.late}</td><td style="color:#1a4da0;font-weight:700">${e.half_day}</td><td style="color:#c42a00;font-weight:700">${e.absent}</td><td style="font-weight:700">${e.hours.toFixed(1)} hrs</td></tr>`).join('');
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th style="color:#1a7a42">Present</th><th style="color:#c46a00">Late</th><th style="color:#1a4da0">Half Day</th><th style="color:#c42a00">Absent</th><th>Total Hours</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 async function openManualAtt(){
