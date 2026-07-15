@@ -163,7 +163,10 @@ export async function onRequest(context) {
     const record = await env.DB.prepare(
       'SELECT * FROM attendance_records WHERE company_id=? AND employee_id=? AND date=?'
     ).bind(companyId, employeeId, date).first();
-    return json({ record: record || null, date, company });
+const schedule = await env.DB.prepare(
+  'SELECT * FROM work_schedules WHERE company_id=? LIMIT 1'
+).bind(companyId).first();
+return json({ record: record || null, date, company: { ...company, ...schedule } });
   }
 
   // GET /api/attendance
