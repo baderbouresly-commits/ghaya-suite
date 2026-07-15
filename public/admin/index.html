@@ -179,6 +179,10 @@ select.form-input{cursor:pointer}
       <span class="nav-icon">🕐</span><span data-en="Permission Hours" data-ar="ساعات الاستئذان">Permission Hours</span>
       <span class="nav-badge" id="perm-badge" style="display:none">0</span>
     </div>
+    <div class="nav-item" onclick="showPage('overtime')" id="nav-overtime">
+      <span class="nav-icon">⏱️</span><span data-en="Overtime" data-ar="العمل الإضافي">Overtime</span>
+      <span class="nav-badge" id="ot-badge" style="display:none">0</span>
+    </div>
     <div class="nav-item" onclick="showPage('payroll')" id="nav-payroll">
       <span class="nav-icon">💰</span><span data-en="Payroll" data-ar="الرواتب">Payroll</span>
     </div>
@@ -307,6 +311,34 @@ select.form-input{cursor:pointer}
         <div id="perm-usage-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
+    <!-- OVERTIME -->
+    <div id="page-overtime" style="display:none">
+      <div class="section-card">
+        <div class="section-header">
+          <div><div class="section-title">Overtime Requests (العمل الإضافي)</div><div class="section-sub">Kuwait Labour Law: 1.25× normal days · 1.5× rest days/holidays</div></div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div class="filter-row">
+              <button class="filter-btn active" onclick="filterOT('pending',this)">Pending</button>
+              <button class="filter-btn" onclick="filterOT('approved',this)">Approved</button>
+              <button class="filter-btn" onclick="filterOT('rejected',this)">Rejected</button>
+              <button class="filter-btn" onclick="filterOT('all',this)">All</button>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openAddOT()">+ Add Entry</button>
+          </div>
+        </div>
+        <div id="ot-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+      <div class="section-card">
+        <div class="section-header">
+          <div><div class="section-title">Monthly Overtime Summary</div><div class="section-sub" id="ot-month-label">This month</div></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="month" class="search-bar" id="ot-month" style="width:160px;"/>
+            <button class="btn btn-ghost btn-sm" onclick="loadOTSummary()">View</button>
+          </div>
+        </div>
+        <div id="ot-summary"><div class="empty"><div class="empty-icon">⏱️</div><div class="empty-text">Select a month to view summary</div></div></div>
+      </div>
+    </div>
     <!-- PAYROLL -->
     <div id="page-payroll" style="display:none">
       <div id="payroll-runs-view">
@@ -338,7 +370,6 @@ select.form-input{cursor:pointer}
     </div>
     <!-- SETTINGS -->
     <div id="page-settings" style="display:none">
-      <!-- Geofencing -->
       <div class="section-card" style="margin-bottom:24px;">
         <div class="section-header">
           <div><div class="section-title">Workplace Geofencing</div><div class="section-sub">Restrict clock in/out to within a set distance of your workplace</div></div>
@@ -362,7 +393,6 @@ select.form-input{cursor:pointer}
         </div>
         <div id="geofence-off-hint" style="padding:14px 24px;font-size:13px;color:#888;">Toggle on to configure your workplace location and radius.</div>
       </div>
-      <!-- Work Schedule -->
       <div class="section-card" style="margin-bottom:24px;">
         <div class="section-header"><div class="section-title">Work Schedule</div><div class="section-sub">Default hours used for attendance tracking</div></div>
         <div class="sched-row">
@@ -384,7 +414,6 @@ select.form-input{cursor:pointer}
         </div>
         <div style="padding:0 24px 20px;"><button class="btn btn-primary" onclick="saveWorkSchedule()">Save Schedule</button></div>
       </div>
-      <!-- Permission Limit -->
       <div class="section-card" style="margin-bottom:24px;">
         <div class="section-header"><div class="section-title">Permission Hours Limit</div><div class="section-sub">Monthly استئذان allowance per employee</div></div>
         <div style="padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
@@ -398,7 +427,6 @@ select.form-input{cursor:pointer}
           </div>
         </div>
       </div>
-      <!-- Departments & Job Titles -->
       <div class="section-card">
         <div class="section-header"><div class="section-title">Departments &amp; Job Titles</div><div class="section-sub">Manage your company structure</div></div>
         <div class="settings-grid">
@@ -502,6 +530,35 @@ select.form-input{cursor:pointer}
     </div>
   </div>
 </div>
+<!-- MODAL: Add Overtime -->
+<div class="modal-overlay" id="modal-ot">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header"><div class="modal-title">Add Overtime Entry</div><button class="modal-close" onclick="closeModal('modal-ot')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">Employee</label><select class="form-input" id="ot-emp-id"><option value="">— Select Employee —</option></select></div>
+      <div class="form-row"><label class="form-label">Date</label><input class="form-input" id="ot-date" type="date"/></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Hours</label><input class="form-input" id="ot-hours" type="number" min="0.5" max="16" step="0.5" placeholder="2"/></div>
+        <div class="form-row"><label class="form-label">Day Type</label>
+          <select class="form-input" id="ot-day-type">
+            <option value="normal">Normal Day (1.25×)</option>
+            <option value="holiday">Holiday/Rest Day (1.5×)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row"><label class="form-label">Reason</label><input class="form-input" id="ot-reason" placeholder="e.g. Month-end closing, urgent delivery"/></div>
+      <div id="ot-pay-preview" style="background:#faf6f1;border:1px solid #e8e0d8;border-radius:8px;padding:12px 16px;font-size:13px;display:none;margin-top:4px;">
+        <div style="color:#888;font-size:11px;font-weight:700;margin-bottom:4px;">ESTIMATED OVERTIME PAY</div>
+        <div id="ot-pay-amount" style="font-size:20px;font-weight:800;color:#1a7a42"></div>
+        <div id="ot-pay-formula" style="font-size:11px;color:#888;margin-top:2px;"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-ot')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveOTEntry()">Save (Auto-Approved)</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <script>
 const API='/api';
@@ -544,7 +601,7 @@ async function init(){
   document.getElementById('payroll-month').value=now.getMonth()+1;
   setLang(currentLang,false);
   const saved=localStorage.getItem('ghaya_page')||'dashboard';
-showPage(saved);
+  showPage(saved);
 }
 
 async function loadDeptsAndTitles(){
@@ -555,18 +612,19 @@ async function loadDeptsAndTitles(){
 
 function showPage(page){
   localStorage.setItem('ghaya_page',page);
-  ['dashboard','employees','attendance','leaves','permissions','payroll','settings'].forEach(p=>{
+  ['dashboard','employees','attendance','leaves','permissions','overtime','payroll','settings'].forEach(p=>{
     document.getElementById('page-'+p).style.display=p===page?'':'none';
     const nav=document.getElementById('nav-'+p);
     if(nav)nav.classList.toggle('active',p===page);
   });
-  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},payroll:{en:'Payroll',ar:'الرواتب'},settings:{en:'Settings',ar:'الإعدادات'}};
+  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},overtime:{en:'Overtime',ar:'العمل الإضافي'},payroll:{en:'Payroll',ar:'الرواتب'},settings:{en:'Settings',ar:'الإعدادات'}};
   document.getElementById('page-title').textContent=titles[page]?.[currentLang]||titles[page]?.en;
   if(page==='dashboard')loadDashboard();
   if(page==='employees')loadEmployees();
   if(page==='attendance')loadAttendance();
   if(page==='leaves'){loadLeaves();loadLeaveBalances();}
   if(page==='permissions'){loadPerms();loadPermUsage();}
+  if(page==='overtime')loadOT();
   if(page==='payroll')loadPayroll();
   if(page==='settings'){renderSettings();loadAllSettings();}
 }
@@ -884,6 +942,95 @@ async function savePermLimit(){
   const res=await apicall('PUT','/companies/'+currentUser.company_id,{permission_hours_monthly:val});
   if(res?.company)showToast(`Limit set to ${val} hrs/month ✓`,'success');
   else showToast(res?.error||'Error saving limit','error');
+}
+
+/* ── OVERTIME ── */
+async function loadOT(status){
+  status=status||'pending';
+  document.getElementById('ot-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const url=status==='all'?'/overtime':'/overtime?status='+status;
+  const data=await apicall('GET',url);
+  const list=data?.requests||[];
+  const pending=data?.pending_count||0;
+  if(pending>0){document.getElementById('ot-badge').style.display='';document.getElementById('ot-badge').textContent=pending;}
+  else document.getElementById('ot-badge').style.display='none';
+  const el=document.getElementById('ot-list');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">⏱️</div><div class="empty-text">No overtime records</div></div>';return;}
+  const sb={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>'};
+  const dt={normal:'Normal (1.25×)',holiday:'Holiday (1.5×)'};
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Date</th><th>Hours</th><th>Day Type</th><th>OT Pay (KWD)</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map(r=>`<tr>
+    <td style="font-weight:700">${r.employee_name||'—'}</td>
+    <td style="font-size:12px;color:#888">${r.date||'—'}</td>
+    <td style="font-weight:700">${parseFloat(r.hours||0).toFixed(1)} hrs</td>
+    <td style="font-size:12px">${dt[r.day_type]||r.day_type}</td>
+    <td style="font-weight:700;color:#1a7a42">KWD ${parseFloat(r.overtime_pay||0).toFixed(3)}</td>
+    <td style="font-size:12px;color:#888;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.reason||'—'}</td>
+    <td>${sb[r.status]||r.status}</td>
+    <td style="display:flex;gap:6px;">${r.status==='pending'?`<button class="btn btn-success btn-sm" onclick="approveOT('${r.id}')">✓</button><button class="btn btn-danger btn-sm" onclick="rejectOT('${r.id}')">✕</button>`:`<button class="btn btn-ghost btn-sm" onclick="deleteOT('${r.id}')">🗑</button>`}</td>
+  </tr>`).join('')}</tbody></table></div>`;
+}
+function filterOT(status,btn){document.querySelectorAll('#page-overtime .filter-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');loadOT(status);}
+async function approveOT(id){const res=await apicall('PUT','/overtime/'+id,{status:'approved'});if(res&&!res.error){showToast('Overtime approved ✓','success');loadOT();}else showToast('Error','error');}
+async function rejectOT(id){const res=await apicall('PUT','/overtime/'+id,{status:'rejected'});if(res&&!res.error){showToast('Rejected','');loadOT();}else showToast('Error','error');}
+async function deleteOT(id){if(!confirm('Delete this overtime record?'))return;const res=await apicall('DELETE','/overtime/'+id);if(res?.success){showToast('Deleted','success');loadOT();}else showToast('Error','error');}
+async function loadOTSummary(){
+  const month=document.getElementById('ot-month').value;
+  if(!month){showToast('Select a month','error');return;}
+  document.getElementById('ot-month-label').textContent=new Date(month+'-01').toLocaleString('en',{month:'long',year:'numeric'});
+  document.getElementById('ot-summary').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const data=await apicall('GET','/overtime/summary?month='+month);
+  const list=data?.summary||[];
+  const el=document.getElementById('ot-summary');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No approved overtime this month</div></div>';return;}
+  const total=list.reduce((s,r)=>s+(parseFloat(r.total_overtime_pay)||0),0);
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Records</th><th>Total Hours</th><th>Total OT Pay (KWD)</th></tr></thead><tbody>${list.map(r=>`<tr>
+    <td style="font-weight:700">${r.employee_name||'—'}</td>
+    <td style="color:#888">${r.records_count||0}</td>
+    <td style="font-weight:700">${parseFloat(r.total_hours||0).toFixed(1)} hrs</td>
+    <td style="font-weight:800;color:#1a7a42">KWD ${parseFloat(r.total_overtime_pay||0).toFixed(3)}</td>
+  </tr>`).join('')}</tbody></table>
+  <div style="padding:14px 20px;border-top:2px solid #1a1a2e;display:flex;justify-content:space-between;font-weight:800;font-size:14px;">
+    <span>Total Overtime Cost</span><span style="color:#1a7a42">KWD ${total.toFixed(3)}</span>
+  </div></div>`;
+}
+async function openAddOT(){
+  if(!employeesData.length){const d=await apicall('GET','/employees');employeesData=d?.employees||[];}
+  const sel=document.getElementById('ot-emp-id');
+  sel.innerHTML='<option value="">— Select Employee —</option>'+employeesData.filter(e=>e.status==='active').map(e=>`<option value="${e.id}" data-salary="${e.basic_salary||0}">${e.first_name_en} ${e.last_name_en}</option>`).join('');
+  document.getElementById('ot-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('ot-hours').value='';
+  document.getElementById('ot-day-type').value='normal';
+  document.getElementById('ot-reason').value='';
+  document.getElementById('ot-pay-preview').style.display='none';
+  ['ot-emp-id','ot-hours','ot-day-type'].forEach(id=>document.getElementById(id).addEventListener('input',previewOTPay));
+  document.getElementById('modal-ot').classList.add('open');
+}
+function previewOTPay(){
+  const sel=document.getElementById('ot-emp-id');
+  const opt=sel.options[sel.selectedIndex];
+  const salary=parseFloat(opt?.dataset?.salary||0);
+  const hours=parseFloat(document.getElementById('ot-hours').value||0);
+  const dayType=document.getElementById('ot-day-type').value;
+  if(!salary||!hours){document.getElementById('ot-pay-preview').style.display='none';return;}
+  const hourlyRate=salary/208;
+  const multiplier=dayType==='holiday'?1.5:1.25;
+  const pay=(hours*hourlyRate*multiplier).toFixed(3);
+  document.getElementById('ot-pay-preview').style.display='';
+  document.getElementById('ot-pay-amount').textContent='KWD '+pay;
+  document.getElementById('ot-pay-formula').textContent=`${hours} hrs × KWD ${hourlyRate.toFixed(4)}/hr × ${multiplier}× = KWD ${pay}`;
+}
+async function saveOTEntry(){
+  const employee_id=document.getElementById('ot-emp-id').value;
+  const date=document.getElementById('ot-date').value;
+  const hours=parseFloat(document.getElementById('ot-hours').value);
+  const day_type=document.getElementById('ot-day-type').value;
+  const reason=document.getElementById('ot-reason').value.trim();
+  if(!employee_id){showToast('Select an employee','error');return;}
+  if(!date){showToast('Select a date','error');return;}
+  if(!hours||hours<=0){showToast('Enter valid hours','error');return;}
+  const res=await apicall('POST','/overtime',{employee_id,date,hours,day_type,reason});
+  if(res&&!res.error){closeModal('modal-ot');showToast('Overtime entry saved ✓','success');loadOT('approved');}
+  else showToast(res?.error||'Error saving','error');
 }
 
 /* ── EMPLOYEE MODAL ── */
