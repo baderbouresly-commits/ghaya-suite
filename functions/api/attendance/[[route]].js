@@ -29,7 +29,6 @@ export async function onRequest(context) {
     const [d, m, y] = date.split('/');
     return { date: `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`, time };
   }
-
   function getStatus(clockIn, workStart, lateThreshold) {
     if (!clockIn || !workStart) return 'present';
     const [ih, im] = clockIn.split(':').map(Number);
@@ -38,13 +37,11 @@ export async function onRequest(context) {
     const startMins = wh * 60 + wm;
     return inMins > startMins + (lateThreshold || 15) ? 'late' : 'present';
   }
-
   function calcHours(clockIn, clockOut) {
     if (!clockIn || !clockOut) return null;
     const toMins = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
     return Math.round((toMins(clockOut) - toMins(clockIn)) / 60 * 10) / 10;
   }
-
   function haversine(lat1, lng1, lat2, lng2) {
     const R = 6371000;
     const toRad = x => x * Math.PI / 180;
@@ -53,19 +50,18 @@ export async function onRequest(context) {
     const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
-
   function b64url(s) {
     const b = atob(s.replace(/-/g, '+').replace(/_/g, '/'));
     return Uint8Array.from(b, c => c.charCodeAt(0));
   }
-
   function uid() { return crypto.randomUUID(); }
-  function json(data, status = 200) { return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } }); }
+  function json(data, status = 200) {
+    return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
+  }
 
-  // ── GET company schedule ──────────────────────────────────
+  // ── Get company ───────────────────────────────────────────
   async function getCompany() {
-    const row = await env.DB.prepare('SELECT * FROM companies WHERE id=?').bind(companyId).first();
-    return row;
+    return await env.DB.prepare('SELECT * FROM companies WHERE id=?').bind(companyId).first();
   }
 
   // ── ROUTES ────────────────────────────────────────────────
@@ -77,7 +73,6 @@ export async function onRequest(context) {
     const { date, time } = getKuwaitTime();
     const company = await getCompany();
 
-    // Geofence check
     if (company?.geofence_enabled && company?.workplace_lat && company?.workplace_lng) {
       if (lat == null || lng == null) {
         return json({ error: 'Location required — workplace geofencing is enabled. Please allow location access and try again.' }, 403);
@@ -89,7 +84,6 @@ export async function onRequest(context) {
       }
     }
 
-    // Check existing record
     const existing = await env.DB.prepare(
       'SELECT * FROM attendance_records WHERE company_id=? AND employee_id=? AND date=?'
     ).bind(companyId, employeeId, date).first();
@@ -112,7 +106,9 @@ export async function onRequest(context) {
       'SELECT * FROM attendance_records WHERE company_id=? AND employee_id=? AND date=?'
     ).bind(companyId, employeeId, date).first();
 
-    const msg = status === 'late' ? `Clocked in at ${time.slice(0,5)} — marked as Late` : `Clocked in at ${time.slice(0,5)}`;
+    const msg = status === 'late'
+      ? `Clocked in at ${time.slice(0,5)} — marked as Late`
+      : `Clocked in at ${time.slice(0,5)}`;
     return json({ message: msg, record });
   }
 
@@ -123,7 +119,6 @@ export async function onRequest(context) {
     const { date, time } = getKuwaitTime();
     const company = await getCompany();
 
-    // Geofence check
     if (company?.geofence_enabled && company?.workplace_lat && company?.workplace_lng) {
       if (lat == null || lng == null) {
         return json({ error: 'Location required — workplace geofencing is enabled. Please allow location access and try again.' }, 403);
@@ -143,7 +138,17 @@ export async function onRequest(context) {
     if (existing?.clock_out) return json({ error: 'Already clocked out today' }, 400);
 
     const hours = calcHours(existing.clock_in.slice(0,5), time.slice(0,5));
-    const status = hours != null && hours < 4 ? 'half_day' : (existing.status || 'present');
+
+    // Early leave detection
+    const endTime = company?.work_end_time || '22:00';
+    const toMins = s => { const [h,m] = s.slice(0,5).split(':').map(Number); return h*60+m; };
+    const leftEarly = toMins(time.slice(0,5)) < toMins(endTime);
+
+    let status;
+    if (hours != null && hours < 4)              status = 'half_day';
+    else if (leftEarly && existing.status === 'late') status = 'late_left_early';
+    else if (leftEarly)                          status = 'left_early';
+    else                                         status = existing.status || 'present';
 
     await env.DB.prepare(
       'UPDATE attendance_records SET clock_out=?,clock_out_lat=?,clock_out_lng=?,hours_worked=?,status=? WHERE id=?'
@@ -153,7 +158,10 @@ export async function onRequest(context) {
       'SELECT * FROM attendance_records WHERE id=?'
     ).bind(existing.id).first();
 
-    return json({ message: `Clocked out at ${time.slice(0,5)} — ${hours} hrs worked`, record });
+    const msg = leftEarly
+      ? `Clocked out at ${time.slice(0,5)} — left early (${hours} hrs worked)`
+      : `Clocked out at ${time.slice(0,5)} — ${hours} hrs worked`;
+    return json({ message: msg, record });
   }
 
   // GET /api/attendance/today
@@ -163,10 +171,7 @@ export async function onRequest(context) {
     const record = await env.DB.prepare(
       'SELECT * FROM attendance_records WHERE company_id=? AND employee_id=? AND date=?'
     ).bind(companyId, employeeId, date).first();
-const schedule = await env.DB.prepare(
-  'SELECT * FROM work_schedules WHERE company_id=? LIMIT 1'
-).bind(companyId).first();
-return json({ record: record || null, date, company: { ...company, ...schedule } });
+    return json({ record: record || null, date, company });
   }
 
   // GET /api/attendance
@@ -174,9 +179,7 @@ return json({ record: record || null, date, company: { ...company, ...schedule }
     const dateParam = url.searchParams.get('date');
     const monthParam = url.searchParams.get('month');
     const empParam = url.searchParams.get('employee_id');
-
     let query, params;
-
     if (isAdmin) {
       if (dateParam) {
         query = `SELECT ar.*, e.first_name_en, e.last_name_en FROM attendance_records ar LEFT JOIN employees e ON ar.employee_id=e.id WHERE ar.company_id=? AND ar.date=? ORDER BY e.first_name_en`;
@@ -199,7 +202,6 @@ return json({ record: record || null, date, company: { ...company, ...schedule }
         params = [companyId, employeeId, date];
       }
     }
-
     const { results } = await env.DB.prepare(query).bind(...params).all();
     return json({ records: results });
   }
