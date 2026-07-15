@@ -370,6 +370,7 @@ select.form-input{cursor:pointer}
     </div>
     <!-- SETTINGS -->
     <div id="page-settings" style="display:none">
+      <!-- Geofencing -->
       <div class="section-card" style="margin-bottom:24px;">
         <div class="section-header">
           <div><div class="section-title">Workplace Geofencing</div><div class="section-sub">Restrict clock in/out to within a set distance of your workplace</div></div>
@@ -389,10 +390,11 @@ select.form-input{cursor:pointer}
             <input type="range" id="geo-radius" min="50" max="1000" step="10" value="200" style="width:100%;margin-top:6px;" oninput="document.getElementById('geo-radius-val').textContent=this.value+'m'"/>
             <div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-top:4px;"><span>50m</span><span>500m</span><span>1000m</span></div>
           </div>
-          <button class="btn btn-primary" onclick="saveGeofenceSettings()">Save Geofencing</button>
         </div>
         <div id="geofence-off-hint" style="padding:14px 24px;font-size:13px;color:#888;">Toggle on to configure your workplace location and radius.</div>
+        <div style="padding:0 24px 20px;"><button class="btn btn-primary" onclick="saveGeofenceSettings()">Save Geofencing</button></div>
       </div>
+      <!-- Work Schedule -->
       <div class="section-card" style="margin-bottom:24px;">
         <div class="section-header"><div class="section-title">Work Schedule</div><div class="section-sub">Default hours used for attendance tracking</div></div>
         <div class="sched-row">
@@ -414,6 +416,7 @@ select.form-input{cursor:pointer}
         </div>
         <div style="padding:0 24px 20px;"><button class="btn btn-primary" onclick="saveWorkSchedule()">Save Schedule</button></div>
       </div>
+      <!-- Permission Limit -->
       <div class="section-card" style="margin-bottom:24px;">
         <div class="section-header"><div class="section-title">Permission Hours Limit</div><div class="section-sub">Monthly استئذان allowance per employee</div></div>
         <div style="padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
@@ -427,6 +430,7 @@ select.form-input{cursor:pointer}
           </div>
         </div>
       </div>
+      <!-- Departments & Job Titles -->
       <div class="section-card">
         <div class="section-header"><div class="section-title">Departments &amp; Job Titles</div><div class="section-sub">Manage your company structure</div></div>
         <div class="settings-grid">
@@ -917,6 +921,8 @@ function toggleGeofenceFields(){
   document.getElementById('geofence-fields').style.display=enabled?'':'none';
   document.getElementById('geofence-off-hint').style.display=enabled?'none':'';
   document.getElementById('geofence-toggle-label').textContent=enabled?'On':'Off';
+  // Auto-save when toggling OFF so it persists without clicking Save
+  if(!enabled) saveGeofenceSettings();
 }
 async function saveGeofenceSettings(){
   const geofence_enabled=document.getElementById('geofence-enabled').checked;
