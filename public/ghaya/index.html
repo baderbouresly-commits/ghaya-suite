@@ -73,6 +73,8 @@ body.ar .main{margin-left:0;margin-right:240px}
 .btn-sm{padding:6px 12px;font-size:12px}
 .btn-danger{background:#fff;color:#E8472A;border:1px solid #E8472A}
 .btn-danger:hover{background:#E8472A;color:#fff}
+.btn-success{background:#1a7a42;color:#fff}
+.btn-success:hover{background:#156234}
 
 /* ── Table ── */
 .table-wrap{overflow-x:auto}
@@ -170,6 +172,12 @@ select.form-input{cursor:pointer}
     <div class="nav-item" onclick="showPage('users')" id="nav-users">
       <span class="nav-icon">👥</span><span data-en="Users" data-ar="المستخدمون">Users</span>
     </div>
+
+    <div class="nav-section" style="margin-top:8px">INBOX</div>
+    <div class="nav-item" onclick="showPage('feedback')" id="nav-feedback">
+      <span class="nav-icon">💬</span><span data-en="Feedback" data-ar="الملاحظات">Feedback</span>
+      <span id="fb-badge" style="margin-left:auto;background:#E8472A;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:800;display:none">0</span>
+    </div>
   </nav>
 
   <div class="sidebar-footer">
@@ -250,8 +258,25 @@ select.form-input{cursor:pointer}
       </div>
     </div>
 
-  </div>
-</div>
+    <!-- FEEDBACK PAGE -->
+    <div id="page-feedback" style="display:none">
+      <div class="section-card">
+        <div class="section-header">
+          <div>
+            <div class="section-title">💬 Company Feedback</div>
+            <div class="section-sub" id="fb-count-sub">Submissions from your company admins</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="filterFeedback('unread',this)" style="border-radius:20px;font-size:12px;">🔴 Unread</button>
+            <button class="btn btn-ghost btn-sm" onclick="filterFeedback('all',this)" style="border-radius:20px;font-size:12px;">All</button>
+          </div>
+        </div>
+        <div id="fb-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
 
 <!-- Add Company Modal -->
 <div class="modal-overlay" id="modal-add-company">
@@ -347,6 +372,7 @@ let currentUser = null;
 let currentLang = localStorage.getItem('ghaya_lang') || 'en';
 let companiesData = [];
 
+// ── Auth guard ──
 if (!token) { window.location.href = '/'; }
 
 async function api(method, path, body) {
@@ -359,6 +385,7 @@ async function api(method, path, body) {
   return res.json();
 }
 
+// ── Init ──
 async function init() {
   try {
     const me = await api('GET', '/auth/me');
@@ -371,30 +398,33 @@ async function init() {
 
   setLang(currentLang, false);
   loadDashboard();
+  loadFeedbackBadge();
 }
 
+// ── Pages ──
 function showPage(page) {
-  ['dashboard','companies','users'].forEach(p => {
+  ['dashboard','companies','users','feedback'].forEach(p => {
     document.getElementById('page-' + p).style.display = p === page ? '' : 'none';
     const nav = document.getElementById('nav-' + p);
     if (nav) nav.classList.toggle('active', p === page);
   });
-  const titles = { dashboard:{en:'Dashboard',ar:'لوحة التحكم'}, companies:{en:'Companies',ar:'الشركات'}, users:{en:'Users',ar:'المستخدمون'} };
-  document.getElementById('page-title').textContent = titles[page][currentLang] || titles[page].en;
+  const titles = { dashboard:{en:'Dashboard',ar:'لوحة التحكم'}, companies:{en:'Companies',ar:'الشركات'}, users:{en:'Users',ar:'المستخدمون'}, feedback:{en:'Feedback',ar:'الملاحظات'} };
+  document.getElementById('page-title').textContent = titles[page]?.[currentLang] || titles[page]?.en;
   if (page === 'dashboard') loadDashboard();
   if (page === 'companies') loadCompanies();
   if (page === 'users') loadUsers();
+  if (page === 'feedback') loadFeedback('all');
 }
 
+// ── Dashboard ──
 async function loadDashboard() {
   try {
     const data = await api('GET', '/dashboard');
     if (!data) return;
-const s = data.stats || data;
-    document.getElementById('stat-companies').textContent = s.total_companies ?? '—';
-    document.getElementById('stat-employees').textContent = s.total_employees ?? '—';
-    document.getElementById('stat-managed').textContent = s.managed_companies ?? '—';
-    document.getElementById('stat-active').textContent = s.active_subscriptions ?? s.active_companies ?? '—';
+    document.getElementById('stat-companies').textContent = data.total_companies ?? '—';
+    document.getElementById('stat-employees').textContent = data.total_employees ?? '—';
+    document.getElementById('stat-managed').textContent = data.managed_companies ?? '—';
+    document.getElementById('stat-active').textContent = data.active_subscriptions ?? '—';
     renderRecentCompanies(data.recent_companies || []);
   } catch(e) {
     document.getElementById('recent-companies-list').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Could not load data</div></div>';
@@ -405,7 +435,9 @@ function renderRecentCompanies(companies) {
   const el = document.getElementById('recent-companies-list');
   if (!companies.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏢</div><div class="empty-text">No companies yet</div><div class="empty-sub">Add your first company to get started</div></div>'; return; }
   el.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>Company</th><th>Industry</th><th>Tier</th><th>Managed</th><th>Status</th></tr></thead>
+    <thead><tr>
+      <th>Company</th><th>Industry</th><th>Tier</th><th>Managed</th><th>Status</th>
+    </tr></thead>
     <tbody>${companies.slice(0,5).map(co => `
       <tr>
         <td><div style="font-weight:700">${co.name_en}</div><div style="font-size:12px;color:#888">${co.name_ar||''}</div></td>
@@ -417,6 +449,7 @@ function renderRecentCompanies(companies) {
     </tbody></table></div>`;
 }
 
+// ── Companies ──
 async function loadCompanies() {
   const el = document.getElementById('companies-list');
   el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
@@ -437,7 +470,9 @@ function renderCompaniesTable(companies) {
     return;
   }
   el.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>Company</th><th>CR #</th><th>Industry</th><th>Tier</th><th>Managed</th><th>Status</th><th>Actions</th></tr></thead>
+    <thead><tr>
+      <th>Company</th><th>CR #</th><th>Industry</th><th>Tier</th><th>Managed</th><th>Status</th><th>Actions</th>
+    </tr></thead>
     <tbody>${companies.map(co => `
       <tr>
         <td><div style="font-weight:700">${co.name_en}</div><div style="font-size:12px;color:#888">${co.name_ar||''}</div></td>
@@ -462,52 +497,76 @@ async function toggleManaged(id, current) {
   else showToast(currentLang==='ar'?'حدث خطأ':'Error updating','error');
 }
 
-function viewCompany(id) { showToast('Company detail view coming soon',''); }
-
-async function loadUsers() {
-  const el = document.getElementById('users-list');
-  el.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>Email</th><th>Role</th><th>Company</th><th>Status</th></tr></thead>
-    <tbody>
-      <tr>
-        <td><div style="font-weight:700">admin@ghaya.hr</div></td>
-        <td><span class="badge badge-orange">⚡ ghaya_admin</span></td>
-        <td>—</td>
-        <td><span class="badge badge-green">Active</span></td>
-      </tr>
-    </tbody></table></div>
-    <div style="padding:16px 24px;font-size:12px;color:#888">Full user list requires /api/users endpoint — coming soon.</div>`;
+function viewCompany(id) {
+  showToast('Company detail view coming soon','');
 }
 
-function openAddCompany() { document.getElementById('modal-add-company').classList.add('open'); }
+// ── Users ──
+async function loadUsers() {
+  const el = document.getElementById('users-list');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    el.innerHTML = `<div class="table-wrap"><table>
+      <thead><tr><th>Email</th><th>Role</th><th>Company</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div style="font-weight:700">admin@ghaya.hr</div></td>
+          <td><span class="badge badge-orange">⚡ ghaya_admin</span></td>
+          <td>—</td>
+          <td><span class="badge badge-green">Active</span></td>
+        </tr>
+      </tbody></table></div>
+      <div style="padding:16px 24px;font-size:12px;color:#888">Full user list requires /api/users endpoint — coming soon.</div>`;
+  } catch(e) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Could not load users</div></div>';
+  }
+}
+
+// ── Add Company ──
+function openAddCompany() {
+  document.getElementById('modal-add-company').classList.add('open');
+}
 
 async function createCompany() {
   const nameEn = document.getElementById('co-name-en').value.trim();
+  const nameAr = document.getElementById('co-name-ar').value.trim();
+  const cr = document.getElementById('co-cr').value.trim();
+  const industry = document.getElementById('co-industry').value;
+  const tier = document.getElementById('co-tier').value;
+  const size = document.getElementById('co-size').value;
+  const managed = document.getElementById('co-managed').checked;
   const adminEmail = document.getElementById('co-admin-email').value.trim();
+  const adminPass = document.getElementById('co-admin-pass').value.trim();
+
   if (!nameEn) { showToast('Company name (EN) is required','error'); return; }
   if (!adminEmail) { showToast('Admin email is required','error'); return; }
+
   const res = await api('POST', '/companies', {
-    name_en: nameEn,
-    name_ar: document.getElementById('co-name-ar').value.trim(),
-    cr_number: document.getElementById('co-cr').value.trim(),
-    industry: document.getElementById('co-industry').value,
-    subscription_tier: document.getElementById('co-tier').value,
-    size_tier: document.getElementById('co-size').value,
-    managed_by_ghaya: document.getElementById('co-managed').checked,
-    admin_email: adminEmail,
-    admin_password: document.getElementById('co-admin-pass').value.trim() || 'TempPass2025!'
+    name_en: nameEn, name_ar: nameAr, cr_number: cr, industry,
+    subscription_tier: tier, size_tier: size, managed_by_ghaya: managed,
+    admin_email: adminEmail, admin_password: adminPass || 'TempPass2025!'
   });
+
   if (res && !res.error) {
     showToast(currentLang==='ar'?'تم إنشاء الشركة':'Company created!','success');
     closeModal('modal-add-company');
-    ['co-name-en','co-name-ar','co-cr','co-admin-email','co-admin-pass'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('co-managed').checked = false;
+    clearAddForm();
     loadCompanies();
-  } else { showToast(res?.error || 'Error creating company','error'); }
+  } else {
+    showToast(res?.error || 'Error creating company','error');
+  }
 }
 
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function clearAddForm() {
+  ['co-name-en','co-name-ar','co-cr','co-admin-email','co-admin-pass'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('co-managed').checked = false;
+}
 
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ── Lang ──
 function setLang(lang, save=true) {
   currentLang = lang;
   if (save) localStorage.setItem('ghaya_lang', lang);
@@ -520,6 +579,7 @@ function setLang(lang, save=true) {
   });
 }
 
+// ── Toast ──
 function showToast(msg, type='') {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -527,6 +587,96 @@ function showToast(msg, type='') {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+// ── Feedback ──
+let allFeedback = [];
+
+async function loadFeedbackBadge() {
+  try {
+    const data = await api('GET', '/feedback');
+    const count = data?.unread_count || 0;
+    const badge = document.getElementById('fb-badge');
+    if (badge) { badge.textContent = count; badge.style.display = count > 0 ? '' : 'none'; }
+  } catch(e) {}
+}
+
+async function loadFeedback(filter) {
+  filter = filter || 'all';
+  const el = document.getElementById('fb-list');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const data = await api('GET', '/feedback');
+  allFeedback = data?.feedback || [];
+  const unread = data?.unread_count || 0;
+  document.getElementById('fb-count-sub').textContent = `${allFeedback.length} total · ${unread} unread`;
+  const badge = document.getElementById('fb-badge');
+  if (badge) { badge.textContent = unread; badge.style.display = unread > 0 ? '' : 'none'; }
+  renderFeedback(filter === 'unread' ? allFeedback.filter(f => f.status === 'unread') : allFeedback);
+}
+
+function filterFeedback(filter, btn) {
+  document.querySelectorAll('#page-feedback .btn-ghost').forEach(b => b.style.background = '');
+  if (btn) btn.style.background = '#e8e0d8';
+  renderFeedback(filter === 'unread' ? allFeedback.filter(f => f.status === 'unread') : allFeedback);
+}
+
+function renderFeedback(list) {
+  const el = document.getElementById('fb-list');
+  if (!list.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">💬</div><div class="empty-text">No feedback yet</div><div class="empty-sub">Company admins will see a "Send Feedback" option in their portal</div></div>';
+    return;
+  }
+  const typeIcon = { suggestion:'💡', bug:'🐛', idea:'🚀', complaint:'⚠️' };
+  const statusBadge = { unread:'<span class="badge badge-orange">Unread</span>', read:'<span class="badge badge-blue">Read</span>', resolved:'<span class="badge badge-green">Resolved ✓</span>' };
+  el.innerHTML = list.map(f => `
+    <div style="border-bottom:1px solid #f5f0eb;padding:20px 24px;${f.status==='unread'?'background:#fffdf9;':''}" id="fb-item-${f.id}">
+      <div style="display:flex;align-items:flex-start;gap:12px;">
+        <div style="font-size:24px;flex-shrink:0">${typeIcon[f.type]||'💬'}</div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+            <span style="font-weight:800;font-size:15px">${f.title}</span>
+            ${statusBadge[f.status]||''}
+          </div>
+          <div style="font-size:12px;color:#888;margin-bottom:8px;">
+            ${f.company_name||'Unknown'} · ${f.type} · ${f.created_at?.slice(0,10)||'—'}
+          </div>
+          <div style="font-size:13px;color:#444;line-height:1.6;margin-bottom:12px;">${f.message}</div>
+          ${f.admin_reply ? `<div style="background:#faf6f1;border-left:3px solid #E8472A;padding:8px 12px;border-radius:0 6px 6px 0;font-size:12px;color:#555;margin-bottom:10px;"><strong>Your reply:</strong> ${f.admin_reply}</div>` : ''}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            ${f.status==='unread'?`<button class="btn btn-ghost btn-sm" onclick="markFeedback('${f.id}','read')">👁 Mark Read</button>`:''}
+            ${f.status!=='resolved'?`<button class="btn btn-success btn-sm" onclick="markFeedback('${f.id}','resolved')">✓ Resolve</button>`:''}
+            <button class="btn btn-ghost btn-sm" onclick="replyFeedback('${f.id}')">💬 Reply</button>
+          </div>
+          <div id="fb-reply-${f.id}" style="display:none;margin-top:10px;">
+            <textarea class="form-input" id="fb-reply-text-${f.id}" rows="2" placeholder="Type your reply..." style="resize:vertical;font-size:13px;"></textarea>
+            <div style="margin-top:6px;display:flex;gap:8px;">
+              <button class="btn btn-primary btn-sm" onclick="sendReply('${f.id}')">Send Reply</button>
+              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('fb-reply-${f.id}').style.display='none'">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function markFeedback(id, status) {
+  const res = await api('PUT', '/feedback/' + id, { status });
+  if (res && !res.error) { showToast('Updated ✓', 'success'); loadFeedback('all'); }
+  else showToast('Error', 'error');
+}
+
+function replyFeedback(id) {
+  const el = document.getElementById('fb-reply-' + id);
+  if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+
+async function sendReply(id) {
+  const text = document.getElementById('fb-reply-text-' + id)?.value?.trim();
+  if (!text) { showToast('Enter a reply first', 'error'); return; }
+  const res = await api('PUT', '/feedback/' + id, { admin_reply: text, status: 'resolved' });
+  if (res && !res.error) { showToast('Reply sent ✓', 'success'); loadFeedback('all'); }
+  else showToast('Error sending reply', 'error');
+}
+
+// ── Logout ──
 function logout() {
   localStorage.removeItem('ghaya_token');
   localStorage.removeItem('ghaya_user');
