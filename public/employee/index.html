@@ -534,43 +534,36 @@
   }
 
 async function loadClockStatus() {
-  const data = await apiFetch('/api/attendance/today');
-  const rec = data?.record || null;
-  const company = data?.company || {};
-  currentAttRecord = rec;
-  const inBtn = document.getElementById('clock-in-btn');
-  const outBtn = document.getElementById('clock-out-btn');
-  const label = document.getElementById('clock-status-label');
-  const info = document.getElementById('clock-info');
+    const data = await apiFetch('/api/attendance/today');
+    const rec = data?.record || null;
+    currentAttRecord = rec;
+    const inBtn = document.getElementById('clock-in-btn');
+    const outBtn = document.getElementById('clock-out-btn');
+    const label = document.getElementById('clock-status-label');
+    const info = document.getElementById('clock-info');
 
-  if (!rec || !rec.clock_in) {
-    label.textContent = 'NOT CLOCKED IN';
-    inBtn.style.display = '';
-    outBtn.style.display = 'none';
-    info.textContent = '';
-  } else if (rec.clock_in && !rec.clock_out) {
-    label.textContent = rec.status === 'late' ? 'CLOCKED IN — LATE ⚠️' : 'CLOCKED IN ✓';
-    inBtn.style.display = 'none';
-    outBtn.style.display = '';
-    info.textContent = `Since ${rec.clock_in.slice(0,5)}`;
-  } else {
-    // Clocked out — check if left early
-    let leftEarly = false;
-    const endTime = company.work_end_time; // e.g. "22:00:00"
-    if (endTime && rec.clock_out) {
-      const toMins = s => { const [h,m] = s.slice(0,5).split(':').map(Number); return h*60+m; };
-      leftEarly = toMins(rec.clock_out) < toMins(endTime);
+    if (!rec || !rec.clock_in) {
+      label.textContent = 'NOT CLOCKED IN';
+      inBtn.style.display = '';
+      outBtn.style.display = 'none';
+      info.textContent = '';
+    } else if (rec.clock_in && !rec.clock_out) {
+      label.textContent = rec.status === 'late' ? 'CLOCKED IN — LATE ⚠️' : 'CLOCKED IN ✓';
+      inBtn.style.display = 'none';
+      outBtn.style.display = '';
+      info.textContent = `Since ${rec.clock_in.slice(0,5)}`;
+    } else {
+      const wasLate = rec.status === 'late' || rec.status === 'late_left_early';
+      const leftEarly = rec.status === 'left_early' || rec.status === 'late_left_early' || rec.status === 'half_day';
+      if (wasLate && leftEarly)  label.textContent = 'CAME LATE + LEFT EARLY ⚠️';
+      else if (wasLate)          label.textContent = 'DONE — CAME LATE ⚠️';
+      else if (leftEarly)        label.textContent = 'LEFT EARLY ⚠️';
+      else                       label.textContent = 'CLOCKED OUT ✓';
+      inBtn.style.display = 'none';
+      outBtn.style.display = 'none';
+      info.textContent = `${rec.clock_in.slice(0,5)} → ${rec.clock_out.slice(0,5)}${rec.hours_worked != null ? ' · ' + rec.hours_worked + ' hrs' : ''}`;
     }
-    const wasLate = rec.status === 'late' || rec.status === 'late_left_early';
-    if (wasLate && leftEarly)     label.textContent = 'CAME LATE + LEFT EARLY ⚠️';
-    else if (wasLate)             label.textContent = 'DONE — CAME LATE ⚠️';
-    else if (leftEarly)           label.textContent = 'LEFT EARLY ⚠️';
-    else                          label.textContent = 'CLOCKED OUT ✓';
-    inBtn.style.display = 'none';
-    outBtn.style.display = 'none';
-    info.textContent = `${rec.clock_in.slice(0,5)} → ${rec.clock_out.slice(0,5)}${rec.hours_worked != null ? ' · ' + rec.hours_worked + ' hrs' : ''}`;
   }
-}
 
   async function getLocation() {
     return new Promise((resolve) => {
