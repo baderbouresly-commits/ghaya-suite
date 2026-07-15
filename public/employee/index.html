@@ -1,992 +1,254 @@
+
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+
+<html dir="ltr" lang="en">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Ghaya — Company Admin</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet"/>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Almarai',sans-serif;background:#FAF6F1;color:#1a1a2e;min-height:100vh}
-body.ar{direction:rtl}
-.sidebar{position:fixed;top:0;left:0;width:240px;height:100vh;background:#1a1a2e;color:#fff;display:flex;flex-direction:column;z-index:100}
-body.ar .sidebar{left:auto;right:0}
-.sidebar-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
-.logo-row{display:flex;align-items:center;gap:10px}
-.logo-circle{width:36px;height:36px;border-radius:50%;background:#E8472A;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff}
-.logo-text{font-size:20px;font-weight:800}
-.logo-sub{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:1px;margin-top:2px}
-.company-badge{margin-top:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:6px 10px;font-size:11px;color:rgba(255,255,255,.7);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nav{flex:1;padding:16px 0;overflow-y:auto}
-.nav-section{padding:8px 20px 4px;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1.5px;font-weight:700}
-.nav-item{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;transition:background .2s;color:rgba(255,255,255,.7);font-size:14px;border-left:3px solid transparent}
-body.ar .nav-item{border-left:none;border-right:3px solid transparent}
-.nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
-.nav-item.active{background:rgba(232,71,42,.15);color:#E8472A;border-left-color:#E8472A}
-body.ar .nav-item.active{border-left-color:transparent;border-right-color:#E8472A}
-.nav-icon{font-size:16px;width:20px;text-align:center}
-.nav-badge{margin-left:auto;background:#E8472A;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:800}
-body.ar .nav-badge{margin-left:0;margin-right:auto}
-.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.1)}
-.user-row{display:flex;align-items:center;gap:10px}
-.user-avatar{width:34px;height:34px;border-radius:50%;background:#E8472A;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
-.user-info{flex:1;min-width:0}
-.user-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.user-role{font-size:10px;color:rgba(255,255,255,.4)}
-.logout-btn{background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;padding:4px;transition:color .2s}
-.logout-btn:hover{color:#E8472A}
-.main{margin-left:240px;min-height:100vh}
-body.ar .main{margin-left:0;margin-right:240px}
-.topbar{background:#fff;border-bottom:1px solid #e8e0d8;padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
-.page-title{font-size:18px;font-weight:800;color:#1a1a2e}
-.topbar-right{display:flex;align-items:center;gap:12px}
-.lang-toggle{display:flex;border:1px solid #e8e0d8;border-radius:8px;overflow:hidden}
-.lang-btn{padding:6px 14px;font-size:12px;font-family:'Almarai',sans-serif;cursor:pointer;border:none;background:#fff;color:#666;font-weight:700;transition:all .2s}
-.lang-btn.active{background:#1a1a2e;color:#fff}
-.content{padding:32px}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
-.stat-card{background:#fff;border-radius:12px;padding:20px;border:1px solid #e8e0d8}
-.stat-icon{font-size:22px;margin-bottom:8px}
-.stat-label{font-size:11px;color:#888;font-weight:700;letter-spacing:.5px;margin-bottom:6px}
-.stat-value{font-size:30px;font-weight:800;color:#1a1a2e;line-height:1}
-.section-card{background:#fff;border-radius:12px;border:1px solid #e8e0d8;margin-bottom:24px;overflow:hidden}
-.section-header{padding:20px 24px;border-bottom:1px solid #f0ebe4;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-.section-title{font-size:15px;font-weight:800;color:#1a1a2e}
-.section-sub{font-size:12px;color:#888;margin-top:2px}
-.section-actions{display:flex;gap:8px;align-items:center}
-.btn{padding:9px 18px;border-radius:8px;font-family:'Almarai',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
-.btn-primary{background:#E8472A;color:#fff}
-.btn-primary:hover{background:#d03d22}
-.btn-ghost{background:#f5f0eb;color:#1a1a2e;border:1px solid #e8e0d8}
-.btn-ghost:hover{background:#e8e0d8}
-.btn-success{background:#1a7a42;color:#fff}
-.btn-success:hover{background:#156234}
-.btn-danger{background:#fff;color:#c42a00;border:1px solid #E8472A}
-.btn-danger:hover{background:#E8472A;color:#fff}
-.btn-purple{background:#5c35b8;color:#fff}
-.btn-purple:hover{background:#4a2a9a}
-.btn-sm{padding:6px 12px;font-size:12px}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse}
-th{padding:10px 20px;text-align:left;font-size:11px;font-weight:700;color:#888;letter-spacing:.5px;border-bottom:1px solid #f0ebe4;white-space:nowrap;background:#faf6f1}
-body.ar th{text-align:right}
-td{padding:13px 20px;font-size:13px;border-bottom:1px solid #f5f0eb;vertical-align:middle}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:#fdf9f6}
-.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
-.badge-green{background:#e6f7ee;color:#1a7a42}
-.badge-blue{background:#e6f0ff;color:#1a4da0}
-.badge-orange{background:#fff3e6;color:#c46a00}
-.badge-red{background:#ffeee6;color:#c42a00}
-.badge-gray{background:#f0ebe4;color:#666}
-.badge-purple{background:#f0ebff;color:#5c35b8}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
-.modal-overlay.open{opacity:1;pointer-events:all}
-.modal{background:#fff;border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
-.modal-header{padding:24px 24px 0;display:flex;align-items:center;justify-content:space-between}
-.modal-title{font-size:17px;font-weight:800}
-.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#888;padding:4px}
-.modal-body{padding:24px}
-.modal-footer{padding:0 24px 24px;display:flex;gap:10px;justify-content:flex-end}
-.form-row{margin-bottom:14px}
-.form-label{display:block;font-size:12px;font-weight:700;color:#555;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
-.form-input{width:100%;padding:10px 14px;border:1px solid #e8e0d8;border-radius:8px;font-family:'Almarai',sans-serif;font-size:14px;color:#1a1a2e;background:#faf6f1;transition:border .2s}
-.form-input:focus{outline:none;border-color:#E8472A;background:#fff}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-select.form-input{cursor:pointer}
-.empty{padding:48px 24px;text-align:center;color:#888}
-.empty-icon{font-size:40px;margin-bottom:10px}
-.empty-text{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
-.empty-sub{font-size:13px}
-.toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s}
-.toast.show{transform:translateY(0);opacity:1}
-.toast.success{background:#1a7a42}
-.toast.error{background:#c42a00}
-.loading{display:flex;align-items:center;justify-content:center;padding:48px;color:#888;font-size:14px;gap:8px}
-.spinner{width:20px;height:20px;border:2px solid #e8e0d8;border-top-color:#E8472A;border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.search-bar{padding:8px 14px;border:1px solid #e8e0d8;border-radius:8px;font-family:'Almarai',sans-serif;font-size:13px;width:200px;background:#faf6f1}
-.search-bar:focus{outline:none;border-color:#E8472A}
-.leave-card{border:1px solid #e8e0d8;border-radius:10px;padding:16px 20px;margin:12px 24px;display:flex;align-items:center;gap:16px;background:#fff}
-.leave-card:last-child{margin-bottom:24px}
-.leave-avatar{width:38px;height:38px;border-radius:50%;background:#E8472A;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;flex-shrink:0}
-.leave-info{flex:1}
-.leave-name{font-size:14px;font-weight:700}
-.leave-detail{font-size:12px;color:#888;margin-top:2px}
-.leave-actions{display:flex;gap:8px}
-.filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.filter-btn{padding:5px 12px;border-radius:20px;font-family:'Almarai',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #e8e0d8;background:#fff;color:#888;transition:all .2s}
-.filter-btn.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
-.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px}
-.settings-col-title{font-size:13px;font-weight:800;color:#1a1a2e;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #E8472A}
-.tag-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
-.tag-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#faf6f1;border:1px solid #e8e0d8;border-radius:8px;font-size:13px}
-.tag-item-name{font-weight:700;color:#1a1a2e}
-.tag-item-ar{font-size:11px;color:#888;margin-top:2px}
-.tag-delete{background:none;border:none;color:#ccc;cursor:pointer;font-size:16px;padding:2px 6px;transition:color .2s}
-.tag-delete:hover{color:#E8472A}
-.add-tag-row{display:flex;gap:8px}
-.add-tag-input{flex:1;padding:8px 12px;border:1px solid #e8e0d8;border-radius:8px;font-family:'Almarai',sans-serif;font-size:13px;background:#fff}
-.add-tag-input:focus{outline:none;border-color:#E8472A}
-.toggle-wrap{position:relative;display:inline-flex;align-items:center;cursor:pointer}
-.toggle-wrap input{opacity:0;width:0;height:0;position:absolute}
-.toggle-slider{width:38px;height:22px;background:#ccc;border-radius:11px;transition:.3s;position:relative;display:block}
-.toggle-slider::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:.3s}
-.toggle-wrap input:checked+.toggle-slider{background:#1a7a42}
-.toggle-wrap input:checked+.toggle-slider::after{left:19px}
-.info-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#e8e0d8;color:#555;font-size:11px;font-weight:800;cursor:help}
-.doc-card{border:1px solid #e8e0d8;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:10px;background:#fff}
-.doc-card:hover{background:#fdf9f6}
-@media(max-width:768px){.sidebar{display:none}.main{margin-left:0!important;margin-right:0!important}.stats-grid{grid-template-columns:1fr 1fr}.content{padding:16px}.form-grid{grid-template-columns:1fr}.settings-grid{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
-<div class="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-row">
-      <div class="logo-circle">غ</div>
-      <div>
-        <div class="logo-text">Ghaya <span style="font-size:13px;opacity:.6">غاية</span></div>
-        <div class="logo-sub">YOUR TRUSTED HR SUPPORT</div>
-      </div>
-    </div>
-    <div class="company-badge" id="company-name">Loading...</div>
-  </div>
-  <nav class="nav">
-    <div class="nav-section">OVERVIEW</div>
-    <div class="nav-item" onclick="showPage('dashboard')" id="nav-dashboard">
-      <span class="nav-icon">📊</span><span data-en="Dashboard" data-ar="لوحة التحكم">Dashboard</span>
-    </div>
-    <div class="nav-section" style="margin-top:8px">HR MANAGEMENT</div>
-    <div class="nav-item" onclick="showPage('employees')" id="nav-employees">
-      <span class="nav-icon">👥</span><span data-en="Employees" data-ar="الموظفون">Employees</span>
-    </div>
-    <div class="nav-item" onclick="showPage('leaves')" id="nav-leaves">
-      <span class="nav-icon">🌴</span><span data-en="Leave Requests" data-ar="طلبات الإجازة">Leave Requests</span>
-      <span class="nav-badge" id="leave-badge" style="display:none">0</span>
-    </div>
-    <div class="nav-item" onclick="showPage('permissions')" id="nav-permissions">
-      <span class="nav-icon">🕐</span><span data-en="Permission Hours" data-ar="ساعات الاستئذان">Permission Hours</span>
-      <span class="nav-badge" id="perm-badge" style="display:none">0</span>
-    </div>
-    <div class="nav-item" onclick="showPage('payroll')" id="nav-payroll">
-      <span class="nav-icon">💰</span><span data-en="Payroll" data-ar="الرواتب">Payroll</span>
-    </div>
-    <div class="nav-item" onclick="showPage('documents')" id="nav-documents">
-      <span class="nav-icon">📁</span><span data-en="Documents" data-ar="الوثائق">Documents</span>
-    </div>
-    <div class="nav-section" style="margin-top:8px">SETTINGS</div>
-    <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
-      <span class="nav-icon">⚙️</span><span data-en="Settings" data-ar="الإعدادات">Settings</span>
-    </div>
-  </nav>
-  <div class="sidebar-footer">
-    <div class="user-row">
-      <div class="user-avatar" id="user-avatar">A</div>
-      <div class="user-info">
-        <div class="user-name" id="user-name">Loading...</div>
-        <div class="user-role" data-en="Company Admin" data-ar="مدير الشركة">Company Admin</div>
-      </div>
-      <button class="logout-btn" onclick="logout()" title="Logout">↩</button>
-    </div>
-  </div>
-</div>
-<div class="main">
-  <div class="topbar">
-    <div class="page-title" id="page-title">Dashboard</div>
-    <div class="topbar-right">
-      <div class="lang-toggle">
-        <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
-        <button class="lang-btn" id="btn-ar" onclick="setLang('ar')">ع</button>
-      </div>
-    </div>
-  </div>
-  <div class="content">
-    <!-- DASHBOARD -->
-    <div id="page-dashboard" style="display:none">
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">Total Employees</div><div class="stat-value" id="s-total">—</div></div>
-        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">Active</div><div class="stat-value" id="s-active">—</div></div>
-        <div class="stat-card"><div class="stat-icon">🌴</div><div class="stat-label">Pending Leaves</div><div class="stat-value" id="s-leaves">—</div></div>
-        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">Monthly Payroll (KWD)</div><div class="stat-value" id="s-payroll">—</div></div>
-      </div>
-      <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Recent Employees</div></div>
-          <button class="btn btn-primary btn-sm" onclick="showPage('employees')">View All →</button>
-        </div>
-        <div id="dash-employees"><div class="loading"><div class="spinner"></div></div></div>
-      </div>
-      <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Pending Leave Requests</div></div>
-          <button class="btn btn-ghost btn-sm" onclick="showPage('leaves')">View All</button>
-        </div>
-        <div id="dash-leaves"><div class="loading"><div class="spinner"></div></div></div>
-      </div>
-    </div>
-    <!-- EMPLOYEES -->
-    <div id="page-employees" style="display:none">
-      <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">All Employees</div><div class="section-sub" id="emp-count">—</div></div>
-          <div class="section-actions">
-            <input class="search-bar" id="emp-search" placeholder="Search..." oninput="filterEmployees()"/>
-            <button class="btn btn-primary" onclick="openAddEmployee()">+ Add Employee</button>
-          </div>
-        </div>
-        <div id="employees-list"><div class="loading"><div class="spinner"></div></div></div>
-      </div>
-    </div>
-    <!-- LEAVES -->
-    <div id="page-leaves" style="display:none">
-      <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Leave Requests</div></div>
-          <div class="filter-row">
-            <button class="filter-btn active" onclick="filterLeaves('pending',this)">Pending</button>
-            <button class="filter-btn" onclick="filterLeaves('approved',this)">Approved</button>
-            <button class="filter-btn" onclick="filterLeaves('rejected',this)">Rejected</button>
-            <button class="filter-btn" onclick="filterLeaves('all',this)">All</button>
-          </div>
-        </div>
-        <div id="leaves-list"><div class="loading"><div class="spinner"></div></div></div>
-      </div>
-      <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Leave Balances</div><div class="section-sub">Accrued annual leave per employee (pro-rata)</div></div>
-          <button class="btn btn-ghost btn-sm" onclick="loadLeaveBalances()">↻ Refresh</button>
-        </div>
-        <div id="leave-balances-list"><div class="loading"><div class="spinner"></div></div></div>
-      </div>
-    </div>
-    <!-- PERMISSIONS -->
-    <div id="page-permissions" style="display:none">
-      <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Permission Hours (استئذان)</div><div class="section-sub">Employee hourly time-off requests</div></div>
-          <div class="filter-row">
-            <button class="filter-btn active" onclick="filterPerms('pending',this)">Pending</button>
-            <button class="filter-btn" onclick="filterPerms('approved',this)">Approved</button>
-            <button class="filter-btn" onclick="filterPerms('rejected',this)">Rejected</button>
-            <button class="filter-btn" onclick="filterPerms('all',this)">All</button>
-          </div>
-        </div>
-        <div id="perms-list"><div class="loading"><div class="spinner"></div></div></div>
-      </div>
-      <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Monthly Usage by Employee</div><div class="section-sub" id="perm-month-label">This month</div></div>
-          <button class="btn btn-ghost btn-sm" onclick="loadPermUsage()">↻ Refresh</button>
-        </div>
-        <div id="perm-usage-list"><div class="loading"><div class="spinner"></div></div></div>
-      </div>
-    </div>
-    <!-- PAYROLL -->
-    <div id="page-payroll" style="display:none">
-      <div id="payroll-runs-view">
-        <div class="section-card" style="margin-bottom:24px;">
-          <div class="section-header">
-            <div><div class="section-title">Run Payroll</div><div class="section-sub">Calculates salaries + PIFSS for all active employees</div></div>
-            <div style="display:flex;gap:10px;align-items:center;">
-              <select class="search-bar" id="payroll-month" style="width:130px;">
-                <option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option>
-              </select>
-              <select class="search-bar" id="payroll-year" style="width:90px;"></select>
-              <div style="display:flex;align-items:center;gap:6px;padding:0 10px;border-left:1px solid #e8e0d8;">
-                <span style="font-size:12px;font-weight:700;color:#555;">PIFSS</span>
-                <label class="toggle-wrap"><input type="checkbox" id="pifss-toggle" checked><span class="toggle-slider"></span></label>
-                <span class="info-icon" data-tip="Kuwaiti nationals: 8% deducted from salary + 11% employer cost. Non-Kuwaitis: exempt.">ℹ</span>
-              </div>
-              <button class="btn btn-primary" onclick="runPayroll()">▶ Run Payroll</button>
-            </div>
-          </div>
-        </div>
-        <div class="section-card">
-          <div class="section-header"><div class="section-title">Payroll History</div></div>
-          <div id="payroll-list"><div class="loading"><div class="spinner"></div></div></div>
-        </div>
-      </div>
-      <div id="payroll-detail-view" style="display:none">
-        <div style="margin-bottom:20px;"><button class="btn btn-ghost btn-sm" onclick="showPayrollList()">← Back to History</button></div>
-        <div id="payroll-detail-summary" style="margin-bottom:24px;"></div>
-        <div class="section-card">
-          <div class="section-header">
-            <div class="section-title" id="payroll-detail-title">Payroll Breakdown</div>
-            <div id="payroll-detail-actions" style="display:flex;gap:8px;"></div>
-          </div>
-          <div id="payroll-detail-list"><div class="loading"><div class="spinner"></div></div></div>
-        </div>
-      </div>
-    </div>
-    <!-- DOCUMENTS -->
-    <div id="page-documents" style="display:none">
-      <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">Employee Documents</div><div class="section-sub">Contracts, IDs, visas, and other employee files</div></div>
-          <div class="section-actions">
-            <select class="search-bar" id="doc-emp-filter" style="width:200px;" onchange="loadDocuments()">
-              <option value="">All Employees</option>
-            </select>
-            <button class="btn btn-primary" onclick="openUploadDoc()">+ Upload Document</button>
-          </div>
-        </div>
-        <div id="docs-list" style="padding:16px 24px;"><div class="loading"><div class="spinner"></div></div></div>
-      </div>
-    </div>
-    <!-- SETTINGS -->
-    <div id="page-settings" style="display:none">
-      <div class="section-card" style="margin-bottom:24px;">
-        <div class="section-header"><div class="section-title">Permission Hours Limit</div><div class="section-sub">Monthly استئذان allowance per employee</div></div>
-        <div style="padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-          <div>
-            <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px;">HOURS PER MONTH</div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <input class="form-input" id="perm-hours-limit" type="number" min="0" max="40" step="0.5" style="width:100px;" placeholder="4"/>
-              <button class="btn btn-primary" onclick="savePermLimit()">Save</button>
-            </div>
-            <div style="font-size:11px;color:#888;margin-top:6px;">Kuwait Labour Law has no fixed limit — this is your company policy. Default: 4 hrs/month.</div>
-          </div>
-        </div>
-      </div>
-      <div class="section-card">
-        <div class="section-header"><div class="section-title">Departments &amp; Job Titles</div><div class="section-sub">Manage your company structure</div></div>
-        <div class="settings-grid">
-          <div>
-            <div class="settings-col-title">🏢 Departments</div>
-            <div class="tag-list" id="dept-list"><div class="loading"><div class="spinner"></div></div></div>
-            <div class="add-tag-row">
-              <input class="add-tag-input" id="new-dept-en" placeholder="Name (EN)"/>
-              <input class="add-tag-input" id="new-dept-ar" placeholder="الاسم (AR)" dir="rtl"/>
-              <button class="btn btn-primary btn-sm" onclick="addDept()">+ Add</button>
-            </div>
-          </div>
-          <div>
-            <div class="settings-col-title">💼 Job Titles</div>
-            <div class="tag-list" id="jt-list"><div class="loading"><div class="spinner"></div></div></div>
-            <div class="add-tag-row">
-              <input class="add-tag-input" id="new-jt-en" placeholder="Title (EN)"/>
-              <input class="add-tag-input" id="new-jt-ar" placeholder="المسمى (AR)" dir="rtl"/>
-              <button class="btn btn-primary btn-sm" onclick="addJobTitle()">+ Add</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- MODAL: Add/Edit Employee -->
-<div class="modal-overlay" id="modal-employee">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-emp-title">Add Employee</div>
-      <button class="modal-close" onclick="closeModal('modal-employee')">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="emp-id"/>
-      <div class="form-grid">
-        <div class="form-row"><label class="form-label">First Name (EN)</label><input class="form-input" id="emp-first-en" placeholder="Ahmed"/></div>
-        <div class="form-row"><label class="form-label">Last Name (EN)</label><input class="form-input" id="emp-last-en" placeholder="Al-Rashidi"/></div>
-      </div>
-      <div class="form-grid">
-        <div class="form-row"><label class="form-label">First Name (AR)</label><input class="form-input" id="emp-first-ar" placeholder="أحمد"/></div>
-        <div class="form-row"><label class="form-label">Last Name (AR)</label><input class="form-input" id="emp-last-ar" placeholder="الراشدي"/></div>
-      </div>
-      <div class="form-grid">
-        <div class="form-row"><label class="form-label">Civil ID</label><input class="form-input" id="emp-civil-id" placeholder="28012345678"/></div>
-        <div class="form-row"><label class="form-label">Nationality</label>
-          <select class="form-input" id="emp-nationality">
-            <option value="Kuwaiti">Kuwaiti</option><option value="Saudi">Saudi</option><option value="Egyptian">Egyptian</option><option value="Indian">Indian</option><option value="Pakistani">Pakistani</option><option value="Bangladeshi">Bangladeshi</option><option value="Filipino">Filipino</option><option value="Sri Lankan">Sri Lankan</option><option value="Nepalese">Nepalese</option><option value="Other">Other</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-grid">
-        <div class="form-row"><label class="form-label">Department</label>
-          <select class="form-input" id="emp-dept-id"><option value="">— Select —</option></select>
-        </div>
-        <div class="form-row"><label class="form-label">Job Title</label>
-          <select class="form-input" id="emp-job-title-id"><option value="">— Select —</option></select>
-        </div>
-      </div>
-      <div class="form-grid">
-        <div class="form-row"><label class="form-label">Basic Salary (KWD)</label><input class="form-input" id="emp-salary" type="number" step="0.001" placeholder="350.000"/></div>
-        <div class="form-row"><label class="form-label">Hire Date</label><input class="form-input" id="emp-start" type="date"/></div>
-      </div>
-      <div class="form-grid">
-        <div class="form-row"><label class="form-label">Work Email</label><input class="form-input" id="emp-email" type="email" placeholder="ahmed@company.com"/></div>
-        <div class="form-row"><label class="form-label">Phone</label><input class="form-input" id="emp-phone" placeholder="+965 9999 9999"/></div>
-      </div>
-      <div class="form-row"><label class="form-label">Contract Type</label>
-        <select class="form-input" id="emp-contract">
-          <option value="full_time">Full Time</option><option value="part_time">Part Time</option><option value="contract">Contract</option>
-        </select>
-      </div>
-      <div class="form-row"><label class="form-label">Login Password</label><input class="form-input" id="emp-password" type="password" placeholder="Employee portal login password"/></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-employee')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveEmployee()" id="save-emp-btn">Add Employee</button>
-    </div>
-  </div>
-</div>
-<!-- MODAL: End of Service Calculator -->
-<div class="modal-overlay" id="modal-eos">
-  <div class="modal" style="max-width:600px">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title" id="eos-emp-name">End of Service Indemnity</div>
-        <div style="font-size:11px;color:#888;margin-top:3px;">مكافأة نهاية الخدمة · Kuwait Labour Law Art. 51</div>
-      </div>
-      <button class="modal-close" onclick="closeModal('modal-eos')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div style="display:flex;gap:8px;margin-bottom:20px;background:#faf6f1;padding:6px;border-radius:10px;">
-        <button class="btn btn-primary" id="eos-btn-termination" style="flex:1;justify-content:center;" onclick="loadEOS(currentEOSId,'termination')">🔴 Terminated by Employer</button>
-        <button class="btn btn-ghost" id="eos-btn-resignation" style="flex:1;justify-content:center;" onclick="loadEOS(currentEOSId,'resignation')">📝 Resignation</button>
-      </div>
-      <div id="eos-content"><div class="loading"><div class="spinner"></div></div></div>
-    </div>
-  </div>
-</div>
-<!-- MODAL: Upload Document -->
-<div class="modal-overlay" id="modal-upload-doc">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Upload Document</div>
-      <button class="modal-close" onclick="closeModal('modal-upload-doc')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <label class="form-label">Employee</label>
-        <select class="form-input" id="upload-doc-emp"><option value="">— Select Employee —</option></select>
-      </div>
-      <div class="form-row">
-        <label class="form-label">Document Type</label>
-        <select class="form-input" id="upload-doc-type">
-          <option value="Civil ID">🪪 Civil ID</option>
-          <option value="Passport">📘 Passport</option>
-          <option value="Visa">✈️ Visa</option>
-          <option value="Contract">📝 Contract</option>
-          <option value="Offer Letter">💼 Offer Letter</option>
-          <option value="Warning Letter">⚠️ Warning Letter</option>
-          <option value="Salary Certificate">💰 Salary Certificate</option>
-          <option value="Medical">🏥 Medical</option>
-          <option value="Other">📄 Other</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label class="form-label">File (max 10MB — PDF, JPG, PNG, DOC, DOCX)</label>
-        <input class="form-input" id="upload-doc-file" type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="padding:8px;"/>
-      </div>
-      <div class="form-row">
-        <label class="form-label">Expiry Date (optional)</label>
-        <input class="form-input" id="upload-doc-expiry" type="date"/>
-      </div>
-      <div class="form-row">
-        <label class="form-label">Notes (optional)</label>
-        <input class="form-input" id="upload-doc-notes" placeholder="Any notes about this document"/>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-upload-doc')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveDocument()">Upload</button>
-    </div>
-  </div>
-</div>
-<div class="toast" id="toast"></div>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light dark">
+<meta name="google" value="notranslate">
+
 <script>
-const API='/api';
-let token=localStorage.getItem('ghaya_token');
-let currentUser=null,currentLang=localStorage.getItem('ghaya_lang')||'en';
-let employeesData=[],leavesData=[],currentLeaveFilter='pending',editingEmpId=null;
-let deptsData=[],jobTitlesData=[];
-let currentEOSId=null;
-if(!token){window.location.href='/';}
-async function apicall(method,path,body){
-  try{
-    const res=await fetch(API+path,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:body?JSON.stringify(body):undefined});
-    if(res.status===401){logout();return null;}
-    return await res.json();
-  }catch(e){return null;}
-}
-async function init(){
-  try{
-    const me=await apicall('GET','/auth/me');
-    if(!me||me.error){logout();return;}
-    if(!['company_admin','manager'].includes(me.user.role)){logout();return;}
-    currentUser=me.user;
-    document.getElementById('user-name').textContent=me.user.name||me.user.email;
-    document.getElementById('user-avatar').textContent=(me.user.name||me.user.email)[0].toUpperCase();
-    if(me.user.company_id){
-      const co=await apicall('GET','/companies/'+me.user.company_id);
-      if(co&&co.company)document.getElementById('company-name').textContent=currentLang==='ar'?(co.company.name_ar||co.company.name_en):co.company.name_en;
-    }
-  }catch(e){logout();return;}
-  await loadDeptsAndTitles();
-  setLang(currentLang,false);
-}
-async function loadDeptsAndTitles(){
-  const[d,j]=await Promise.all([apicall('GET','/departments'),apicall('GET','/job-titles')]);
-  deptsData=d?.departments||[];
-  jobTitlesData=j?.job_titles||[];
-}
-function showPage(page){
-  localStorage.setItem('ghaya_page',page);
-  ['dashboard','employees','leaves','permissions','payroll','documents','settings'].forEach(p=>{
-    document.getElementById('page-'+p).style.display=p===page?'':'none';
-    const nav=document.getElementById('nav-'+p);
-    if(nav)nav.classList.toggle('active',p===page);
-  });
-  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},payroll:{en:'Payroll',ar:'الرواتب'},documents:{en:'Documents',ar:'الوثائق'},settings:{en:'Settings',ar:'الإعدادات'}};
-  document.getElementById('page-title').textContent=titles[page]?.[currentLang]||titles[page]?.en;
-  if(page==='dashboard')loadDashboard();
-  if(page==='employees')loadEmployees();
-  if(page==='leaves'){loadLeaves();loadLeaveBalances();}
-  if(page==='permissions'){loadPerms();loadPermUsage();}
-  if(page==='payroll')loadPayroll();
-  if(page==='documents')loadDocuments();
-  if(page==='settings'){renderSettings();loadPermSettings();}
-}
-async function loadDashboard(){
-  const[emps,leaves]=await Promise.all([apicall('GET','/employees'),apicall('GET','/leaves?status=pending')]);
-  const employees=emps?.employees||[];
-  const pendingLeaves=leaves?.requests||[];
-  const active=employees.filter(e=>e.status==='active');
-  const totalSalary=active.reduce((s,e)=>s+(parseFloat(e.basic_salary)||0),0);
-  document.getElementById('s-total').textContent=employees.length;
-  document.getElementById('s-active').textContent=active.length;
-  document.getElementById('s-leaves').textContent=pendingLeaves.length;
-  document.getElementById('s-payroll').textContent=totalSalary.toFixed(3);
-  if(pendingLeaves.length>0){document.getElementById('leave-badge').style.display='';document.getElementById('leave-badge').textContent=pendingLeaves.length;}
-  renderDashEmployees(employees.slice(0,5));
-  renderDashLeaves(pendingLeaves.slice(0,3));
-}
-function getDeptName(id){return deptsData.find(d=>d.id===id)?.name_en||id||'—';}
-function getJobTitle(id){return jobTitlesData.find(j=>j.id===id)?.title_en||id||'—';}
-function renderDashEmployees(list){
-  const el=document.getElementById('dash-employees');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees yet</div></div>';return;}
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Title</th><th>Department</th><th>Salary (KWD)</th><th>Status</th></tr></thead><tbody>${list.map(e=>`<tr><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.nationality||''}</div></td><td>${getJobTitle(e.job_title_en)}</td><td>${getDeptName(e.department)}</td><td style="font-weight:700">${parseFloat(e.basic_salary||0).toFixed(3)}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td></tr>`).join('')}</tbody></table></div>`;
-}
-function renderDashLeaves(list){
-  const el=document.getElementById('dash-leaves');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">No pending leave requests</div></div>';return;}
-  el.innerHTML=list.map(l=>`<div class="leave-card"><div class="leave-avatar">${(l.employee_name||'?')[0]}</div><div class="leave-info"><div class="leave-name">${l.employee_name||'—'}</div><div class="leave-detail">${l.type_name||'Annual'} · ${l.start_date} → ${l.end_date} · ${l.days_count||'?'} days</div></div><div class="leave-actions"><button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕</button></div></div>`).join('');
-}
-async function loadEmployees(){
-  document.getElementById('employees-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET','/employees');
-  employeesData=data?.employees||[];
-  document.getElementById('emp-count').textContent=`${employeesData.length} employees`;
-  renderEmployeesTable(employeesData);
-}
-function filterEmployees(){
-  const q=document.getElementById('emp-search').value.toLowerCase();
-  renderEmployeesTable(employeesData.filter(e=>`${e.first_name_en} ${e.last_name_en} ${getDeptName(e.department)} ${getJobTitle(e.job_title_en)}`.toLowerCase().includes(q)));
-}
-function renderEmployeesTable(list){
-  const el=document.getElementById('employees-list');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees found</div><div class="empty-sub">Add your first employee using the button above</div></div>';return;}
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Title / Dept</th><th>Nationality</th><th>Basic Salary</th><th>Hire Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((e,i)=>`<tr><td style="color:#888;font-size:12px">${i+1}</td><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></td><td><div>${getJobTitle(e.job_title_en)}</div><div style="font-size:11px;color:#888">${getDeptName(e.department)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="font-size:12px;color:#888">${e.hire_date||'—'}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button><button class="btn btn-purple btn-sm" onclick="viewEOS('${e.id}')">EOS</button></td></tr>`).join('')}</tbody></table></div>`;
-}
-/* ── EOS Calculator ── */
-function viewEOS(id){
-  currentEOSId=id;
-  document.getElementById('modal-eos').classList.add('open');
-  loadEOS(id,'termination');
-}
-async function loadEOS(id,type){
-  document.getElementById('eos-btn-termination').className='btn '+(type==='termination'?'btn-primary':'btn-ghost');
-  document.getElementById('eos-btn-termination').style.cssText='flex:1;justify-content:center;';
-  document.getElementById('eos-btn-resignation').className='btn '+(type==='resignation'?'btn-primary':'btn-ghost');
-  document.getElementById('eos-btn-resignation').style.cssText='flex:1;justify-content:center;';
-  document.getElementById('eos-content').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET',`/eos?employee_id=${id}&type=${type}`);
-  if(!data||data.error){
-    document.getElementById('eos-content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">${data?.error||'Error loading EOS'}</div><div class="empty-sub">Make sure this employee has a hire date set</div></div>`;
+function addRow(name, url, isdir,
+    size, size_string, date_modified, date_modified_string) {
+  if (name == "." || name == "..")
     return;
+
+  var root = document.location.pathname;
+  if (root.substr(-1) !== "/")
+    root += "/";
+
+  var tbody = document.getElementById("tbody");
+  var row = document.createElement("tr");
+  var file_cell = document.createElement("td");
+  var link = document.createElement("a");
+
+  link.className = isdir ? "icon dir" : "icon file";
+
+  if (isdir) {
+    name = name + "/";
+    url = url + "/";
+    size = 0;
+    size_string = "";
+  } else {
+    link.draggable = "true";
+    link.addEventListener("dragstart", onDragStart, false);
   }
-  document.getElementById('eos-emp-name').textContent=`EOS — ${data.employee.name}`;
-  const kwd=n=>`KWD ${parseFloat(n).toFixed(3)}`;
-  const accentColor=data.final_indemnity>0?'#1a7a42':'#c46a00';
-  const bgColor=data.final_indemnity>0?'#e6f7ee':'#fff3e6';
-  document.getElementById('eos-content').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;">
-      <div class="stat-card" style="padding:14px;"><div class="stat-label">Hire Date</div><div style="font-size:15px;font-weight:800;margin-top:4px;">${data.employee.hire_date}</div></div>
-      <div class="stat-card" style="padding:14px;"><div class="stat-label">Years of Service</div><div style="font-size:20px;font-weight:800;margin-top:4px;">${data.years_of_service} yrs</div></div>
-      <div class="stat-card" style="padding:14px;"><div class="stat-label">Daily Wage</div><div style="font-size:15px;font-weight:800;margin-top:4px;">${kwd(data.daily_wage)}</div></div>
-    </div>
-    <div class="section-card" style="margin-bottom:14px;">
-      <div style="padding:16px 20px;">
-        <div style="font-size:13px;font-weight:800;margin-bottom:12px;color:#1a1a2e;">Indemnity Breakdown</div>
-        <table width="100%" style="border-collapse:collapse;font-size:13px;">
-          <tr><td style="padding:8px 0;color:#555;">First 5 years &nbsp;<span style="color:#888;font-size:11px;">(${Math.min(data.years_of_service,5).toFixed(2)} yrs × 15 days × ${kwd(data.daily_wage)}/day)</span></td><td style="text-align:right;font-weight:700;">${kwd(data.first_5_years_amount)}</td></tr>
-          ${data.beyond_5_years>0?`<tr><td style="padding:8px 0;color:#555;">Beyond 5 years &nbsp;<span style="color:#888;font-size:11px;">(${data.beyond_5_years.toFixed(2)} yrs × 30 days × ${kwd(data.daily_wage)}/day)</span></td><td style="text-align:right;font-weight:700;">${kwd(data.beyond_5_years_amount)}</td></tr>`:''}
-          <tr style="border-top:2px solid #e8e0d8;"><td style="padding:12px 0 6px;font-weight:800;">Full Indemnity (before factor)</td><td style="text-align:right;font-weight:800;font-size:15px;">${kwd(data.full_indemnity)}</td></tr>
-          <tr><td style="padding:4px 0;font-size:12px;color:#888;">${data.factor_reason}</td><td style="text-align:right;font-size:12px;color:#888;">× ${data.factor===(2/3)?'2/3 (66.7%)':data.factor*100+'%'}</td></tr>
-        </table>
-      </div>
-    </div>
-    <div style="background:${bgColor};border-radius:12px;padding:22px;text-align:center;">
-      <div style="font-size:11px;font-weight:700;color:#888;letter-spacing:1px;margin-bottom:8px;">TOTAL END OF SERVICE INDEMNITY</div>
-      <div style="font-size:36px;font-weight:800;color:${accentColor};">${kwd(data.final_indemnity)}</div>
-      <div style="font-size:12px;color:#888;margin-top:6px;">Based on basic salary of ${kwd(data.employee.basic_salary)}/month · as of today</div>
-    </div>`;
+  link.innerText = name;
+  link.href = root + url;
+
+  file_cell.dataset.value = name;
+  file_cell.appendChild(link);
+
+  row.appendChild(file_cell);
+  row.appendChild(createCell(size, size_string));
+  row.appendChild(createCell(date_modified, date_modified_string));
+
+  tbody.appendChild(row);
 }
-async function loadLeaves(){
-  document.getElementById('leaves-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET','/leaves?status='+currentLeaveFilter);
-  leavesData=data?.requests||[];
-  renderLeavesList(leavesData);
+
+function onDragStart(e) {
+  var el = e.srcElement;
+  var name = el.innerText.replace(":", "");
+  var download_url_data = "application/octet-stream:" + name + ":" + el.href;
+  e.dataTransfer.setData("DownloadURL", download_url_data);
+  e.dataTransfer.effectAllowed = "copy";
 }
-function filterLeaves(status,btn){currentLeaveFilter=status;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');loadLeaves();}
-function renderLeavesList(list){
-  const el=document.getElementById('leaves-list');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div>';return;}
-  const statusBadge={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>'};
-  el.innerHTML=list.map(l=>`<div class="leave-card"><div class="leave-avatar">${(l.employee_name||'?')[0]}</div><div class="leave-info"><div class="leave-name">${l.employee_name||'—'} ${statusBadge[l.status]||''}</div><div class="leave-detail">${l.leave_type||l.type_name||'Annual'} · ${l.start_date} → ${l.end_date} · ${l.days_count||l.days_requested||'?'} days${l.reason?' · '+l.reason:''}</div></div>${l.status==='pending'?`<div class="leave-actions"><button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕ Reject</button></div>`:''}</div>`).join('');
+
+function createCell(value, text) {
+  var cell = document.createElement("td");
+  cell.setAttribute("class", "detailsColumn");
+  cell.dataset.value = value;
+  cell.innerText = text;
+  return cell;
 }
-async function loadLeaveBalances(){
-  const el=document.getElementById('leave-balances-list');
-  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const[empsData,allLeavesData]=await Promise.all([apicall('GET','/employees'),apicall('GET','/leaves')]);
-  const employees=empsData?.employees||[];
-  const allLeaves=allLeavesData?.requests||[];
-  const year=new Date().getFullYear().toString();
-  if(!employees.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌴</div><div class="empty-text">No employees yet</div></div>';return;}
-  function calcBal(hireDate){
-    if(!hireDate)return null;
-    const now=new Date(),hire=new Date(hireDate);
-    if(isNaN(hire))return null;
-    const yearStart=new Date(now.getFullYear(),0,1);
-    const msPerYear=1000*60*60*24*365.25;
-    const yearsOfService=(now-hire)/msPerYear;
-    const entitlement=yearsOfService>=5?35:30;
-    const accrualStart=hire>yearStart?hire:yearStart;
-    const daysAccruing=Math.max(0,(now-accrualStart)/(1000*60*60*24));
-    const isLeap=new Date(now.getFullYear(),1,29).getDate()===29;
-    const accrued=(daysAccruing/(isLeap?366:365))*entitlement;
-    return{yearsOfService:Math.round(yearsOfService*10)/10,entitlement,accrued:Math.round(accrued*10)/10};
+
+function start(location) {
+  var header = document.getElementById("header");
+  header.innerText = header.innerText.replace("LOCATION", location);
+
+  document.getElementById("title").innerText = header.innerText;
+}
+
+function onHasParentDirectory() {
+  var box = document.getElementById("parentDirLinkBox");
+  box.style.display = "block";
+
+  var root = document.location.pathname;
+  if (!root.endsWith("/"))
+    root += "/";
+
+  var link = document.getElementById("parentDirLink");
+  link.href = root + "..";
+}
+
+function sortTable(column) {
+  var theader = document.getElementById("theader");
+  var oldOrder = theader.cells[column].dataset.order || '1';
+  oldOrder = parseInt(oldOrder, 10)
+  var newOrder = 0 - oldOrder;
+  theader.cells[column].dataset.order = newOrder;
+
+  var tbody = document.getElementById("tbody");
+  var rows = tbody.rows;
+  var list = [], i;
+  for (i = 0; i < rows.length; i++) {
+    list.push(rows[i]);
   }
-  const rows=employees.map(emp=>{
-    const empLeaves=allLeaves.filter(l=>l.employee_id===emp.id&&l.status==='approved'&&(l.start_date||'').startsWith(year)&&(l.leave_type==='annual'||!l.leave_type));
-    const taken=empLeaves.reduce((s,l)=>s+(parseFloat(l.days_count||l.days_requested)||0),0);
-    const bal=calcBal(emp.hire_date);
-    const remaining=bal?Math.max(0,Math.round((bal.accrued-taken)*10)/10):'—';
-    const remainingColor=bal&&remaining<5?'#c42a00':bal&&remaining<10?'#c46a00':'#1a7a42';
-    return`<tr><td><div style="font-weight:700">${emp.first_name_en} ${emp.last_name_en}</div><div style="font-size:11px;color:#888">${getDeptName(emp.department)}</div></td><td style="font-size:12px;color:#888">${bal?bal.yearsOfService+' yrs':'No hire date'}</td><td><span class="badge badge-blue">${bal?bal.entitlement+' days':'—'}</span></td><td style="font-weight:700;color:#E8472A">${bal?bal.accrued:'—'}</td><td>${taken||0}</td><td style="font-weight:800;color:${remainingColor}">${remaining}</td></tr>`;
-  }).join('');
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Service</th><th>Entitlement</th><th>Accrued</th><th>Taken</th><th>Remaining</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-}
-async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'approve'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none'){loadLeaves();loadLeaveBalances();}}else showToast(res?.error||'Error','error');}
-async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'reject'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none'){loadLeaves();loadLeaveBalances();}}else showToast(res?.error||'Error','error');}
-const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
-async function loadPayroll(){
-  const now=new Date();
-  const yearSel=document.getElementById('payroll-year');
-  yearSel.innerHTML='';
-  for(let y=now.getFullYear();y>=now.getFullYear()-3;y--){yearSel.innerHTML+=`<option value="${y}">${y}</option>`;}
-  document.getElementById('payroll-month').value=now.getMonth()+1;
-  const data=await apicall('GET','/payroll');
-  const runs=data?.runs||[];
-  const el=document.getElementById('payroll-list');
-  if(!runs.length){el.innerHTML='<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">No payroll runs yet</div><div class="empty-sub">Select a month and click Run Payroll</div></div>';return;}
-  const statusBadge={draft:'<span class="badge badge-orange">Draft</span>',approved:'<span class="badge badge-blue">Published</span>',paid:'<span class="badge badge-green">Paid</span>'};
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Period</th><th>Gross (KWD)</th><th>PIFSS Deducted</th><th>Net Pay (KWD)</th><th>Status</th><th>Actions</th></tr></thead><tbody>${runs.map(r=>`<tr><td style="font-weight:700">${MONTH_NAMES[r.period_month-1]} ${r.period_year}</td><td>KWD ${(r.total_gross||0).toFixed(3)}</td><td style="color:#E8472A">- KWD ${(r.total_pifss_employee||0).toFixed(3)}</td><td style="font-weight:800;color:#1a7a42">KWD ${(r.total_net||0).toFixed(3)}</td><td>${statusBadge[r.status]||r.status}</td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="viewPayrollRun('${r.id}')">View</button>${r.status==='draft'?`<button class="btn btn-primary btn-sm" onclick="publishPayslips('${r.id}')">Publish</button>`:''}${r.status==='approved'?`<button class="btn btn-success btn-sm" onclick="markAsPaid('${r.id}')">Mark Paid</button>`:''}${r.status!=='paid'?`<button class="btn btn-danger btn-sm" onclick="deletePayrollRun('${r.id}')">Delete</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;
-}
-async function runPayroll(){
-  const month=parseInt(document.getElementById('payroll-month').value);
-  const year=parseInt(document.getElementById('payroll-year').value);
-  const apply_pifss=document.getElementById('pifss-toggle').checked;
-  const res=await apicall('POST','/payroll',{month,year,apply_pifss});
-  if(!res||res.error){showToast(res?.error||'Error running payroll','error');return;}
-  showToast(`✓ Payroll for ${MONTH_NAMES[month-1]} ${year} created`,'success');
-  loadPayroll();
-}
-async function viewPayrollRun(id){
-  document.getElementById('payroll-runs-view').style.display='none';
-  document.getElementById('payroll-detail-view').style.display='';
-  document.getElementById('payroll-detail-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET','/payroll/'+id);
-  if(!data||data.error){showToast('Error loading run','error');return;}
-  const{run,entries}=data;
-  document.getElementById('payroll-detail-title').textContent=`${MONTH_NAMES[run.period_month-1]} ${run.period_year} — Breakdown`;
-  document.getElementById('payroll-detail-summary').innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;"><div class="stat-card"><div class="stat-label">Total Gross</div><div class="stat-value" style="font-size:22px">KWD ${(run.total_gross||0).toFixed(3)}</div></div><div class="stat-card"><div class="stat-label">PIFSS Deducted (8%)</div><div class="stat-value" style="font-size:22px;color:#E8472A">-${(run.total_pifss_employee||0).toFixed(3)}</div></div><div class="stat-card"><div class="stat-label">Net Salaries</div><div class="stat-value" style="font-size:22px;color:#1a7a42">KWD ${(run.total_net||0).toFixed(3)}</div></div><div class="stat-card"><div class="stat-label">Company PIFSS (11%)</div><div class="stat-value" style="font-size:22px;color:#888">KWD ${(run.total_pifss_employer||0).toFixed(3)}</div></div></div>`;
-  const actionsEl=document.getElementById('payroll-detail-actions');
-  if(run.status==='draft'){actionsEl.innerHTML=`<button class="btn btn-primary" onclick="publishPayslips('${id}')">📤 Publish Payslips</button><button class="btn btn-danger" onclick="deletePayrollRun('${id}')">Delete</button>`;}
-  else if(run.status==='approved'){actionsEl.innerHTML=`<button class="btn btn-success" onclick="markAsPaid('${id}')">✓ Mark as Paid</button>`;}
-  else{actionsEl.innerHTML=`<span class="badge badge-green" style="padding:8px 16px;font-size:13px;">✓ Paid</span>`;}
-  document.getElementById('payroll-detail-list').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Nationality</th><th>Basic Salary</th><th>PIFSS (8%)</th><th>Net Pay</th><th>Payslip</th></tr></thead><tbody>${(entries||[]).map(e=>`<tr><td style="font-weight:700">${e.first_name_en} ${e.last_name_en}</td><td style="font-size:12px">${e.nationality||'—'}</td><td>KWD ${(e.basic_salary||0).toFixed(3)}</td><td style="color:${e.pifss_employee>0?'#E8472A':'#888'}">${e.pifss_employee>0?`- KWD ${e.pifss_employee.toFixed(3)}`:'—'}</td><td style="font-weight:800;color:#1a7a42">KWD ${(e.net_salary||0).toFixed(3)}</td><td>${e.payslip_published?'<span class="badge badge-green">Published</span>':'<span class="badge badge-gray">Pending</span>'}</td></tr>`).join('')}</tbody></table></div>`;
-}
-function showPayrollList(){document.getElementById('payroll-runs-view').style.display='';document.getElementById('payroll-detail-view').style.display='none';}
-async function publishPayslips(id){const res=await apicall('PUT','/payroll/'+id,{action:'publish'});if(!res||res.error){showToast(res?.error||'Error','error');return;}showToast('Payslips published ✓','success');loadPayroll();viewPayrollRun(id);}
-async function markAsPaid(id){const res=await apicall('PUT','/payroll/'+id,{action:'pay'});if(!res||res.error){showToast(res?.error||'Error','error');return;}showToast('Marked as paid ✓','success');loadPayroll();viewPayrollRun(id);}
-async function deletePayrollRun(id){if(!confirm('Delete this payroll run?'))return;const res=await apicall('DELETE','/payroll/'+id);if(!res||res.error){showToast(res?.error||'Error','error');return;}showToast('Deleted','success');showPayrollList();loadPayroll();}
-/* ── DOCUMENTS ─────────────────────────────────────────────── */
-const DOC_TYPES={'Civil ID':'🪪','Passport':'📘','Visa':'✈️','Contract':'📝','Offer Letter':'💼','Warning Letter':'⚠️','Salary Certificate':'💰','Medical':'🏥','Other':'📄'};
-let docEmpsCached=false;
-async function loadDocuments(){
-  const filterEl=document.getElementById('doc-emp-filter');
-  if(filterEl&&!docEmpsCached){
-    const ed=await apicall('GET','/employees');
-    (ed?.employees||[]).forEach(e=>{
-      const o=document.createElement('option');
-      o.value=e.id;
-      o.textContent=`${e.first_name_en} ${e.last_name_en}`;
-      filterEl.appendChild(o);
-    });
-    docEmpsCached=true;
-  }
-  const empId=filterEl?filterEl.value:'';
-  const url='/documents'+(empId?'?employee_id='+empId:'');
-  const data=await apicall('GET',url);
-  const docs=data?.documents||[];
-  const list=document.getElementById('docs-list');
-  if(!list)return;
-  if(!docs.length){list.innerHTML='<div class="empty"><div class="empty-icon">📁</div><div class="empty-text">No documents found</div><div class="empty-sub">Upload your first document using the button above</div></div>';return;}
-  const today=new Date();
-  const soon=new Date();soon.setDate(soon.getDate()+30);
-  list.innerHTML=docs.map(d=>{
-    const icon=DOC_TYPES[d.doc_type]||'📄';
-    let expBadge='';
-    if(d.expiry_date){
-      const exp=new Date(d.expiry_date);
-      if(exp<today) expBadge='<span class="badge badge-red" style="margin-left:6px;">Expired</span>';
-      else if(exp<=soon) expBadge='<span class="badge badge-orange" style="margin-left:6px;">Expiring Soon</span>';
+
+  list.sort(function(row1, row2) {
+    var a = row1.cells[column].dataset.value;
+    var b = row2.cells[column].dataset.value;
+    if (column) {
+      a = parseInt(a, 10);
+      b = parseInt(b, 10);
+      return a > b ? newOrder : a < b ? oldOrder : 0;
     }
-    const empName=`${d.first_name_en||''} ${d.last_name_en||''}`.trim();
-    const sizeMB=d.file_size?(d.file_size/1048576).toFixed(2)+'MB':'';
-    return `<div class="doc-card">
-      <span style="font-size:28px;">${icon}</span>
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:700;">${d.file_name}${expBadge}</div>
-        <div style="font-size:12px;color:#888;">${d.doc_type} · ${empName||'—'}${sizeMB?' · '+sizeMB:''}</div>
-        ${d.expiry_date?`<div style="font-size:12px;color:#888;">Expires: ${d.expiry_date}</div>`:''}
-        ${d.notes?`<div style="font-size:12px;color:#888;">${d.notes}</div>`:''}
-      </div>
-      <div style="display:flex;gap:8px;flex-shrink:0;">
-        <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.id}')">⬇ Download</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.id}')">🗑</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-async function openUploadDoc(){
-  const sel=document.getElementById('upload-doc-emp');
-  sel.innerHTML='<option value="">— Select Employee —</option>';
-  const ed=await apicall('GET','/employees');
-  (ed?.employees||[]).forEach(e=>{
-    const o=document.createElement('option');
-    o.value=e.id;
-    o.textContent=`${e.first_name_en} ${e.last_name_en}`;
-    sel.appendChild(o);
+
+    // Column 0 is text.
+    if (a > b)
+      return newOrder;
+    if (a < b)
+      return oldOrder;
+    return 0;
   });
-  document.getElementById('upload-doc-file').value='';
-  document.getElementById('upload-doc-expiry').value='';
-  document.getElementById('upload-doc-notes').value='';
-  document.getElementById('modal-upload-doc').classList.add('open');
+
+  // Appending an existing child again just moves it.
+  for (i = 0; i < list.length; i++) {
+    tbody.appendChild(list[i]);
+  }
 }
-async function saveDocument(){
-  const empId=document.getElementById('upload-doc-emp').value;
-  const docType=document.getElementById('upload-doc-type').value;
-  const fileInput=document.getElementById('upload-doc-file');
-  const expiry=document.getElementById('upload-doc-expiry').value;
-  const notes=document.getElementById('upload-doc-notes').value.trim();
-  if(!empId||!docType||!fileInput.files[0]){showToast('Employee, type and file are required','error');return;}
-  const file=fileInput.files[0];
-  if(file.size>10*1024*1024){showToast('File must be under 10MB','error');return;}
-  const form=new FormData();
-  form.append('employee_id',empId);
-  form.append('doc_type',docType);
-  form.append('file',file);
-  if(expiry)form.append('expiry_date',expiry);
-  if(notes)form.append('notes',notes);
-  try{
-    const res=await fetch(API+'/documents',{method:'POST',headers:{Authorization:'Bearer '+token},body:form});
-    const data=await res.json();
-    if(data?.document||data?.id){
-      showToast('Document uploaded ✓','success');
-      closeModal('modal-upload-doc');
-      docEmpsCached=false;
-      loadDocuments();
-    } else showToast(data?.error||'Upload failed','error');
-  }catch(e){showToast('Upload error','error');}
-}
-async function downloadDoc(id){
-  const res=await fetch(API+'/documents/'+id+'/download',{headers:{Authorization:'Bearer '+token}});
-  if(!res.ok){showToast('Download failed','error');return;}
-  const blob=await res.blob();
-  const cd=res.headers.get('Content-Disposition')||'';
-  const match=cd.match(/filename="?([^"]+)"?/);
-  const name=match?match[1]:'document';
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=name;a.click();
-  URL.revokeObjectURL(url);
-}
-async function deleteDoc(id){
-  if(!confirm('Delete this document permanently?'))return;
-  const res=await apicall('DELETE','/documents/'+id);
-  if(res?.success){showToast('Document deleted','success');loadDocuments();}
-  else showToast(res?.error||'Delete failed','error');
-}
-/* ── END DOCUMENTS ─────────────────────────────────────────── */
-function renderSettings(){renderDeptList();renderJTList();}
-function renderDeptList(){const el=document.getElementById('dept-list');if(!deptsData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No departments yet</div>';return;}el.innerHTML=deptsData.map(d=>`<div class="tag-item"><div><div class="tag-item-name">${d.name_en}</div><div class="tag-item-ar">${d.name_ar||''}</div></div><button class="tag-delete" onclick="deleteDept('${d.id}')">✕</button></div>`).join('');}
-function renderJTList(){const el=document.getElementById('jt-list');if(!jobTitlesData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No job titles yet</div>';return;}el.innerHTML=jobTitlesData.map(j=>`<div class="tag-item"><div><div class="tag-item-name">${j.title_en}</div><div class="tag-item-ar">${j.title_ar||''}</div></div><button class="tag-delete" onclick="deleteJobTitle('${j.id}')">✕</button></div>`).join('');}
-async function addDept(){const en=document.getElementById('new-dept-en').value.trim();const ar=document.getElementById('new-dept-ar').value.trim();if(!en){showToast('Enter department name','error');return;}const res=await apicall('POST','/departments',{name_en:en,name_ar:ar});if(res&&res.department){deptsData.push(res.department);renderDeptList();document.getElementById('new-dept-en').value='';document.getElementById('new-dept-ar').value='';showToast('Department added ✓','success');}else showToast('Error adding department','error');}
-async function addJobTitle(){const en=document.getElementById('new-jt-en').value.trim();const ar=document.getElementById('new-jt-ar').value.trim();if(!en){showToast('Enter job title','error');return;}const res=await apicall('POST','/job-titles',{title_en:en,title_ar:ar});if(res&&res.job_title){jobTitlesData.push(res.job_title);renderJTList();document.getElementById('new-jt-en').value='';document.getElementById('new-jt-ar').value='';showToast('Job title added ✓','success');}else showToast('Error adding job title','error');}
-async function deleteDept(id){const res=await apicall('DELETE','/departments/'+id);if(res&&res.success){deptsData=deptsData.filter(d=>d.id!==id);renderDeptList();showToast('Deleted','success');}else showToast('Error','error');}
-async function deleteJobTitle(id){const res=await apicall('DELETE','/job-titles/'+id);if(res&&res.success){jobTitlesData=jobTitlesData.filter(j=>j.id!==id);renderJTList();showToast('Deleted','success');}else showToast('Error','error');}
-function populateDropdowns(){
-  const deptSel=document.getElementById('emp-dept-id');
-  const jtSel=document.getElementById('emp-job-title-id');
-  deptSel.innerHTML='<option value="">— Select Department —</option>'+deptsData.map(d=>`<option value="${d.id}">${d.name_en}</option>`).join('');
-  jtSel.innerHTML='<option value="">— Select Job Title —</option>'+jobTitlesData.map(j=>`<option value="${j.id}">${j.title_en}</option>`).join('');
-}
-function openAddEmployee(){
-  editingEmpId=null;
-  document.getElementById('modal-emp-title').textContent='Add Employee';
-  document.getElementById('save-emp-btn').textContent='Add Employee';
-  ['emp-id','emp-first-en','emp-last-en','emp-first-ar','emp-last-ar','emp-civil-id','emp-salary','emp-email','emp-phone','emp-password'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('emp-start').value=new Date().toISOString().split('T')[0];
-  populateDropdowns();
-  document.getElementById('modal-employee').classList.add('open');
-}
-function editEmployee(id){
-  const emp=employeesData.find(e=>e.id===id);if(!emp)return;
-  editingEmpId=id;
-  document.getElementById('modal-emp-title').textContent='Edit Employee';
-  document.getElementById('save-emp-btn').textContent='Save Changes';
-  document.getElementById('emp-id').value=emp.id;
-  document.getElementById('emp-first-en').value=emp.first_name_en||'';
-  document.getElementById('emp-last-en').value=emp.last_name_en||'';
-  document.getElementById('emp-first-ar').value=emp.first_name_ar||'';
-  document.getElementById('emp-last-ar').value=emp.last_name_ar||'';
-  document.getElementById('emp-civil-id').value=emp.civil_id||'';
-  document.getElementById('emp-nationality').value=emp.nationality||'Kuwaiti';
-  document.getElementById('emp-salary').value=emp.basic_salary||'';
-  document.getElementById('emp-start').value=emp.hire_date||'';
-  document.getElementById('emp-email').value=emp.work_email||'';
-  document.getElementById('emp-phone').value=emp.mobile||'';
-  document.getElementById('emp-contract').value=emp.employment_type||'full_time';
-  document.getElementById('emp-password').value='';
-  populateDropdowns();
-  document.getElementById('emp-dept-id').value=emp.department||'';
-  document.getElementById('emp-job-title-id').value=emp.job_title_en||'';
-  document.getElementById('modal-employee').classList.add('open');
-}
-async function saveEmployee(){
-  const body={
-    first_name_en:document.getElementById('emp-first-en').value.trim(),
-    last_name_en:document.getElementById('emp-last-en').value.trim(),
-    first_name_ar:document.getElementById('emp-first-ar').value.trim(),
-    last_name_ar:document.getElementById('emp-last-ar').value.trim(),
-    civil_id:document.getElementById('emp-civil-id').value.trim(),
-    nationality:document.getElementById('emp-nationality').value,
-    department_id:document.getElementById('emp-dept-id').value||null,
-    job_title_id:document.getElementById('emp-job-title-id').value||null,
-    basic_salary:parseFloat(document.getElementById('emp-salary').value)||0,
-    hire_date:document.getElementById('emp-start').value,
-    work_email:document.getElementById('emp-email').value.trim(),
-    mobile:document.getElementById('emp-phone').value.trim(),
-    employment_type:document.getElementById('emp-contract').value,
-    initial_password:document.getElementById('emp-password')?.value||''
+
+// Add event handlers to column headers.
+function addHandlers(element, column) {
+  element.onclick = (e) => sortTable(column);
+  element.onkeydown = (e) => {
+    if (e.key == 'Enter' || e.key == ' ') {
+      sortTable(column);
+      e.preventDefault();
+    }
   };
-  if(!body.first_name_en||!body.last_name_en){showToast('First and last name required','error');return;}
-  const res=editingEmpId?await apicall('PUT','/employees/'+editingEmpId,body):await apicall('POST','/employees',body);
-  if(res&&!res.error){showToast(editingEmpId?'Employee updated ✓':'Employee added ✓','success');closeModal('modal-employee');loadEmployees();loadDashboard();}
-  else showToast(res?.error||'Error saving employee','error');
 }
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-/* ── PERMISSION HOURS ────────────────────────────────────────── */
-let permsData=[], currentPermFilter='pending';
-async function loadPerms(){
-  document.getElementById('perms-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const status=currentPermFilter==='all'?'':('?status='+currentPermFilter);
-  const data=await apicall('GET','/permissions'+(status));
-  permsData=data?.requests||[];
-  renderPermsList(permsData);
-  const pending=await apicall('GET','/permissions?status=pending');
-  const count=(pending?.requests||[]).length;
-  const badge=document.getElementById('perm-badge');
-  if(count>0){badge.style.display='';badge.textContent=count;}else{badge.style.display='none';}
+
+function onLoad() {
+  addHandlers(document.getElementById('nameColumnHeader'), 0);
+  addHandlers(document.getElementById('sizeColumnHeader'), 1);
+  addHandlers(document.getElementById('dateColumnHeader'), 2);
 }
-function filterPerms(status,btn){
-  currentPermFilter=status;
-  document.querySelectorAll('#page-permissions .filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  loadPerms();
-}
-function renderPermsList(list){
-  const el=document.getElementById('perms-list');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🕐</div><div class="empty-text">No permission requests</div></div>';return;}
-  const statusBadge={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>'};
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Date</th><th>Time</th><th>Hours</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map(p=>{
-    const name=p.first_name_en?`${p.first_name_en} ${p.last_name_en}`:'—';
-    const time=`${p.start_time} – ${p.end_time}`;
-    return`<tr><td style="font-weight:700">${name}</td><td style="font-size:12px">${p.date}</td><td style="font-size:12px">${time}</td><td style="font-weight:700">${parseFloat(p.hours).toFixed(1)} hrs</td><td style="font-size:12px;color:#888;max-width:160px">${p.reason||'—'}</td><td>${statusBadge[p.status]||p.status}</td><td style="display:flex;gap:6px;">${p.status==='pending'?`<button class="btn btn-success btn-sm" onclick="approvePerm('${p.id}')">✓</button><button class="btn btn-danger btn-sm" onclick="rejectPerm('${p.id}')">✕</button>`:'—'}</td></tr>`;
-  }).join('')}</tbody></table></div>`;
-}
-async function approvePerm(id){
-  const res=await apicall('PUT','/permissions/'+id,{action:'approve'});
-  if(res&&!res.error){showToast('Approved ✓','success');loadPerms();loadPermUsage();}
-  else showToast(res?.error||'Error','error');
-}
-async function rejectPerm(id){
-  const res=await apicall('PUT','/permissions/'+id,{action:'reject'});
-  if(res&&!res.error){showToast('Rejected','');loadPerms();loadPermUsage();}
-  else showToast(res?.error||'Error','error');
-}
-async function loadPermUsage(){
-  const el=document.getElementById('perm-usage-list');
-  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const now=new Date();
-  const month=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  document.getElementById('perm-month-label').textContent=`${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`;
-  const[empsRes,permsRes]=await Promise.all([apicall('GET','/employees'),apicall('GET',`/permissions?month=${month}`)]);
-  const employees=empsRes?.employees||[];
-  const allPerms=permsRes?.requests||[];
-  if(!employees.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees yet</div></div>';return;}
-  const coRes=await apicall('GET','/companies/'+(currentUser?.company_id||''));
-  const limit=coRes?.company?.permission_hours_monthly??4;
-  const rows=employees.map(emp=>{
-    const empPerms=allPerms.filter(p=>p.employee_id===emp.id&&p.status==='approved');
-    const used=empPerms.reduce((s,p)=>s+(parseFloat(p.hours)||0),0);
-    const remaining=Math.max(0,limit-used);
-    const usedColor=used>=limit?'#c42a00':used>=limit*0.75?'#c46a00':'#1a1a2e';
-    const pct=Math.min(100,Math.round((used/limit)*100));
-    return`<tr><td><div style="font-weight:700">${emp.first_name_en} ${emp.last_name_en}</div></td><td style="font-weight:700;color:${usedColor}">${used.toFixed(1)} hrs</td><td>${remaining.toFixed(1)} hrs</td><td style="width:140px"><div style="background:#f0ebe4;border-radius:4px;height:8px;overflow:hidden"><div style="width:${pct}%;background:${usedColor};height:100%"></div></div><div style="font-size:10px;color:#888;margin-top:2px">${pct}% of ${limit} hrs</div></td></tr>`;
-  }).join('');
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Used This Month</th><th>Remaining</th><th>Usage</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-}
-async function savePermLimit(){
-  const val=parseFloat(document.getElementById('perm-hours-limit').value);
-  if(isNaN(val)||val<0){showToast('Enter a valid number','error');return;}
-  const res=await apicall('PUT','/companies/'+currentUser.company_id,{permission_hours_monthly:val});
-  if(res&&!res.error){showToast(`Limit set to ${val} hrs/month ✓`,'success');}
-  else showToast(res?.error||'Error saving limit','error');
-}
-async function loadPermSettings(){
-  if(!currentUser?.company_id)return;
-  const co=await apicall('GET','/companies/'+currentUser.company_id);
-  if(co?.company){document.getElementById('perm-hours-limit').value=co.company.permission_hours_monthly??4;}
-}
-/* ── END PERMISSION HOURS ───────────────────────────────────── */
-function setLang(lang,save=true){currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);document.documentElement.lang=lang;document.body.classList.toggle('ar',lang==='ar');document.getElementById('btn-en').classList.toggle('active',lang==='en');document.getElementById('btn-ar').classList.toggle('active',lang==='ar');document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.dataset[lang]||el.dataset.en;});}
-function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3000);}
-function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem('ghaya_user');localStorage.removeItem('ghaya_page');window.location.href='/';}
-document.querySelectorAll('.info-icon').forEach(icon=>{
-  icon.addEventListener('mouseenter',function(){
-    const tip=document.createElement('div');tip.id='gtip';tip.style.cssText='position:fixed;background:#1a1a2e;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;line-height:1.5;width:210px;z-index:9999;pointer-events:none';
-    tip.textContent=this.dataset.tip;document.body.appendChild(tip);
-    const r=this.getBoundingClientRect();tip.style.left=Math.max(10,r.right-215)+'px';tip.style.top=(r.bottom+8)+'px';
-  });
-  icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
-});
-const saved=localStorage.getItem('ghaya_page')||'dashboard';
-showPage(saved);
-init();
+
+window.addEventListener('DOMContentLoaded', onLoad);
 </script>
+
+<style>
+
+  h1 {
+    border-bottom: 1px solid #c0c0c0;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    white-space: nowrap;
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+
+  th {
+    cursor: pointer;
+  }
+
+  td.detailsColumn {
+    padding-inline-start: 2em;
+    text-align: end;
+    white-space: nowrap;
+  }
+
+  a.icon {
+    padding-inline-start: 1.5em;
+    text-decoration: none;
+    user-select: auto;
+  }
+
+  a.icon:hover {
+    text-decoration: underline;
+  }
+
+  a.file {
+    background : url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABnRSTlMAAAAAAABupgeRAAABEElEQVR42nRRx3HDMBC846AHZ7sP54BmWAyrsP588qnwlhqw/k4v5ZwWxM1hzmGRgV1cYqrRarXoH2w2m6qqiqKIR6cPtzc3xMSML2Te7XZZlnW7Pe/91/dX47WRBHuA9oyGmRknzGDjab1ePzw8bLfb6WRalmW4ip9FDVpYSWZgOp12Oh3nXJ7nxoJSGEciteP9y+fH52q1euv38WosqA6T2gGOT44vry7BEQtJkMAMMpa6JagAMcUfWYa4hkkzAc7fFlSjwqCoOUYAF5RjHZPVCFBOtSBGfgUDji3c3jpibeEMQhIMh8NwshqyRsBJgvF4jMs/YlVR5KhgNpuBLzk0OcUiR3CMhcPaOzsZiAAA/AjmaB3WZIkAAAAASUVORK5CYII=") left top no-repeat;
+  }
+
+  a.dir {
+    background : url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABt0lEQVR42oxStZoWQRCs2cXdHTLcHZ6EjAwnQWIkJyQlRt4Cd3d3d1n5d7q7ju1zv/q+mh6taQsk8fn29kPDRo87SDMQcNAUJgIQkBjdAoRKdXjm2mOH0AqS+PlkP8sfp0h93iu/PDji9s2FzSSJVg5ykZqWgfGRr9rAAAQiDFoB1OfyESZEB7iAI0lHwLREQBcQQKqo8p+gNUCguwCNAAUQAcFOb0NNGjT+BbUC2YsHZpWLhC6/m0chqIoM1LKbQIIBwlTQE1xAo9QDGDPYf6rkTpPc92gCUYVJAZjhyZltJ95f3zuvLYRGWWCUNkDL2333McBh4kaLlxg+aTmyL7c2xTjkN4Bt7oE3DBP/3SRz65R/bkmBRPGzcRNHYuzMjaj+fdnaFoJUEdTSXfaHbe7XNnMPyqryPcmfY+zURaAB7SHk9cXSH4fQ5rojgCAVIuqCNWgRhLYLhJB4k3iZfIPtnQiCpjAzeBIRXMA6emAqoEbQSoDdGxFUrxS1AYcpaNbBgyQBGJEOnYOeENKR/iAd1npusI4C75/c3539+nbUjOgZV5CkAU27df40lH+agUdIuA/EAgDmZnwZlhDc0wAAAABJRU5ErkJggg==") left top no-repeat;
+  }
+
+  a.up {
+    background : url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACM0lEQVR42myTA+w1RxRHz+zftmrbdlTbtq04qRGrCmvbDWp9tq3a7tPcub8mj9XZ3eHOGQdJAHw77/LbZuvnWy+c/CIAd+91CMf3bo+bgcBiBAGIZKXb19/zodsAkFT+3px+ssYfyHTQW5tr05dCOf3xN49KaVX9+2zy1dX4XMk+5JflN5MBPL30oVsvnvEyp+18Nt3ZAErQMSFOfelCFvw0HcUloDayljZkX+MmamTAMTe+d+ltZ+1wEaRAX/MAnkJdcujzZyErIiVSzCEvIiq4O83AG7LAkwsfIgAnbncag82jfPPdd9RQyhPkpNJvKJWQBKlYFmQA315n4YPNjwMAZYy0TgAweedLmLzTJSTLIxkWDaVCVfAbbiKjytgmm+EGpMBYW0WwwbZ7lL8anox/UxekaOW544HO0ANAshxuORT/RG5YSrjlwZ3lM955tlQqbtVMlWIhjwzkAVFB8Q9EAAA3AFJ+DR3DO/Pnd3NPi7H117rAzWjpEs8vfIqsGZpaweOfEAAFJKuM0v6kf2iC5pZ9+fmLSZfWBVaKfLLNOXj6lYY0V2lfyVCIsVzmcRV9Y0fx02eTaEwhl2PDrXcjFdYRAohQmS8QEFLCLKGYA0AeEakhCCFDXqxsE0AQACgAQp5w96o0lAXuNASeDKWIvADiHwigfBINpWKtAXJvCEKWgSJNbRvxf4SmrnKDpvZavePu1K/zu/due1X/6Nj90MBd/J2Cic7WjBp/jUdIuA8AUtd65M+PzXIAAAAASUVORK5CYII=") left top no-repeat;
+  }
+
+  html[dir=rtl] a {
+    background-position-x: right;
+  }
+
+  #parentDirLinkBox {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+  }
+</style>
+
+<title id="title"></title>
+
+</head>
+
+<body>
+
+<h1 id="header">Index of LOCATION</h1>
+
+<div id="parentDirLinkBox" style="display:none">
+  <a id="parentDirLink" class="icon up">
+    <span id="parentDirText">[parent directory]</span>
+  </a>
+</div>
+
+<table>
+  <thead>
+    <tr class="header" id="theader">
+      <th id="nameColumnHeader" tabindex=0 role="button">Name</th>
+      <th id="sizeColumnHeader" class="detailsColumn" tabindex=0 role="button">
+        Size
+      </th>
+      <th id="dateColumnHeader" class="detailsColumn" tabindex=0 role="button">
+        Date Modified
+      </th>
+    </tr>
+  </thead>
+  <tbody id="tbody">
+  </tbody>
+</table>
+
 </body>
+
 </html>
+<script>// Copyright 2012 The Chromium Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+"use strict";var loadTimeData;class LoadTimeData{constructor(){this.data_=null}set data(value){expect(!this.data_,"Re-setting data.");this.data_=value}valueExists(id){return id in this.data_}getValue(id){expect(this.data_,"No data. Did you remember to include strings.js?");const value=this.data_[id];expect(typeof value!=="undefined","Could not find value for "+id);return value}getString(id){const value=this.getValue(id);expectIsType(id,value,"string");return value}getStringF(id,var_args){const value=this.getString(id);if(!value){return""}const args=Array.prototype.slice.call(arguments);args[0]=value;return this.substituteString.apply(this,args)}substituteString(label,var_args){const varArgs=arguments;return label.replace(/\$(.|$|\n)/g,(function(m){expect(m.match(/\$[$1-9]/),"Unescaped $ found in localized string.");return m==="$$"?"$":varArgs[m[1]]}))}getBoolean(id){const value=this.getValue(id);expectIsType(id,value,"boolean");return value}getInteger(id){const value=this.getValue(id);expectIsType(id,value,"number");expect(value===Math.floor(value),"Number isn't integer: "+value);return value}overrideValues(replacements){expect(typeof replacements==="object","Replacements must be a dictionary object.");for(const key in replacements){this.data_[key]=replacements[key]}}}function expect(condition,message){if(!condition){throw new Error("Unexpected condition on "+document.location.href+": "+message)}}function expectIsType(id,value,type){expect(typeof value===type,"["+value+"] ("+id+") is not a "+type)}expect(!loadTimeData,"should only include this file once");loadTimeData=new LoadTimeData;window.loadTimeData=loadTimeData;console.warn("crbug/1173575, non-JS module files deprecated.");</script><script>loadTimeData.data = {"header":"Index of LOCATION","headerDateModified":"Date Modified","headerName":"Name","headerSize":"Size","language":"en","parentDirText":"[parent directory]","textdirection":"ltr"};</script><script>start("/");</script>
+<script>addRow(".nofollow",".nofollow",1,64,"64 B",1782354543,"6/25/26, 5:29:03 AM");</script>
+<script>addRow(".resolve",".resolve",1,64,"64 B",1782354543,"6/25/26, 5:29:03 AM");</script>
+<script>addRow(".vol",".vol",1,64,"64 B",1782354543,"6/25/26, 5:29:03 AM");</script>
+<script>addRow("AppleInternal","AppleInternal",1,64,"64 B",1647843788,"3/21/22, 9:23:08 AM");</script>
+<script>addRow("Applications","Applications",1,1024,"1.0 kB",1784121728,"7/15/26, 4:22:08 PM");</script>
+<script>addRow("bin","bin",1,1248,"1.2 kB",1782354543,"6/25/26, 5:29:03 AM");</script>
+<script>addRow("cores","cores",1,64,"64 B",1644182531,"2/7/22, 12:22:11 AM");</script>
+<script>addRow("dev","dev",1,4732,"4.6 kB",1784121025,"7/15/26, 4:10:25 PM");</script>
+<script>addRow("etc","etc",1,2464,"2.4 kB",1784121101,"7/15/26, 4:11:41 PM");</script>
+<script>addRow("home","home",1,1,"1 B",1784121101,"7/15/26, 4:11:41 PM");</script>
+<script>addRow("Library","Library",1,2144,"2.1 kB",1784121083,"7/15/26, 4:11:23 PM");</script>
+<script>addRow("opt","opt",1,64,"64 B",1644182531,"2/7/22, 12:22:11 AM");</script>
+<script>addRow("private","private",1,192,"192 B",1784121097,"7/15/26, 4:11:37 PM");</script>
+<script>addRow("sbin","sbin",1,2432,"2.4 kB",1782354543,"6/25/26, 5:29:03 AM");</script>
+<script>addRow("System","System",1,320,"320 B",1782354543,"6/25/26, 5:29:03 AM");</script>
+<script>addRow("tmp","tmp",1,384,"384 B",1784136436,"7/15/26, 8:27:16 PM");</script>
+<script>addRow("Users","Users",1,160,"160 B",1784121057,"7/15/26, 4:10:57 PM");</script>
+<script>addRow("usr","usr",1,352,"352 B",1782354543,"6/25/26, 5:29:03 AM");</script>
+<script>addRow("var","var",1,1152,"1.1 kB",1784121087,"7/15/26, 4:11:27 PM");</script>
+<script>addRow("Volumes","Volumes",1,96,"96 B",1784125896,"7/15/26, 5:31:36 PM");</script>
+<script>addRow(".file",".file",0,0,"0 B",1782354543,"6/25/26, 5:29:03 AM");</script>
