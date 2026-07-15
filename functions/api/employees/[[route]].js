@@ -118,11 +118,21 @@ export async function onRequest({ request, env, params }) {
       const tempPass = `${first_name_en}${hireYear}!`;
       const hash = await hashPassword(tempPass);
       await db.prepare(
-        "INSERT OR IGNORE INTO users (id, company_id, email, password_hash, role, employee_id, is_active) VALUES (?,?,?,?,'employee',?,1)"
-      ).bind(userId, companyId, work_email.toLowerCase(), hash, id).run();
+"INSERT OR IGNORE INTO users (id, company_id, email, password_hash, role, employee_id, is_active) VALUES (?,?,?,?,'employee',?,1)"      ).bind(userId, companyId, work_email.toLowerCase(), hash, id).run();
       await db.prepare("UPDATE employees SET user_id = ? WHERE id = ?").bind(userId, id).run();
     }
 
+    // Handle password update if provided
+if (body.initial_password && body.initial_password.trim().length >= 6) {
+  const { hashPassword } = await import('../_lib/auth.js');
+  const newHash = await hashPassword(body.initial_password.trim());
+  const emp = await db.prepare('SELECT user_id FROM employees WHERE id = ? AND company_id = ?').bind(employeeId, companyId).first();
+  if (emp?.user_id) {
+    await db.prepare("UPDATE users SET password_hash = ?, is_active = 1, updated_at = datetime('now') WHERE id = ?")
+      .bind(newHash, emp.user_id).run();
+  }
+}
+    
     // Audit log
     await db.prepare(
       "INSERT INTO audit_log (company_id, user_id, action, entity_type, entity_id, new_values) VALUES (?,?,?,?,?,?)"
