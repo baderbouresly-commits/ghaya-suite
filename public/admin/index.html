@@ -833,6 +833,72 @@ async function loadPerms(status){
   document.getElementById('perms-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const url=status==='all'?'/permissions':'/permissions?status='+status;
   const data=await apicall('GET',url);const list=data?.requests||[];
+document.getElementById('att-notes').value='';
+  document.getElementById('att-emp-id').disabled=false;
+  if(!employeesData.length){const d=await apicall('GET','/employees');employeesData=d?.employees||[];}
+  const sel=document.getElementById('att-emp-id');
+  sel.innerHTML='<option value="">— Select Employee —</option>'+employeesData.filter(e=>e.status==='active').map(e=>`<option value="${e.id}">${e.first_name_en} ${e.last_name_en}</option>`).join('');
+  document.getElementById('modal-att').classList.add('open');
+}
+function editAttRecord(id,empId,clockIn,clockOut,status){
+  editingAttId=id;
+  document.getElementById('modal-att-title').textContent='Edit Attendance Record';
+  document.getElementById('att-save-btn').textContent='Save Changes';
+  const empName=(employeesData.find(e=>e.id===empId)||{}).first_name_en||empId;
+  document.getElementById('att-emp-id').innerHTML=`<option value="${empId}">${empName}</option>`;
+  document.getElementById('att-emp-id').disabled=true;
+  document.getElementById('att-clock-in').value=clockIn?.slice(0,5)||'';
+  document.getElementById('att-clock-out').value=clockOut?.slice(0,5)||'';
+  document.getElementById('att-status').value=status||'present';
+  document.getElementById('att-notes').value='';
+  document.getElementById('modal-att').classList.add('open');
+}
+async function saveManualAtt(){
+  const clock_in=document.getElementById('att-clock-in').value;
+  const clock_out=document.getElementById('att-clock-out').value;
+  const status=document.getElementById('att-status').value;
+  const notes=document.getElementById('att-notes').value.trim();
+  let res;
+  if(editingAttId){
+    res=await apicall('PUT','/attendance/'+editingAttId,{clock_in,clock_out,status,notes});
+  }else{
+    const employee_id=document.getElementById('att-emp-id').value;
+    const date=document.getElementById('att-entry-date').value;
+    if(!employee_id||!date){showToast('Select employee and date','error');return;}
+    res=await apicall('POST','/attendance',{employee_id,date,clock_in,clock_out,status,notes});
+  }
+  if(res&&!res.error){closeModal('modal-att');showToast('Saved ✓','success');loadAttendance();}
+  else showToast(res?.error||'Error saving','error');
+}
+
+/* ── LEAVES ── */
+async function loadLeaves(status){
+  status=status||currentLeaveFilter;currentLeaveFilter=status;
+  document.getElementById('leaves-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const url=status==='all'?'/leaves':'/leaves?status='+status;
+  const data=await apicall('GET',url);const list=data?.requests||[];
+  const el=document.getElementById('leaves-list');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div>';return;}
+  const sb={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>',cancelled:'<span class="badge badge-gray">Cancelled</span>'};
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map(l=>`<tr><td style="font-weight:700">${l.employee_name||'—'}</td><td>${l.type_name||l.leave_type||'—'}</td><td>${l.start_date||'—'}</td><td>${l.end_date||'—'}</td><td>${l.days_count||'—'}</td><td>${sb[l.status]||l.status}</td><td style="display:flex;gap:6px;">${l.status==='pending'?`<button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕ Reject</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function filterLeaves(status,btn){document.querySelectorAll('#page-leaves .filter-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');loadLeaves(status);}
+async function loadLeaveBalances(){
+  document.getElementById('leave-balances-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const data=await apicall('GET','/leaves/balances');const list=data?.balances||[];
+  const el=document.getElementById('leave-balances-list');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No data</div></div>';return;}
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Hire Date</th><th>Accrued (days)</th><th>Taken</th><th>Remaining</th></tr></thead><tbody>${list.map(b=>`<tr><td style="font-weight:700">${b.employee_name||'—'}</td><td style="color:#888;font-size:12px">${b.hire_date||'—'}</td><td style="font-weight:700;color:#1a7a42">${typeof b.accrued==='number'?b.accrued.toFixed(1):'—'}</td><td>${b.taken||0}</td><td style="font-weight:700;color:${(b.remaining||0)>0?'#1a7a42':'#c42a00'}">${typeof b.remaining==='number'?b.remaining.toFixed(1):'—'}</td></tr>`).join('')}</tbody></table></div>`;
+}
+async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'approved'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
+async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'rejected'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
+
+/* ── PERMISSIONS ── */
+async function loadPerms(status){
+  status=status||'pending';
+  document.getElementById('perms-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const url=status==='all'?'/permissions':'/permissions?status='+status;
+  const data=await apicall('GET',url);const list=data?.requests||[];
   const el=document.getElementById('perms-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🕐</div><div class="empty-text">No permission requests</div></div>';return;}
   const sb={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>'};
@@ -998,7 +1064,16 @@ async function loadOT(status){
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">⏱️</div><div class="empty-text">No overtime records</div></div>';return;}
   const sb={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>'};
   const dt={normal:'Normal (1.25×)',holiday:'Holiday (1.5×)'};
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Date</th><th>Hours</th><th>Day Type</th><th>OT Pay (KWD)</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map(r=>`<tr><td style="font-weight:700">${r.employee_name||'—'}</td><td style="font-size:12px;color:#888">${r.date||'—'}</td><td style="font-weight:700">${parseFloat(r.hours||0).toFixed(1)} hrs</td><td style="font-size:12px">${dt[r.day_type]||r.day_type}</td><td style="font-weight:700;color:#1a7a42">KWD ${parseFloat(r.overtime_pay||0).toFixed(3)}</td><td style="font-size:12px;color:#888;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.reason||'—'}</td><td>${sb[r.status]||r.status}</td><td style="display:flex;gap:6px;">${r.status==='pending'?`<button class="btn btn-success btn-sm" onclick="approveOT('${r.id}')">✓</button><button class="btn btn-danger btn-sm" onclick="rejectOT('${r.id}')">✕</button>`:`<button class="btn btn-ghost btn-sm" onclick="deleteOT('${r.id}')">🗑</button>`}</td></tr>`).join('')}</tbody></table></div>`;
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Date</th><th>Hours</th><th>Day Type</th><th>OT Pay (KWD)</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map(r=>`<tr>
+    <td style="font-weight:700">${r.employee_name||'—'}</td>
+    <td style="font-size:12px;color:#888">${r.date||'—'}</td>
+    <td style="font-weight:700">${parseFloat(r.hours||0).toFixed(1)} hrs</td>
+    <td style="font-size:12px">${dt[r.day_type]||r.day_type}</td>
+    <td style="font-weight:700;color:#1a7a42">KWD ${parseFloat(r.overtime_pay||0).toFixed(3)}</td>
+    <td style="font-size:12px;color:#888;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.reason||'—'}</td>
+    <td>${sb[r.status]||r.status}</td>
+    <td style="display:flex;gap:6px;">${r.status==='pending'?`<button class="btn btn-success btn-sm" onclick="approveOT('${r.id}')">✓</button><button class="btn btn-danger btn-sm" onclick="rejectOT('${r.id}')">✕</button>`:`<button class="btn btn-ghost btn-sm" onclick="deleteOT('${r.id}')">🗑</button>`}</td>
+  </tr>`).join('')}</tbody></table></div>`;
 }
 function filterOT(status,btn){document.querySelectorAll('#page-overtime .filter-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');loadOT(status);}
 async function approveOT(id){const res=await apicall('PUT','/overtime/'+id,{status:'approved'});if(res&&!res.error){showToast('Overtime approved ✓','success');loadOT();}else showToast('Error','error');}
@@ -1014,7 +1089,15 @@ async function loadOTSummary(){
   const el=document.getElementById('ot-summary');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No approved overtime this month</div></div>';return;}
   const total=list.reduce((s,r)=>s+(parseFloat(r.total_overtime_pay)||0),0);
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Records</th><th>Total Hours</th><th>Total OT Pay (KWD)</th></tr></thead><tbody>${list.map(r=>`<tr><td style="font-weight:700">${r.employee_name||'—'}</td><td style="color:#888">${r.records_count||0}</td><td style="font-weight:700">${parseFloat(r.total_hours||0).toFixed(1)} hrs</td><td style="font-weight:800;color:#1a7a42">KWD ${parseFloat(r.total_overtime_pay||0).toFixed(3)}</td></tr>`).join('')}</tbody></table><div style="padding:14px 20px;border-top:2px solid #1a1a2e;display:flex;justify-content:space-between;font-weight:800;font-size:14px;"><span>Total Overtime Cost</span><span style="color:#1a7a42">KWD ${total.toFixed(3)}</span></div></div>`;
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Records</th><th>Total Hours</th><th>Total OT Pay (KWD)</th></tr></thead><tbody>${list.map(r=>`<tr>
+    <td style="font-weight:700">${r.employee_name||'—'}</td>
+    <td style="color:#888">${r.records_count||0}</td>
+    <td style="font-weight:700">${parseFloat(r.total_hours||0).toFixed(1)} hrs</td>
+    <td style="font-weight:800;color:#1a7a42">KWD ${parseFloat(r.total_overtime_pay||0).toFixed(3)}</td>
+  </tr>`).join('')}</tbody></table>
+  <div style="padding:14px 20px;border-top:2px solid #1a1a2e;display:flex;justify-content:space-between;font-weight:800;font-size:14px;">
+    <span>Total Overtime Cost</span><span style="color:#1a7a42">KWD ${total.toFixed(3)}</span>
+  </div></div>`;
 }
 async function openAddOT(){
   if(!employeesData.length){const d=await apicall('GET','/employees');employeesData=d?.employees||[];}
@@ -1107,6 +1190,64 @@ async function saveEmployee(){
   else showToast(res?.error||'Error saving employee','error');
 }
 
+/* ── ANNOUNCEMENTS ── */
+let annsData=[];
+async function loadAnnouncements(){
+  document.getElementById('ann-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const data=await apicall('GET','/announcements');
+  annsData=data?.announcements||[];
+  renderAnnouncements(annsData);
+}
+function renderAnnouncements(list){
+  const el=document.getElementById('ann-list');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📢</div><div class="empty-text">No announcements yet</div><div class="empty-sub">Post your first company-wide announcement above</div></div>';return;}
+  const typeIcon={general:'📢',urgent:'🚨',holiday:'🎉',policy:'📋'};
+  const typeBadge={general:'badge-gray',urgent:'badge-red',holiday:'badge-green',policy:'badge-blue'};
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Type</th><th>Title & Message</th><th>Posted</th><th>Expires</th><th>Pinned</th><th>Actions</th></tr></thead><tbody>${list.map(a=>`
+    <tr style="${a.is_pinned?'background:#fffdf9;':''}">
+      <td><span class="badge ${typeBadge[a.type]||'badge-gray'}">${typeIcon[a.type]||'📢'} ${a.type}</span></td>
+      <td><div style="font-weight:700;max-width:240px">${a.title}</div><div style="font-size:12px;color:#888;margin-top:2px;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.body}</div></td>
+      <td style="font-size:12px;color:#888">${a.created_at?.slice(0,10)||'—'}</td>
+      <td style="font-size:12px;color:#888">${a.expires_at?a.expires_at.slice(0,10):'<span style="color:#ccc">Never</span>'}</td>
+      <td>${a.is_pinned?'📌 Yes':'<span style="color:#ccc">—</span>'}</td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-ghost btn-sm" onclick="pinAnn('${a.id}',${a.is_pinned})">${a.is_pinned?'Unpin':'📌 Pin'}</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteAnn('${a.id}')">🗑</button>
+      </td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+function openAnnModal(){
+  document.getElementById('ann-title').value='';
+  document.getElementById('ann-body').value='';
+  document.getElementById('ann-type').value='general';
+  document.getElementById('ann-pinned').checked=false;
+  document.getElementById('ann-expires').value='';
+  document.getElementById('modal-ann').classList.add('open');
+}
+async function saveAnnouncement(){
+  const type=document.getElementById('ann-type').value;
+  const title=document.getElementById('ann-title').value.trim();
+  const body=document.getElementById('ann-body').value.trim();
+  const is_pinned=document.getElementById('ann-pinned').checked;
+  const expires_at=document.getElementById('ann-expires').value||null;
+  if(!title){showToast('Title is required','error');return;}
+  if(!body){showToast('Message body is required','error');return;}
+  const res=await apicall('POST','/announcements',{type,title,body,is_pinned,expires_at});
+  if(res&&!res.error){closeModal('modal-ann');showToast('Announcement posted ✓','success');loadAnnouncements();}
+  else showToast(res?.error||'Error posting announcement','error');
+}
+async function pinAnn(id,currentlyPinned){
+  const res=await apicall('PUT','/announcements/'+id,{is_pinned:currentlyPinned?0:1});
+  if(res&&!res.error){showToast(currentlyPinned?'Unpinned':'Pinned 📌','success');loadAnnouncements();}
+  else showToast('Error','error');
+}
+async function deleteAnn(id){
+  if(!confirm('Delete this announcement? Employees will no longer see it.'))return;
+  const res=await apicall('DELETE','/announcements/'+id);
+  if(res?.success){showToast('Deleted','success');loadAnnouncements();}
+  else showToast('Error deleting','error');
+}
+
 /* ── FEEDBACK ── */
 async function submitFeedback(){
   const type=document.getElementById('fb-type').value;
@@ -1133,7 +1274,16 @@ async function loadMyFeedback(){
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">💬</div><div class="empty-text">No submissions yet</div><div class="empty-sub">Use the form above to send your first feedback</div></div>';return;}
   const typeIcon={suggestion:'💡',bug:'🐛',idea:'🚀',complaint:'⚠️'};
   const statusBadge={unread:'<span class="badge badge-orange">Unread</span>',read:'<span class="badge badge-blue">Read</span>',resolved:'<span class="badge badge-green">Resolved ✓</span>'};
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Type</th><th>Title</th><th>Sent</th><th>Status</th><th>Reply</th></tr></thead><tbody>${list.map(f=>`<tr><td>${typeIcon[f.type]||'💬'} ${f.type}</td><td style="font-weight:700;max-width:200px">${f.title}</td><td style="font-size:12px;color:#888">${f.created_at?.slice(0,10)||'—'}</td><td>${statusBadge[f.status]||f.status}</td><td style="font-size:12px;color:#555;max-width:200px">${f.admin_reply||'<span style="color:#ccc">—</span>'}</td></tr>`).join('')}</tbody></table></div>`;
+  el.innerHTML=`<div class="table-wrap"><table>
+    <thead><tr><th>Type</th><th>Title</th><th>Sent</th><th>Status</th><th>Reply</th></tr></thead>
+    <tbody>${list.map(f=>`<tr>
+      <td>${typeIcon[f.type]||'💬'} ${f.type}</td>
+      <td style="font-weight:700;max-width:200px">${f.title}</td>
+      <td style="font-size:12px;color:#888">${f.created_at?.slice(0,10)||'—'}</td>
+      <td>${statusBadge[f.status]||f.status}</td>
+      <td style="font-size:12px;color:#555;max-width:200px">${f.admin_reply||'<span style="color:#ccc">—</span>'}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
 }
 
 /* ── UTILS ── */
