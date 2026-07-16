@@ -186,6 +186,9 @@ select.form-input{cursor:pointer}
     <div class="nav-item" onclick="showPage('payroll')" id="nav-payroll">
       <span class="nav-icon">💰</span><span data-en="Payroll" data-ar="الرواتب">Payroll</span>
     </div>
+    <div class="nav-item" onclick="showPage('announcements')" id="nav-announcements">
+      <span class="nav-icon">📢</span><span data-en="Announcements" data-ar="الإعلانات">Announcements</span>
+    </div>
     <div class="nav-section" style="margin-top:8px">SETTINGS</div>
     <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
       <span class="nav-icon">⚙️</span><span data-en="Settings" data-ar="الإعدادات">Settings</span>
@@ -454,6 +457,19 @@ select.form-input{cursor:pointer}
         </div>
       </div>
     </div>
+    <!-- ANNOUNCEMENTS -->
+    <div id="page-announcements" style="display:none">
+      <div class="section-card">
+        <div class="section-header">
+          <div>
+            <div class="section-title">📢 Announcements</div>
+            <div class="section-sub">Post company-wide notices visible to all employees</div>
+          </div>
+          <button class="btn btn-primary" onclick="openAnnModal()">+ Post Announcement</button>
+        </div>
+        <div id="ann-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
     <!-- FEEDBACK -->
     <div id="page-feedback" style="display:none">
       <div class="section-card">
@@ -597,6 +613,51 @@ select.form-input{cursor:pointer}
     </div>
   </div>
 </div>
+<!-- MODAL: Post Announcement -->
+<div class="modal-overlay" id="modal-ann">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <div class="modal-title">📢 Post Announcement</div>
+      <button class="modal-close" onclick="closeModal('modal-ann')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">Type</label>
+          <select class="form-input" id="ann-type">
+            <option value="general">📢 General</option>
+            <option value="urgent">🚨 Urgent</option>
+            <option value="holiday">🎉 Holiday</option>
+            <option value="policy">📋 Policy Update</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Expires (optional)</label>
+          <input class="form-input" id="ann-expires" type="date"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Title</label>
+        <input class="form-input" id="ann-title" placeholder="e.g. Eid Al-Adha Holiday Notice"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Message</label>
+        <textarea class="form-input" id="ann-body" rows="4" placeholder="Write your announcement here..." style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-row" style="display:flex;align-items:center;gap:12px;">
+        <label class="toggle-wrap"><input type="checkbox" id="ann-pinned"><span class="toggle-slider"></span></label>
+        <div>
+          <div style="font-size:13px;font-weight:700;">📌 Pin this announcement</div>
+          <div style="font-size:11px;color:#888;">Pinned posts appear at the top for all employees</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-ann')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAnnouncement()">📤 Post Announcement</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <script>
 const API='/api';
@@ -650,12 +711,12 @@ async function loadDeptsAndTitles(){
 
 function showPage(page){
   localStorage.setItem('ghaya_page',page);
-  ['dashboard','employees','attendance','leaves','permissions','overtime','payroll','settings','feedback'].forEach(p=>{
+  ['dashboard','employees','attendance','leaves','permissions','overtime','payroll','announcements','settings','feedback'].forEach(p=>{
     document.getElementById('page-'+p).style.display=p===page?'':'none';
     const nav=document.getElementById('nav-'+p);
     if(nav)nav.classList.toggle('active',p===page);
   });
-  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},overtime:{en:'Overtime',ar:'العمل الإضافي'},payroll:{en:'Payroll',ar:'الرواتب'},settings:{en:'Settings',ar:'الإعدادات'},feedback:{en:'Send Feedback',ar:'إرسال ملاحظات'}};
+  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},overtime:{en:'Overtime',ar:'العمل الإضافي'},payroll:{en:'Payroll',ar:'الرواتب'},announcements:{en:'Announcements',ar:'الإعلانات'},settings:{en:'Settings',ar:'الإعدادات'},feedback:{en:'Send Feedback',ar:'إرسال ملاحظات'}};
   document.getElementById('page-title').textContent=titles[page]?.[currentLang]||titles[page]?.en;
   if(page==='dashboard')loadDashboard();
   if(page==='employees')loadEmployees();
@@ -664,6 +725,7 @@ function showPage(page){
   if(page==='permissions'){loadPerms();loadPermUsage();}
   if(page==='overtime')loadOT();
   if(page==='payroll')loadPayroll();
+  if(page==='announcements')loadAnnouncements();
   if(page==='settings'){renderSettings();loadAllSettings();}
   if(page==='feedback')loadMyFeedback();
 }
@@ -833,72 +895,6 @@ async function loadPerms(status){
   document.getElementById('perms-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const url=status==='all'?'/permissions':'/permissions?status='+status;
   const data=await apicall('GET',url);const list=data?.requests||[];
-document.getElementById('att-notes').value='';
-  document.getElementById('att-emp-id').disabled=false;
-  if(!employeesData.length){const d=await apicall('GET','/employees');employeesData=d?.employees||[];}
-  const sel=document.getElementById('att-emp-id');
-  sel.innerHTML='<option value="">— Select Employee —</option>'+employeesData.filter(e=>e.status==='active').map(e=>`<option value="${e.id}">${e.first_name_en} ${e.last_name_en}</option>`).join('');
-  document.getElementById('modal-att').classList.add('open');
-}
-function editAttRecord(id,empId,clockIn,clockOut,status){
-  editingAttId=id;
-  document.getElementById('modal-att-title').textContent='Edit Attendance Record';
-  document.getElementById('att-save-btn').textContent='Save Changes';
-  const empName=(employeesData.find(e=>e.id===empId)||{}).first_name_en||empId;
-  document.getElementById('att-emp-id').innerHTML=`<option value="${empId}">${empName}</option>`;
-  document.getElementById('att-emp-id').disabled=true;
-  document.getElementById('att-clock-in').value=clockIn?.slice(0,5)||'';
-  document.getElementById('att-clock-out').value=clockOut?.slice(0,5)||'';
-  document.getElementById('att-status').value=status||'present';
-  document.getElementById('att-notes').value='';
-  document.getElementById('modal-att').classList.add('open');
-}
-async function saveManualAtt(){
-  const clock_in=document.getElementById('att-clock-in').value;
-  const clock_out=document.getElementById('att-clock-out').value;
-  const status=document.getElementById('att-status').value;
-  const notes=document.getElementById('att-notes').value.trim();
-  let res;
-  if(editingAttId){
-    res=await apicall('PUT','/attendance/'+editingAttId,{clock_in,clock_out,status,notes});
-  }else{
-    const employee_id=document.getElementById('att-emp-id').value;
-    const date=document.getElementById('att-entry-date').value;
-    if(!employee_id||!date){showToast('Select employee and date','error');return;}
-    res=await apicall('POST','/attendance',{employee_id,date,clock_in,clock_out,status,notes});
-  }
-  if(res&&!res.error){closeModal('modal-att');showToast('Saved ✓','success');loadAttendance();}
-  else showToast(res?.error||'Error saving','error');
-}
-
-/* ── LEAVES ── */
-async function loadLeaves(status){
-  status=status||currentLeaveFilter;currentLeaveFilter=status;
-  document.getElementById('leaves-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const url=status==='all'?'/leaves':'/leaves?status='+status;
-  const data=await apicall('GET',url);const list=data?.requests||[];
-  const el=document.getElementById('leaves-list');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div>';return;}
-  const sb={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>',cancelled:'<span class="badge badge-gray">Cancelled</span>'};
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map(l=>`<tr><td style="font-weight:700">${l.employee_name||'—'}</td><td>${l.type_name||l.leave_type||'—'}</td><td>${l.start_date||'—'}</td><td>${l.end_date||'—'}</td><td>${l.days_count||'—'}</td><td>${sb[l.status]||l.status}</td><td style="display:flex;gap:6px;">${l.status==='pending'?`<button class="btn btn-success btn-sm" onclick="approveLeave('${l.id}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${l.id}')">✕ Reject</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;
-}
-function filterLeaves(status,btn){document.querySelectorAll('#page-leaves .filter-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');loadLeaves(status);}
-async function loadLeaveBalances(){
-  document.getElementById('leave-balances-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET','/leaves/balances');const list=data?.balances||[];
-  const el=document.getElementById('leave-balances-list');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No data</div></div>';return;}
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Hire Date</th><th>Accrued (days)</th><th>Taken</th><th>Remaining</th></tr></thead><tbody>${list.map(b=>`<tr><td style="font-weight:700">${b.employee_name||'—'}</td><td style="color:#888;font-size:12px">${b.hire_date||'—'}</td><td style="font-weight:700;color:#1a7a42">${typeof b.accrued==='number'?b.accrued.toFixed(1):'—'}</td><td>${b.taken||0}</td><td style="font-weight:700;color:${(b.remaining||0)>0?'#1a7a42':'#c42a00'}">${typeof b.remaining==='number'?b.remaining.toFixed(1):'—'}</td></tr>`).join('')}</tbody></table></div>`;
-}
-async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'approved'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
-async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'rejected'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
-
-/* ── PERMISSIONS ── */
-async function loadPerms(status){
-  status=status||'pending';
-  document.getElementById('perms-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const url=status==='all'?'/permissions':'/permissions?status='+status;
-  const data=await apicall('GET',url);const list=data?.requests||[];
   const el=document.getElementById('perms-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🕐</div><div class="empty-text">No permission requests</div></div>';return;}
   const sb={pending:'<span class="badge badge-orange">Pending</span>',approved:'<span class="badge badge-green">Approved</span>',rejected:'<span class="badge badge-red">Rejected</span>'};
@@ -917,8 +913,7 @@ async function loadPermUsage(){
   const limit=data?.monthly_limit||4;
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Used This Month</th><th>Remaining</th><th>Usage</th></tr></thead><tbody>${list.map(u=>{const pct=Math.min(100,((u.used||0)/limit)*100);return`<tr><td style="font-weight:700">${u.employee_name||'—'}</td><td style="font-weight:700;color:#E8472A">${parseFloat(u.used||0).toFixed(1)} hrs</td><td style="color:${(limit-(u.used||0))>=0?'#1a7a42':'#c42a00'};font-weight:700">${Math.max(0,limit-(u.used||0)).toFixed(1)} hrs</td><td style="min-width:120px"><div style="height:6px;background:#f0ebe4;border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${pct>=100?'#c42a00':'#E8472A'};border-radius:3px;"></div></div></td></tr>`;}).join('')}</tbody></table></div>`;
 }
-
-/* ── PAYROLL ── */
+  /* ── PAYROLL ── */
 async function loadPayroll(){
   document.getElementById('payroll-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/payroll');const runs=data?.runs||data?.payslips||[];
@@ -1245,60 +1240,4 @@ async function deleteAnn(id){
   if(!confirm('Delete this announcement? Employees will no longer see it.'))return;
   const res=await apicall('DELETE','/announcements/'+id);
   if(res?.success){showToast('Deleted','success');loadAnnouncements();}
-  else showToast('Error deleting','error');
-}
-
-/* ── FEEDBACK ── */
-async function submitFeedback(){
-  const type=document.getElementById('fb-type').value;
-  const title=document.getElementById('fb-title').value.trim();
-  const message=document.getElementById('fb-message').value.trim();
-  if(!title){showToast('Please enter a title','error');return;}
-  if(!message){showToast('Please describe your feedback','error');return;}
-  const res=await apicall('POST','/feedback',{type,title,message});
-  if(res&&!res.error){
-    showToast('Feedback sent to Ghaya team ✓','success');
-    document.getElementById('fb-title').value='';
-    document.getElementById('fb-message').value='';
-    document.getElementById('fb-type').value='suggestion';
-    loadMyFeedback();
-  }else{
-    showToast(res?.error||'Error sending feedback','error');
-  }
-}
-async function loadMyFeedback(){
-  const el=document.getElementById('fb-history');
-  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET','/feedback');
-  const list=data?.feedback||[];
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">💬</div><div class="empty-text">No submissions yet</div><div class="empty-sub">Use the form above to send your first feedback</div></div>';return;}
-  const typeIcon={suggestion:'💡',bug:'🐛',idea:'🚀',complaint:'⚠️'};
-  const statusBadge={unread:'<span class="badge badge-orange">Unread</span>',read:'<span class="badge badge-blue">Read</span>',resolved:'<span class="badge badge-green">Resolved ✓</span>'};
-  el.innerHTML=`<div class="table-wrap"><table>
-    <thead><tr><th>Type</th><th>Title</th><th>Sent</th><th>Status</th><th>Reply</th></tr></thead>
-    <tbody>${list.map(f=>`<tr>
-      <td>${typeIcon[f.type]||'💬'} ${f.type}</td>
-      <td style="font-weight:700;max-width:200px">${f.title}</td>
-      <td style="font-size:12px;color:#888">${f.created_at?.slice(0,10)||'—'}</td>
-      <td>${statusBadge[f.status]||f.status}</td>
-      <td style="font-size:12px;color:#555;max-width:200px">${f.admin_reply||'<span style="color:#ccc">—</span>'}</td>
-    </tr>`).join('')}</tbody>
-  </table></div>`;
-}
-
-/* ── UTILS ── */
-function closeModal(id){
-  document.getElementById(id).classList.remove('open');
-  const attEmp=document.getElementById('att-emp-id');if(attEmp)attEmp.disabled=false;
-}
-function setLang(lang,save=true){currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);document.documentElement.lang=lang;document.body.classList.toggle('ar',lang==='ar');document.getElementById('btn-en').classList.toggle('active',lang==='en');document.getElementById('btn-ar').classList.toggle('active',lang==='ar');document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.dataset[lang]||el.dataset.en;});}
-function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3000);}
-function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem('ghaya_user');localStorage.removeItem('ghaya_page');window.location.href='/';}
-document.querySelectorAll('.info-icon').forEach(icon=>{
-  icon.addEventListener('mouseenter',function(){const tip=document.createElement('div');tip.id='gtip';tip.style.cssText='position:fixed;background:#1a1a2e;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;line-height:1.5;width:210px;z-index:9999;pointer-events:none';tip.textContent=this.dataset.tip;document.body.appendChild(tip);const r=this.getBoundingClientRect();tip.style.left=Math.max(10,r.right-215)+'px';tip.style.top=(r.bottom+8)+'px';});
-  icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
-});
-init();
-</script>
-</body>
-</html>
+  else showToast('
