@@ -716,6 +716,54 @@ select.form-input{cursor:pointer}
     </div>
   </div>
 </div>
+<!-- DOCUMENTS MODAL -->
+<div class="modal-overlay" id="modal-docs">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <div class="modal-title">📂 Documents — <span id="docs-emp-name"></span></div>
+      <button class="modal-close" onclick="document.getElementById('modal-docs').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- Upload area -->
+      <div style="background:#f8faff;border:2px dashed #c0d0f0;border-radius:10px;padding:16px;margin-bottom:16px;">
+        <div style="font-weight:700;margin-bottom:10px;color:#1a1a2e;">Upload New Document</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">Document Type</label>
+            <select id="doc-type-select" class="form-control" style="font-size:13px;">
+              <option value="dt-civil-id">Civil ID</option>
+              <option value="dt-passport">Passport</option>
+              <option value="dt-residency">Residency Permit (Iqama)</option>
+              <option value="dt-work-permit">Work Permit</option>
+              <option value="dt-contract">Employment Contract</option>
+              <option value="dt-offer-letter">Offer Letter</option>
+              <option value="dt-medical">Medical Certificate</option>
+              <option value="dt-education">Educational Certificate</option>
+              <option value="dt-noc">Other</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">Notes (optional)</label>
+            <input type="text" id="doc-notes" class="form-control" placeholder="e.g. expires Jan 2026" style="font-size:13px;">
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label style="flex:1;background:#fff;border:1px solid #d0d8e8;border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px;color:#555;display:flex;align-items:center;gap:8px;" for="doc-file-input">
+            <span>📎</span><span id="doc-file-label">Choose file (PDF, JPG, PNG, Word — max 10 MB)</span>
+          </label>
+          <input type="file" id="doc-file-input" style="display:none;" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" onchange="docFileSelected(this)">
+          <button class="btn btn-primary btn-sm" onclick="uploadDoc()" id="doc-upload-btn">Upload</button>
+        </div>
+        <div id="doc-upload-progress" style="display:none;margin-top:8px;font-size:12px;color:#1a4da0;">Uploading…</div>
+      </div>
+      <!-- Documents list -->
+      <div id="docs-list-container">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- RESET PASSWORD MODAL -->
 <div class="modal-overlay" id="modal-reset-pwd">
   <div class="modal" style="max-width:420px;">
@@ -861,7 +909,7 @@ function filterEmployees(){
 function renderEmployeesTable(list){
   const el=document.getElementById('employees-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees found</div><div class="empty-sub">Add your first employee using the button above</div></div>';return;}
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Title / Dept</th><th>Nationality</th><th>Basic Salary</th><th>Hire Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((e,i)=>`<tr><td style="color:#888;font-size:12px">${i+1}</td><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></td><td><div>${getJobTitle(e.job_title_en)}</div><div style="font-size:11px;color:#888">${getDeptName(e.department)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="font-size:12px;color:#888">${e.hire_date||'—'}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button><button class="btn btn-purple btn-sm" onclick="viewEOS('${e.id}')">EOS</button><button class="btn btn-sm" style="background:#f0f4ff;color:#1a4da0;border:1px solid #c0d0f0;" onclick="openResetPwd('${e.id}','${e.first_name_en} ${e.last_name_en}')">🔑 Reset</button></td></tr>`).join('')}</tbody></table></div>`;
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Title / Dept</th><th>Nationality</th><th>Basic Salary</th><th>Hire Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((e,i)=>`<tr><td style="color:#888;font-size:12px">${i+1}</td><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></td><td><div>${getJobTitle(e.job_title_en)}</div><div style="font-size:11px;color:#888">${getDeptName(e.department)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="font-size:12px;color:#888">${e.hire_date||'—'}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button><button class="btn btn-purple btn-sm" onclick="viewEOS('${e.id}')">EOS</button><button class="btn btn-sm" style="background:#f0f4ff;color:#1a4da0;border:1px solid #c0d0f0;" onclick="openResetPwd('${e.id}','${e.first_name_en} ${e.last_name_en}')">🔑 Reset</button><button class="btn btn-sm" style="background:#fff8e1;color:#b07800;border:1px solid #f0d080;" onclick="openDocs('${e.id}','${e.first_name_en} ${e.last_name_en}')">📂 Docs</button></td></tr>`).join('')}</tbody></table></div>`;
 }
 function viewEOS(id){currentEOSId=id;document.getElementById('modal-eos').classList.add('open');loadEOS(id,'termination');}
 async function loadEOS(id,type){
@@ -1373,6 +1421,93 @@ async function loadMyFeedback(){
       <td style="font-size:12px;color:#555;max-width:200px">${f.admin_reply||'<span style="color:#ccc">—</span>'}</td>
     </tr>`).join('')}</tbody>
   </table></div>`;
+}
+
+/* ── DOCUMENTS ── */
+let docsCurrentEmpId=null;
+function fmtBytes(b){if(!b)return'—';if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+'KB';return(b/1048576).toFixed(1)+'MB';}
+function fmtDocDate(s){if(!s)return'—';return new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
+
+async function openDocs(empId,name){
+  docsCurrentEmpId=empId;
+  document.getElementById('docs-emp-name').textContent=name;
+  document.getElementById('doc-file-label').textContent='Choose file (PDF, JPG, PNG, Word — max 10 MB)';
+  document.getElementById('doc-file-input').value='';
+  document.getElementById('doc-notes').value='';
+  document.getElementById('doc-upload-progress').style.display='none';
+  document.getElementById('modal-docs').classList.add('open');
+  await loadDocsList();
+}
+
+async function loadDocsList(){
+  const el=document.getElementById('docs-list-container');
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const data=await apicall('GET',`/documents?employee_id=${docsCurrentEmpId}`);
+  const docs=data?.documents||[];
+  if(!docs.length){el.innerHTML='<div class="empty" style="padding:24px 0;"><div class="empty-icon">📄</div><div class="empty-text">No documents yet</div><div class="empty-sub">Upload the first document above</div></div>';return;}
+  const typeIcon={pdf:'📄',jpg:'🖼',jpeg:'🖼',png:'🖼',webp:'🖼',doc:'📝',docx:'📝'};
+  el.innerHTML=`<div style="font-weight:700;margin-bottom:10px;color:#1a1a2e;">Uploaded Documents (${docs.length})</div><div style="display:flex;flex-direction:column;gap:8px;">${docs.map(d=>{
+    const ext=(d.file_name||'').split('.').pop().toLowerCase();
+    const icon=typeIcon[ext]||'📎';
+    return`<div style="background:#fff;border:1px solid #e8edf5;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
+      <div style="font-size:22px;">${icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.file_name}</div>
+        <div style="font-size:11px;color:#888;">${d.type_name||'—'} · ${fmtBytes(d.file_size)} · ${fmtDocDate(d.created_at)}</div>
+        ${d.notes?`<div style="font-size:11px;color:#555;margin-top:2px;">${d.notes}</div>`:''}
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-primary btn-sm" onclick="downloadDoc('${d.id}','${d.file_name.replace(/'/g,"\\'")}')">⬇ Download</button>
+        <button class="btn btn-ghost btn-sm" style="color:#c42a00;" onclick="deleteDoc('${d.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function docFileSelected(input){
+  const f=input.files[0];
+  if(f)document.getElementById('doc-file-label').textContent=f.name;
+}
+
+async function uploadDoc(){
+  const fileInput=document.getElementById('doc-file-input');
+  const file=fileInput.files[0];
+  if(!file){showToast('Please choose a file first','error');return;}
+  const typeId=document.getElementById('doc-type-select').value;
+  const notes=document.getElementById('doc-notes').value.trim();
+  const btn=document.getElementById('doc-upload-btn');
+  const prog=document.getElementById('doc-upload-progress');
+  btn.disabled=true;prog.style.display='block';
+  try{
+    const fd=new FormData();
+    fd.append('file',file);
+    fd.append('employee_id',docsCurrentEmpId);
+    fd.append('document_type_id',typeId);
+    if(notes)fd.append('notes',notes);
+    const token=localStorage.getItem('ghaya_token');
+    const res=await fetch('/api/documents',{method:'POST',headers:{'Authorization':'Bearer '+token},body:fd});
+    const data=await res.json();
+    if(!res.ok){showToast(data.error||'Upload failed','error');return;}
+    showToast('Document uploaded');
+    document.getElementById('doc-file-label').textContent='Choose file (PDF, JPG, PNG, Word — max 10 MB)';
+    fileInput.value='';document.getElementById('doc-notes').value='';
+    await loadDocsList();
+  }finally{btn.disabled=false;prog.style.display='none';}
+}
+
+function downloadDoc(id,name){
+  const token=localStorage.getItem('ghaya_token');
+  fetch(`/api/documents/${id}/download`,{headers:{'Authorization':'Bearer '+token}})
+    .then(r=>{if(!r.ok)throw new Error('Download failed');return r.blob();})
+    .then(blob=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href);})
+    .catch(()=>showToast('Download failed','error'));
+}
+
+async function deleteDoc(id){
+  if(!confirm('Delete this document permanently?'))return;
+  const res=await apicall('DELETE',`/documents/${id}`);
+  if(res?.success){showToast('Document deleted');await loadDocsList();}
+  else showToast(res?.error||'Delete failed','error');
 }
 
 /* ── RESET PASSWORD ── */
