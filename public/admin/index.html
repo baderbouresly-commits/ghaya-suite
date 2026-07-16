@@ -186,6 +186,9 @@ select.form-input{cursor:pointer}
     <div class="nav-item" onclick="showPage('payroll')" id="nav-payroll">
       <span class="nav-icon">💰</span><span data-en="Payroll" data-ar="الرواتب">Payroll</span>
     </div>
+    <div class="nav-item" onclick="showPage('reports')" id="nav-reports">
+      <span class="nav-icon">📊</span><span data-en="Reports" data-ar="التقارير">Reports</span>
+    </div>
     <div class="nav-item" onclick="showPage('announcements')" id="nav-announcements">
       <span class="nav-icon">📢</span><span data-en="Announcements" data-ar="الإعلانات">Announcements</span>
     </div>
@@ -243,6 +246,7 @@ select.form-input{cursor:pointer}
           <div><div class="section-title">All Employees</div><div class="section-sub" id="emp-count">—</div></div>
           <div class="section-actions">
             <input class="search-bar" id="emp-search" placeholder="Search..." oninput="filterEmployees()"/>
+            <button class="btn btn-ghost btn-sm" onclick="exportEmployeesCSV()">📥 CSV</button>
             <button class="btn btn-primary" onclick="openAddEmployee()">+ Add Employee</button>
           </div>
         </div>
@@ -274,6 +278,8 @@ select.form-input{cursor:pointer}
           <div style="display:flex;gap:10px;align-items:center;">
             <input type="month" class="search-bar" id="att-month" style="width:160px;" onchange="loadMonthlyReport()"/>
             <button class="btn btn-ghost btn-sm" onclick="loadMonthlyReport()">View</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportAttMonthlyCSV()">📥 CSV</button>
+            <button class="btn btn-primary btn-sm" onclick="printAttMonthly()">🖨 PDF</button>
           </div>
         </div>
         <div id="att-monthly"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Select a month above</div></div></div>
@@ -294,7 +300,7 @@ select.form-input{cursor:pointer}
         <div id="leaves-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
       <div class="section-card">
-        <div class="section-header"><div><div class="section-title">Leave Balances</div><div class="section-sub">Accrued annual leave per employee (pro-rata)</div></div><button class="btn btn-ghost btn-sm" onclick="loadLeaveBalances()">↻ Refresh</button></div>
+        <div class="section-header"><div><div class="section-title">Leave Balances</div><div class="section-sub">Accrued annual leave per employee (pro-rata)</div></div><div style="display:flex;gap:8px;"><button class="btn btn-ghost btn-sm" onclick="loadLeaveBalances()">↻ Refresh</button><button class="btn btn-ghost btn-sm" onclick="exportLeaveBalancesCSV()">📥 CSV</button><button class="btn btn-primary btn-sm" onclick="printLeaveBalances()">🖨 PDF</button></div></div>
         <div id="leave-balances-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
@@ -369,8 +375,55 @@ select.form-input{cursor:pointer}
         <div style="margin-bottom:20px;"><button class="btn btn-ghost btn-sm" onclick="showPayrollList()">← Back to History</button></div>
         <div id="payroll-detail-summary" style="margin-bottom:24px;"></div>
         <div class="section-card">
-          <div class="section-header"><div class="section-title" id="payroll-detail-title">Payroll Breakdown</div><div id="payroll-detail-actions" style="display:flex;gap:8px;"></div></div>
+          <div class="section-header"><div class="section-title" id="payroll-detail-title">Payroll Breakdown</div><div id="payroll-detail-actions" style="display:flex;gap:8px;flex-wrap:wrap;"></div></div>
           <div id="payroll-detail-list"><div class="loading"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+    </div>
+    <!-- REPORTS -->
+    <div id="page-reports" style="display:none">
+      <div class="stats-grid" style="margin-bottom:24px;">
+        <div class="stat-card" style="cursor:pointer;" onclick="document.getElementById('rpt-emp').scrollIntoView({behavior:'smooth'})"><div class="stat-icon">👥</div><div class="stat-label">Employee Roster</div><div class="stat-value" style="font-size:14px;color:#E8472A;">Export →</div></div>
+        <div class="stat-card" style="cursor:pointer;" onclick="document.getElementById('rpt-att').scrollIntoView({behavior:'smooth'})"><div class="stat-icon">📅</div><div class="stat-label">Attendance Report</div><div class="stat-value" style="font-size:14px;color:#E8472A;">Export →</div></div>
+        <div class="stat-card" style="cursor:pointer;" onclick="document.getElementById('rpt-lv').scrollIntoView({behavior:'smooth'})"><div class="stat-icon">🌴</div><div class="stat-label">Leave Report</div><div class="stat-value" style="font-size:14px;color:#E8472A;">Export →</div></div>
+        <div class="stat-card" style="cursor:pointer;" onclick="document.getElementById('rpt-pay').scrollIntoView({behavior:'smooth'})"><div class="stat-icon">💰</div><div class="stat-label">Payroll Report</div><div class="stat-value" style="font-size:14px;color:#E8472A;">Export →</div></div>
+      </div>
+      <div class="section-card" id="rpt-emp" style="margin-bottom:24px;">
+        <div class="section-header">
+          <div><div class="section-title">👥 Employee Roster</div><div class="section-sub">All employees with salary, department and contract details</div></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="rptExportEmployeesCSV()">📥 Download CSV</button>
+            <button class="btn btn-primary btn-sm" onclick="rptPrintEmployees()">🖨 Print / PDF</button>
+          </div>
+        </div>
+      </div>
+      <div class="section-card" id="rpt-att" style="margin-bottom:24px;">
+        <div class="section-header">
+          <div><div class="section-title">📅 Attendance Report</div><div class="section-sub">Monthly summary — present, late, absent, hours per employee</div></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="month" class="search-bar" id="rpt-att-month" style="width:160px;"/>
+            <button class="btn btn-ghost btn-sm" onclick="rptExportAttCSV()">📥 Download CSV</button>
+            <button class="btn btn-primary btn-sm" onclick="rptPrintAtt()">🖨 Print / PDF</button>
+          </div>
+        </div>
+      </div>
+      <div class="section-card" id="rpt-lv" style="margin-bottom:24px;">
+        <div class="section-header">
+          <div><div class="section-title">🌴 Leave Report</div><div class="section-sub">Leave balances for all employees (accrued, taken, remaining)</div></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="rptExportLeavesCSV()">📥 Download CSV</button>
+            <button class="btn btn-primary btn-sm" onclick="rptPrintLeaves()">🖨 Print / PDF</button>
+          </div>
+        </div>
+      </div>
+      <div class="section-card" id="rpt-pay">
+        <div class="section-header">
+          <div><div class="section-title">💰 Payroll Report</div><div class="section-sub">Payroll run history and totals by year</div></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select class="search-bar" id="rpt-pay-year" style="width:100px;"></select>
+            <button class="btn btn-ghost btn-sm" onclick="rptExportPayrollCSV()">📥 Download CSV</button>
+            <button class="btn btn-primary btn-sm" onclick="rptPrintPayroll()">🖨 Print / PDF</button>
+          </div>
         </div>
       </div>
     </div>
@@ -670,6 +723,7 @@ let currentUser=null,currentLang=localStorage.getItem('ghaya_lang')||'en';
 let employeesData=[],leavesData=[],currentLeaveFilter='pending',editingEmpId=null;
 let deptsData=[],jobTitlesData=[];
 let currentEOSId=null,editingAttId=null;
+let attMonthlyData=[],leaveBalancesData=[];
 if(!token){window.location.href='/';}
 
 async function apicall(method,path,body){
@@ -715,12 +769,12 @@ async function loadDeptsAndTitles(){
 
 function showPage(page){
   localStorage.setItem('ghaya_page',page);
-  ['dashboard','employees','attendance','leaves','permissions','overtime','payroll','announcements','settings','feedback'].forEach(p=>{
+  ['dashboard','employees','attendance','leaves','permissions','overtime','payroll','reports','announcements','settings','feedback'].forEach(p=>{
     document.getElementById('page-'+p).style.display=p===page?'':'none';
     const nav=document.getElementById('nav-'+p);
     if(nav)nav.classList.toggle('active',p===page);
   });
-  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},overtime:{en:'Overtime',ar:'العمل الإضافي'},payroll:{en:'Payroll',ar:'الرواتب'},announcements:{en:'Announcements',ar:'الإعلانات'},settings:{en:'Settings',ar:'الإعدادات'},feedback:{en:'Send Feedback',ar:'إرسال ملاحظات'}};
+  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},overtime:{en:'Overtime',ar:'العمل الإضافي'},payroll:{en:'Payroll',ar:'الرواتب'},reports:{en:'Reports & Export',ar:'التقارير'},announcements:{en:'Announcements',ar:'الإعلانات'},settings:{en:'Settings',ar:'الإعدادات'},feedback:{en:'Send Feedback',ar:'إرسال ملاحظات'}};
   document.getElementById('page-title').textContent=titles[page]?.[currentLang]||titles[page]?.en;
   if(page==='dashboard')loadDashboard();
   if(page==='employees')loadEmployees();
@@ -729,6 +783,7 @@ function showPage(page){
   if(page==='permissions'){loadPerms();loadPermUsage();}
   if(page==='overtime')loadOT();
   if(page==='payroll')loadPayroll();
+  if(page==='reports')loadReports();
   if(page==='announcements')loadAnnouncements();
   if(page==='settings'){renderSettings();loadAllSettings();}
   if(page==='feedback')loadMyFeedback();
@@ -822,7 +877,8 @@ async function loadMonthlyReport(){
   if(!records.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No records for this month</div></div>';return;}
   const byEmp={};
   records.forEach(r=>{if(!byEmp[r.employee_id]){byEmp[r.employee_id]={name:r.employee_name||'—',present:0,late:0,absent:0,half_day:0,hours:0};}const e=byEmp[r.employee_id];if(e[r.status]!==undefined)e[r.status]++;e.hours+=(r.hours_worked||0);});
-  const rows=Object.values(byEmp).map(e=>`<tr><td style="font-weight:700">${e.name}</td><td style="color:#1a7a42;font-weight:700">${e.present}</td><td style="color:#c46a00;font-weight:700">${e.late}</td><td style="color:#1a4da0;font-weight:700">${e.half_day}</td><td style="color:#c42a00;font-weight:700">${e.absent}</td><td style="font-weight:700">${e.hours.toFixed(1)} hrs</td></tr>`).join('');
+  attMonthlyData=Object.values(byEmp);
+  const rows=attMonthlyData.map(e=>`<tr><td style="font-weight:700">${e.name}</td><td style="color:#1a7a42;font-weight:700">${e.present}</td><td style="color:#c46a00;font-weight:700">${e.late}</td><td style="color:#1a4da0;font-weight:700">${e.half_day}</td><td style="color:#c42a00;font-weight:700">${e.absent}</td><td style="font-weight:700">${e.hours.toFixed(1)} hrs</td></tr>`).join('');
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th style="color:#1a7a42">Present</th><th style="color:#c46a00">Late</th><th style="color:#1a4da0">Half Day</th><th style="color:#c42a00">Absent</th><th>Total Hours</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 async function openManualAtt(){
@@ -886,6 +942,7 @@ function filterLeaves(status,btn){document.querySelectorAll('#page-leaves .filte
 async function loadLeaveBalances(){
   document.getElementById('leave-balances-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/leaves/balances');const list=data?.balances||[];
+  leaveBalancesData=list;
   const el=document.getElementById('leave-balances-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No data</div></div>';return;}
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Hire Date</th><th>Accrued (days)</th><th>Taken</th><th>Remaining</th></tr></thead><tbody>${list.map(b=>`<tr><td style="font-weight:700">${b.employee_name||'—'}</td><td style="color:#888;font-size:12px">${b.hire_date||'—'}</td><td style="font-weight:700;color:#1a7a42">${typeof b.accrued==='number'?b.accrued.toFixed(1):'—'}</td><td>${b.taken||0}</td><td style="font-weight:700;color:${(b.remaining||0)>0?'#1a7a42':'#c42a00'}">${typeof b.remaining==='number'?b.remaining.toFixed(1):'—'}</td></tr>`).join('')}</tbody></table></div>`;
@@ -936,7 +993,7 @@ async function viewPayrollDetail(id){
   const run=data.run||{};const entries=data.entries||[];
   const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('payroll-detail-title').textContent=`${months[(run.period_month||1)-1]} ${run.period_year} Payroll`;
-  document.getElementById('payroll-detail-actions').innerHTML=run.status!=='published'?`<button class="btn btn-success btn-sm" onclick="publishPayroll('${id}')">✓ Publish</button>`:'<span class="badge badge-green">Published</span>';
+  document.getElementById('payroll-detail-actions').innerHTML=(run.status!=='published'?`<button class="btn btn-success btn-sm" onclick="publishPayroll('${id}')">✓ Publish</button>`:'<span class="badge badge-green">Published</span>')+`<button class="btn btn-ghost btn-sm" onclick="exportPayslipsCSV('${id}')">📥 CSV</button><button class="btn btn-primary btn-sm" onclick="printPayslips('${id}')">🖨 Payslips PDF</button>`;
   if(!entries.length){document.getElementById('payroll-detail-list').innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No entries</div></div>';return;}
   document.getElementById('payroll-detail-list').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Basic Salary</th><th>PIFSS Employee</th><th>PIFSS Employer</th><th>Net Pay</th></tr></thead><tbody>${entries.map(e=>`<tr><td style="font-weight:700">${e.employee_name||'—'}</td><td>KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="color:${e.pifss_employee>0?'#c42a00':'#888'}">${e.pifss_employee>0?'− KWD '+parseFloat(e.pifss_employee).toFixed(3):'—'}</td><td style="color:#888">${e.pifss_employer>0?'KWD '+parseFloat(e.pifss_employer).toFixed(3):'—'}</td><td style="font-weight:800;color:#1a7a42">KWD ${parseFloat(e.net_salary||0).toFixed(3)}</td></tr>`).join('')}</tbody></table></div>`;
 }
@@ -1285,6 +1342,178 @@ async function loadMyFeedback(){
       <td style="font-size:12px;color:#555;max-width:200px">${f.admin_reply||'<span style="color:#ccc">—</span>'}</td>
     </tr>`).join('')}</tbody>
   </table></div>`;
+}
+
+/* ── REPORTS & EXPORT ── */
+function downloadCSV(rows,filename){
+  if(!rows.length){showToast('No data to export','error');return;}
+  const headers=Object.keys(rows[0]);
+  const csv=[headers.join(','),...rows.map(row=>headers.map(h=>{const v=row[h]??'';return`"${String(v).replace(/"/g,'""')}"`}).join(','))].join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
+  showToast('Downloaded ✓','success');
+}
+function printWindow(title,html){
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title><style>
+    *{box-sizing:border-box;}body{font-family:'Segoe UI',Arial,sans-serif;padding:30px;color:#1a1a2e;background:#fff;}
+    h1{font-size:22px;font-weight:800;margin-bottom:4px;}
+    .sub{font-size:12px;color:#888;margin-bottom:28px;}
+    table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px;}
+    th{background:#1a1a2e;color:#fff;padding:9px 12px;text-align:left;font-weight:600;font-size:12px;}
+    td{padding:8px 12px;border-bottom:1px solid #eee;}
+    tr:nth-child(even) td{background:#fafafa;}
+    .payslip{border:1px solid #ddd;border-radius:8px;padding:24px;margin-bottom:24px;page-break-inside:avoid;}
+    .ps-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a2e;padding-bottom:14px;margin-bottom:14px;}
+    .ps-company{font-size:18px;font-weight:800;}.ps-period{font-size:11px;color:#888;margin-top:3px;}
+    .ps-emp{text-align:right;font-size:15px;font-weight:700;}
+    .ps-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}
+    .ps-total{display:flex;justify-content:space-between;padding:10px 0;font-weight:800;font-size:16px;border-top:2px solid #1a1a2e;margin-top:8px;color:#1a7a42;}
+    .ps-note{font-size:11px;color:#888;margin-top:8px;}
+    .no-print{margin-bottom:20px;}
+    @media print{.no-print{display:none;}body{padding:15px;}}
+  </style></head><body>
+  <div class="no-print"><button onclick="window.print()" style="padding:9px 22px;background:#1a1a2e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;">🖨 Print / Save as PDF</button></div>
+  ${html}</body></html>`);
+  w.document.close();
+}
+
+/* Export from Employees page */
+function exportEmployeesCSV(){
+  if(!employeesData.length){showToast('Load employees first','error');return;}
+  const rows=employeesData.map(e=>({'First Name':e.first_name_en,'Last Name':e.last_name_en,'Civil ID':e.civil_id||'','Nationality':e.nationality||'','Department':getDeptName(e.department),'Job Title':getJobTitle(e.job_title_en),'Basic Salary (KWD)':parseFloat(e.basic_salary||0).toFixed(3),'Hire Date':e.hire_date||'','Email':e.work_email||'','Phone':e.phone||'','Contract':e.contract_type||'','Status':e.status||''}));
+  downloadCSV(rows,'employees.csv');
+}
+
+/* Export from Attendance monthly */
+function exportAttMonthlyCSV(){
+  if(!attMonthlyData.length){showToast('Load a monthly report first','error');return;}
+  const month=document.getElementById('att-month').value||'';
+  const rows=attMonthlyData.map(e=>({'Employee':e.name,'Present':e.present,'Late':e.late,'Half Day':e.half_day,'Absent':e.absent,'Total Hours':e.hours.toFixed(1)}));
+  downloadCSV(rows,`attendance-${month||'report'}.csv`);
+}
+function printAttMonthly(){
+  if(!attMonthlyData.length){showToast('Load a monthly report first','error');return;}
+  const month=document.getElementById('att-month').value||'';
+  const label=month?new Date(month+'-01').toLocaleString('en',{month:'long',year:'numeric'}):month;
+  const rows=attMonthlyData.map((e,i)=>`<tr><td>${i+1}</td><td>${e.name}</td><td style="color:#1a7a42;font-weight:700">${e.present}</td><td style="color:#c46a00;font-weight:700">${e.late}</td><td style="color:#1a4da0;font-weight:700">${e.half_day}</td><td style="color:#c42a00;font-weight:700">${e.absent}</td><td style="font-weight:700">${e.hours.toFixed(1)}</td></tr>`).join('');
+  printWindow(`Attendance Report — ${label}`,`<h1>Attendance Report</h1><div class="sub">${label} · Generated: ${new Date().toLocaleDateString('en-GB')}</div><table><thead><tr><th>#</th><th>Employee</th><th>Present</th><th>Late</th><th>Half Day</th><th>Absent</th><th>Hours</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+
+/* Export from Leave Balances */
+function exportLeaveBalancesCSV(){
+  if(!leaveBalancesData.length){showToast('Load leave balances first','error');return;}
+  const rows=leaveBalancesData.map(b=>({'Employee':b.employee_name||'—','Hire Date':b.hire_date||'—','Accrued (days)':typeof b.accrued==='number'?b.accrued.toFixed(1):'—','Taken (days)':b.taken||0,'Remaining (days)':typeof b.remaining==='number'?b.remaining.toFixed(1):'—'}));
+  downloadCSV(rows,'leave-balances.csv');
+}
+function printLeaveBalances(){
+  if(!leaveBalancesData.length){showToast('Load leave balances first','error');return;}
+  const rows=leaveBalancesData.map((b,i)=>`<tr><td>${i+1}</td><td>${b.employee_name||'—'}</td><td>${b.hire_date||'—'}</td><td style="color:#1a7a42;font-weight:700">${typeof b.accrued==='number'?b.accrued.toFixed(1):'—'}</td><td>${b.taken||0}</td><td style="font-weight:700;color:${(b.remaining||0)>=0?'#1a7a42':'#c42a00'}">${typeof b.remaining==='number'?b.remaining.toFixed(1):'—'}</td></tr>`).join('');
+  printWindow('Leave Balance Report',`<h1>Leave Balance Report</h1><div class="sub">Generated: ${new Date().toLocaleDateString('en-GB')}</div><table><thead><tr><th>#</th><th>Employee</th><th>Hire Date</th><th>Accrued</th><th>Taken</th><th>Remaining</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+
+/* Payslip CSV + PDF from Payroll detail */
+async function exportPayslipsCSV(payrollId){
+  const data=await apicall('GET','/payroll/'+payrollId);
+  if(!data||data.error){showToast('Error loading payroll','error');return;}
+  const run=data.run||{};
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const period=`${months[(run.period_month||1)-1]} ${run.period_year}`;
+  const rows=(data.entries||[]).map(e=>({'Employee':e.employee_name||'—','Period':period,'Basic Salary (KWD)':parseFloat(e.basic_salary||0).toFixed(3),'PIFSS Deduction (KWD)':parseFloat(e.pifss_employee||0).toFixed(3),'Net Pay (KWD)':parseFloat(e.net_salary||0).toFixed(3),'Employer PIFSS (KWD)':parseFloat(e.pifss_employer||0).toFixed(3)}));
+  downloadCSV(rows,`payslips-${period.replace(' ','-')}.csv`);
+}
+async function printPayslips(payrollId){
+  const data=await apicall('GET','/payroll/'+payrollId);
+  if(!data||data.error){showToast('Error loading payroll','error');return;}
+  const run=data.run||{};const entries=data.entries||[];
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const period=`${months[(run.period_month||1)-1]} ${run.period_year}`;
+  const companyName=document.getElementById('company-name').textContent||'Company';
+  const slips=entries.map(e=>`
+    <div class="payslip">
+      <div class="ps-header">
+        <div><div class="ps-company">${companyName}</div><div class="ps-period">Official Payslip · ${period}</div></div>
+        <div class="ps-emp">${e.employee_name||'—'}</div>
+      </div>
+      <div class="ps-row"><span>Basic Salary</span><span>KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</span></div>
+      ${e.pifss_employee>0?`<div class="ps-row" style="color:#c42a00"><span>PIFSS Deduction (Employee 8%)</span><span>− KWD ${parseFloat(e.pifss_employee).toFixed(3)}</span></div>`:''}
+      <div class="ps-total"><span>Net Pay</span><span>KWD ${parseFloat(e.net_salary||0).toFixed(3)}</span></div>
+      ${e.pifss_employer>0?`<div class="ps-note">Employer PIFSS contribution (11%): KWD ${parseFloat(e.pifss_employer).toFixed(3)} — paid by company, not deducted from salary</div>`:''}
+    </div>`).join('');
+  printWindow(`Payslips — ${period}`,`<h1>Payslips — ${period}</h1><div class="sub">${companyName} · Generated: ${new Date().toLocaleDateString('en-GB')}</div>${slips}`);
+}
+
+/* Reports page functions */
+async function loadReports(){
+  const yr=document.getElementById('rpt-pay-year');
+  if(!yr.options.length){const now=new Date();for(let y=now.getFullYear();y>=now.getFullYear()-3;y--){const o=document.createElement('option');o.value=y;o.textContent=y;yr.appendChild(o);}}
+  const m=document.getElementById('rpt-att-month');
+  if(!m.value){const now=new Date();m.value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;}
+}
+async function rptExportEmployeesCSV(){
+  if(!employeesData.length){const d=await apicall('GET','/employees');employeesData=d?.employees||[];}
+  await loadDeptsAndTitles();
+  exportEmployeesCSV();
+}
+async function rptPrintEmployees(){
+  if(!employeesData.length){const d=await apicall('GET','/employees');employeesData=d?.employees||[];}
+  await loadDeptsAndTitles();
+  const rows=employeesData.map((e,i)=>`<tr><td>${i+1}</td><td><b>${e.first_name_en} ${e.last_name_en}</b></td><td>${getDeptName(e.department)}</td><td>${getJobTitle(e.job_title_en)}</td><td>${e.nationality||'—'}</td><td><b>KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</b></td><td>${e.hire_date||'—'}</td><td>${e.status==='active'?'✅ Active':'⚪ Inactive'}</td></tr>`).join('');
+  const total=employeesData.filter(e=>e.status==='active').reduce((s,e)=>s+parseFloat(e.basic_salary||0),0);
+  printWindow('Employee Roster',`<h1>Employee Roster</h1><div class="sub">Generated: ${new Date().toLocaleDateString('en-GB')} · Active employees: ${employeesData.filter(e=>e.status==='active').length}</div><table><thead><tr><th>#</th><th>Name</th><th>Department</th><th>Job Title</th><th>Nationality</th><th>Salary</th><th>Hire Date</th><th>Status</th></tr></thead><tbody>${rows}<tr style="background:#f0f0f0;font-weight:800;"><td colspan="5">Total Monthly Payroll</td><td>KWD ${total.toFixed(3)}</td><td colspan="2"></td></tr></tbody></table>`);
+}
+async function rptExportAttCSV(){
+  const month=document.getElementById('rpt-att-month').value;
+  if(!month){showToast('Select a month','error');return;}
+  const data=await apicall('GET','/attendance?month='+month);
+  const records=data?.records||[];
+  if(!records.length){showToast('No attendance data for this month','error');return;}
+  const byEmp={};
+  records.forEach(r=>{if(!byEmp[r.employee_id]){byEmp[r.employee_id]={Employee:r.employee_name||'—',Present:0,Late:0,'Half Day':0,Absent:0,'Total Hours':0};}const e=byEmp[r.employee_id];if(r.status==='present')e.Present++;else if(r.status==='late')e.Late++;else if(r.status==='half_day')e['Half Day']++;else if(r.status==='absent')e.Absent++;e['Total Hours']+=(r.hours_worked||0);});
+  const rows=Object.values(byEmp).map(e=>({...e,'Total Hours':e['Total Hours'].toFixed(1)}));
+  downloadCSV(rows,`attendance-${month}.csv`);
+}
+async function rptPrintAtt(){
+  const month=document.getElementById('rpt-att-month').value;
+  if(!month){showToast('Select a month','error');return;}
+  const data=await apicall('GET','/attendance?month='+month);
+  const records=data?.records||[];
+  if(!records.length){showToast('No data','error');return;}
+  const byEmp={};
+  records.forEach(r=>{if(!byEmp[r.employee_id]){byEmp[r.employee_id]={name:r.employee_name||'—',present:0,late:0,half:0,absent:0,hours:0};}const e=byEmp[r.employee_id];if(r.status==='present')e.present++;else if(r.status==='late')e.late++;else if(r.status==='half_day')e.half++;else if(r.status==='absent')e.absent++;e.hours+=(r.hours_worked||0);});
+  const label=new Date(month+'-01').toLocaleString('en',{month:'long',year:'numeric'});
+  const rows=Object.values(byEmp).map((e,i)=>`<tr><td>${i+1}</td><td>${e.name}</td><td style="color:#1a7a42;font-weight:700">${e.present}</td><td style="color:#c46a00;font-weight:700">${e.late}</td><td style="color:#1a4da0;font-weight:700">${e.half}</td><td style="color:#c42a00;font-weight:700">${e.absent}</td><td style="font-weight:700">${e.hours.toFixed(1)}</td></tr>`).join('');
+  printWindow(`Attendance — ${label}`,`<h1>Attendance Report</h1><div class="sub">${label} · Generated: ${new Date().toLocaleDateString('en-GB')}</div><table><thead><tr><th>#</th><th>Employee</th><th>Present</th><th>Late</th><th>Half Day</th><th>Absent</th><th>Hours</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+async function rptExportLeavesCSV(){
+  const data=await apicall('GET','/leaves/balances');const list=data?.balances||[];
+  if(!list.length){showToast('No leave data','error');return;}
+  const rows=list.map(b=>({'Employee':b.employee_name||'—','Hire Date':b.hire_date||'—','Accrued (days)':typeof b.accrued==='number'?b.accrued.toFixed(1):'—','Taken (days)':b.taken||0,'Remaining (days)':typeof b.remaining==='number'?b.remaining.toFixed(1):'—'}));
+  downloadCSV(rows,'leave-balances.csv');
+}
+async function rptPrintLeaves(){
+  const data=await apicall('GET','/leaves/balances');const list=data?.balances||[];
+  if(!list.length){showToast('No leave data','error');return;}
+  const rows=list.map((b,i)=>`<tr><td>${i+1}</td><td>${b.employee_name||'—'}</td><td>${b.hire_date||'—'}</td><td style="color:#1a7a42;font-weight:700">${typeof b.accrued==='number'?b.accrued.toFixed(1):'—'}</td><td>${b.taken||0}</td><td style="font-weight:700;color:${(b.remaining||0)>=0?'#1a7a42':'#c42a00'}">${typeof b.remaining==='number'?b.remaining.toFixed(1):'—'}</td></tr>`).join('');
+  printWindow('Leave Balance Report',`<h1>Leave Balance Report</h1><div class="sub">Generated: ${new Date().toLocaleDateString('en-GB')}</div><table><thead><tr><th>#</th><th>Employee</th><th>Hire Date</th><th>Accrued</th><th>Taken</th><th>Remaining</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+async function rptExportPayrollCSV(){
+  const year=document.getElementById('rpt-pay-year').value||new Date().getFullYear();
+  const data=await apicall('GET','/payroll');const runs=(data?.runs||data?.payslips||[]).filter(r=>r.period_year==year);
+  if(!runs.length){showToast('No payroll runs for this year','error');return;}
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const rows=runs.map(r=>({'Period':`${months[(r.period_month||1)-1]} ${r.period_year}`,'Employees':r.employee_count||0,'Total Gross (KWD)':parseFloat(r.total_gross||0).toFixed(3),'Total Net (KWD)':parseFloat(r.total_net||0).toFixed(3),'Status':r.status||'draft'}));
+  downloadCSV(rows,`payroll-${year}.csv`);
+}
+async function rptPrintPayroll(){
+  const year=document.getElementById('rpt-pay-year').value||new Date().getFullYear();
+  const data=await apicall('GET','/payroll');const runs=(data?.runs||data?.payslips||[]).filter(r=>r.period_year==year);
+  if(!runs.length){showToast('No payroll runs for this year','error');return;}
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const rows=runs.map(r=>`<tr><td>${months[(r.period_month||1)-1]} ${r.period_year}</td><td>${r.employee_count||0}</td><td>KWD ${parseFloat(r.total_gross||0).toFixed(3)}</td><td style="font-weight:700;color:#1a7a42">KWD ${parseFloat(r.total_net||0).toFixed(3)}</td><td>${r.status||'draft'}</td></tr>`).join('');
+  const total=runs.reduce((s,r)=>s+parseFloat(r.total_net||0),0);
+  printWindow(`Payroll Report ${year}`,`<h1>Payroll Report ${year}</h1><div class="sub">Generated: ${new Date().toLocaleDateString('en-GB')}</div><table><thead><tr><th>Period</th><th>Employees</th><th>Gross</th><th>Net Pay</th><th>Status</th></tr></thead><tbody>${rows}<tr style="background:#f0f0f0;font-weight:800;"><td colspan="3" style="text-align:right">Annual Net Total</td><td style="color:#1a7a42">KWD ${total.toFixed(3)}</td><td></td></tr></tbody></table>`);
 }
 
 /* ── UTILS ── */
