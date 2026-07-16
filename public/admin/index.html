@@ -376,6 +376,7 @@ select.form-input{cursor:pointer}
     </div>
     <!-- SETTINGS -->
     <div id="page-settings" style="display:none">
+      <!-- Geofencing -->
       <div class="section-card" style="margin-bottom:24px;">
         <div class="section-header">
           <div><div class="section-title">Workplace Geofencing</div><div class="section-sub">Restrict clock in/out to within a set distance of your workplace</div></div>
@@ -399,6 +400,7 @@ select.form-input{cursor:pointer}
         <div id="geofence-off-hint" style="padding:14px 24px;font-size:13px;color:#888;">Toggle on to configure your workplace location and radius.</div>
         <div style="padding:0 24px 20px;"><button class="btn btn-primary" onclick="saveGeofenceSettings()">Save Geofencing</button></div>
       </div>
+      <!-- Work Schedule -->
       <div class="section-card" style="margin-bottom:24px;">
         <div class="section-header"><div class="section-title">Work Schedule</div><div class="section-sub">Default hours used for attendance tracking</div></div>
         <div class="sched-row">
@@ -420,6 +422,7 @@ select.form-input{cursor:pointer}
         </div>
         <div style="padding:0 24px 20px;"><button class="btn btn-primary" onclick="saveWorkSchedule()">Save Schedule</button></div>
       </div>
+      <!-- Permission Limit -->
       <div class="section-card" style="margin-bottom:24px;">
         <div class="section-header"><div class="section-title">Permission Hours Limit</div><div class="section-sub">Monthly استئذان allowance per employee</div></div>
         <div style="padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
@@ -433,6 +436,7 @@ select.form-input{cursor:pointer}
           </div>
         </div>
       </div>
+      <!-- Departments & Job Titles -->
       <div class="section-card">
         <div class="section-header"><div class="section-title">Departments &amp; Job Titles</div><div class="section-sub">Manage your company structure</div></div>
         <div class="settings-grid">
@@ -456,7 +460,6 @@ select.form-input{cursor:pointer}
           </div>
         </div>
       </div>
-    </div>
     </div>
     <!-- ANNOUNCEMENTS -->
     <div id="page-announcements" style="display:none">
@@ -914,7 +917,8 @@ async function loadPermUsage(){
   const limit=data?.monthly_limit||4;
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Used This Month</th><th>Remaining</th><th>Usage</th></tr></thead><tbody>${list.map(u=>{const pct=Math.min(100,((u.used||0)/limit)*100);return`<tr><td style="font-weight:700">${u.employee_name||'—'}</td><td style="font-weight:700;color:#E8472A">${parseFloat(u.used||0).toFixed(1)} hrs</td><td style="color:${(limit-(u.used||0))>=0?'#1a7a42':'#c42a00'};font-weight:700">${Math.max(0,limit-(u.used||0)).toFixed(1)} hrs</td><td style="min-width:120px"><div style="height:6px;background:#f0ebe4;border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${pct>=100?'#c42a00':'#E8472A'};border-radius:3px;"></div></div></td></tr>`;}).join('')}</tbody></table></div>`;
 }
-  /* ── PAYROLL ── */
+
+/* ── PAYROLL ── */
 async function loadPayroll(){
   document.getElementById('payroll-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const data=await apicall('GET','/payroll');const runs=data?.runs||data?.payslips||[];
@@ -1018,6 +1022,7 @@ function toggleGeofenceFields(){
   document.getElementById('geofence-fields').style.display=enabled?'':'none';
   document.getElementById('geofence-off-hint').style.display=enabled?'none':'';
   document.getElementById('geofence-toggle-label').textContent=enabled?'On':'Off';
+  // Auto-save when toggling OFF so it persists without clicking Save
   if(!enabled) saveGeofenceSettings();
 }
 async function saveGeofenceSettings(){
@@ -1241,4 +1246,60 @@ async function deleteAnn(id){
   if(!confirm('Delete this announcement? Employees will no longer see it.'))return;
   const res=await apicall('DELETE','/announcements/'+id);
   if(res?.success){showToast('Deleted','success');loadAnnouncements();}
-  else showToast('
+  else showToast('Error deleting','error');
+}
+
+/* ── FEEDBACK ── */
+async function submitFeedback(){
+  const type=document.getElementById('fb-type').value;
+  const title=document.getElementById('fb-title').value.trim();
+  const message=document.getElementById('fb-message').value.trim();
+  if(!title){showToast('Please enter a title','error');return;}
+  if(!message){showToast('Please describe your feedback','error');return;}
+  const res=await apicall('POST','/feedback',{type,title,message});
+  if(res&&!res.error){
+    showToast('Feedback sent to Ghaya team ✓','success');
+    document.getElementById('fb-title').value='';
+    document.getElementById('fb-message').value='';
+    document.getElementById('fb-type').value='suggestion';
+    loadMyFeedback();
+  }else{
+    showToast(res?.error||'Error sending feedback','error');
+  }
+}
+async function loadMyFeedback(){
+  const el=document.getElementById('fb-history');
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const data=await apicall('GET','/feedback');
+  const list=data?.feedback||[];
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">💬</div><div class="empty-text">No submissions yet</div><div class="empty-sub">Use the form above to send your first feedback</div></div>';return;}
+  const typeIcon={suggestion:'💡',bug:'🐛',idea:'🚀',complaint:'⚠️'};
+  const statusBadge={unread:'<span class="badge badge-orange">Unread</span>',read:'<span class="badge badge-blue">Read</span>',resolved:'<span class="badge badge-green">Resolved ✓</span>'};
+  el.innerHTML=`<div class="table-wrap"><table>
+    <thead><tr><th>Type</th><th>Title</th><th>Sent</th><th>Status</th><th>Reply</th></tr></thead>
+    <tbody>${list.map(f=>`<tr>
+      <td>${typeIcon[f.type]||'💬'} ${f.type}</td>
+      <td style="font-weight:700;max-width:200px">${f.title}</td>
+      <td style="font-size:12px;color:#888">${f.created_at?.slice(0,10)||'—'}</td>
+      <td>${statusBadge[f.status]||f.status}</td>
+      <td style="font-size:12px;color:#555;max-width:200px">${f.admin_reply||'<span style="color:#ccc">—</span>'}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+/* ── UTILS ── */
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+  const attEmp=document.getElementById('att-emp-id');if(attEmp)attEmp.disabled=false;
+}
+function setLang(lang,save=true){currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);document.documentElement.lang=lang;document.body.classList.toggle('ar',lang==='ar');document.getElementById('btn-en').classList.toggle('active',lang==='en');document.getElementById('btn-ar').classList.toggle('active',lang==='ar');document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.dataset[lang]||el.dataset.en;});}
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3000);}
+function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem('ghaya_user');localStorage.removeItem('ghaya_page');window.location.href='/';}
+document.querySelectorAll('.info-icon').forEach(icon=>{
+  icon.addEventListener('mouseenter',function(){const tip=document.createElement('div');tip.id='gtip';tip.style.cssText='position:fixed;background:#1a1a2e;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;line-height:1.5;width:210px;z-index:9999;pointer-events:none';tip.textContent=this.dataset.tip;document.body.appendChild(tip);const r=this.getBoundingClientRect();tip.style.left=Math.max(10,r.right-215)+'px';tip.style.top=(r.bottom+8)+'px';});
+  icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
+});
+init();
+</script>
+</body>
+</html>
