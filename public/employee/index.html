@@ -176,6 +176,17 @@
   </div>
 </div>
 
+<!-- My Documents Modal -->
+<div class="modal-overlay" id="docs-modal">
+  <div class="modal" style="max-width:520px;width:100%;">
+    <div class="modal-title">📂 My Documents</div>
+    <div id="emp-docs-list" style="min-height:80px;"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('docs-modal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Top Nav -->
 <nav class="topnav">
   <a href="/" class="nav-logo">
@@ -363,6 +374,7 @@
     return lang === 'ar' ? `${MONTHS_AR[m-1]} ${y}` : `${MONTHS[m-1]} ${y}`;
   }
 
+  // ── Auth ─────────────────────────────────────
   const token = localStorage.getItem('ghaya_token');
   const user = JSON.parse(localStorage.getItem('ghaya_user') || 'null');
   if (!token || !user) { window.location.href = '/'; }
@@ -382,6 +394,7 @@
     return res.json();
   }
 
+  // ── Dashboard ─────────────────────────────────
   async function loadDashboard() {
     const data = await apiFetch('/api/dashboard');
     if (!data) return;
@@ -418,6 +431,7 @@
     document.getElementById('ml-cancel').textContent = t.mlCancel;
     document.getElementById('ml-submit').textContent = t.mlSubmit;
 
+    // Alerts
     const alertsEl = document.getElementById('alerts-section');
     alertsEl.innerHTML = '';
     (data.expiring_documents || []).forEach(doc => {
@@ -428,6 +442,7 @@
       alertsEl.appendChild(div);
     });
 
+    // Stats
     const annualBalance = data.leave_balances?.find(b => b.type_name === 'Annual Leave') || data.leave_balances?.[0];
     if (annualBalance) {
       const remaining = annualBalance.entitled_days - annualBalance.used_days - annualBalance.pending_days;
@@ -504,6 +519,7 @@
     }
   }
 
+  // ── Leave Modal ───────────────────────────────
   function openLeaveModal() { document.getElementById('leave-modal').classList.add('open'); }
   function closeLeaveModal() { document.getElementById('leave-modal').classList.remove('open'); }
 
@@ -521,9 +537,44 @@
     else alert(res?.error || 'Error submitting request');
   }
 
-  function viewDocuments() { alert('Documents page coming soon!'); }
+  async function viewDocuments() {
+    document.getElementById('docs-modal').classList.add('open');
+    const el = document.getElementById('emp-docs-list');
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);">Loading…</div>';
+    const data = await apicall('GET', '/documents');
+    const docs = data?.documents || [];
+    if (!docs.length) {
+      el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;">📄 No documents uploaded yet.<br><span style="font-size:12px;">Your HR admin will upload documents here (contracts, IDs, certificates, etc.)</span></div>';
+      return;
+    }
+    const typeIcon = {pdf:'📄',jpg:'🖼',jpeg:'🖼',png:'🖼',webp:'🖼',doc:'📝',docx:'📝'};
+    const fmtBytes = b => { if(!b) return ''; if(b<1048576) return (b/1024).toFixed(0)+'KB'; return (b/1048576).toFixed(1)+'MB'; };
+    const fmtDate = s => s ? new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '';
+    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;">${docs.map(d => {
+      const ext = (d.file_name||'').split('.').pop().toLowerCase();
+      const icon = typeIcon[ext] || '📎';
+      return `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--cream);border-radius:10px;border:1px solid var(--border);">
+        <div style="font-size:24px;flex-shrink:0;">${icon}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:13px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.file_name}</div>
+          <div style="font-size:11px;color:var(--gray);margin-top:2px;">${d.type_name||'Document'} · ${fmtBytes(d.file_size)} · ${fmtDate(d.created_at)}</div>
+          ${d.notes ? `<div style="font-size:11px;color:#555;margin-top:2px;">${d.notes}</div>` : ''}
+        </div>
+        <button onclick="empDownloadDoc('${d.id}','${d.file_name.replace(/'/g,"\\'")}')" style="background:var(--coral);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">⬇ Download</button>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function empDownloadDoc(id, name) {
+    const token = localStorage.getItem('ghaya_token');
+    fetch(`/api/documents/${id}/download`, { headers: { 'Authorization': 'Bearer ' + token } })
+      .then(r => { if (!r.ok) throw new Error(); return r.blob(); })
+      .then(blob => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href); })
+      .catch(() => alert('Download failed. Please try again.'));
+  }
   function downloadPayslip() { alert('Payslip download coming soon!'); }
 
+  // ── Clock In / Out ────────────────────────────
   let currentAttRecord = null;
 
   function startLiveClock() {
@@ -542,10 +593,12 @@
     const data = await apiFetch('/api/attendance/today');
     const rec = data?.record || null;
     currentAttRecord = rec;
+
     const inBtn = document.getElementById('clock-in-btn');
     const outBtn = document.getElementById('clock-out-btn');
     const label = document.getElementById('clock-status-label');
     const info = document.getElementById('clock-info');
+
     if (!rec || !rec.clock_in) {
       label.textContent = 'NOT CLOCKED IN';
       inBtn.style.display = '';
@@ -579,26 +632,37 @@
     const btn = document.getElementById('clock-in-btn');
     btn.textContent = '…'; btn.disabled = true;
     const {lat, lng} = await getLocation();
-    const res = await apiFetch('/api/attendance/clockin', { method:'POST', body:JSON.stringify({lat, lng}) });
+    const res = await apiFetch('/api/attendance/clockin', {
+      method: 'POST',
+      body: JSON.stringify({lat, lng})
+    });
     btn.textContent = '✓ Clock In'; btn.disabled = false;
     if (res && !res.error) {
       await loadClockStatus();
       if (res.message) document.getElementById('clock-info').textContent = res.message;
-    } else { alert(res?.error || 'Error clocking in'); }
+    } else {
+      alert(res?.error || 'Error clocking in');
+    }
   }
 
   async function clockOut() {
     const btn = document.getElementById('clock-out-btn');
     btn.textContent = '…'; btn.disabled = true;
     const {lat, lng} = await getLocation();
-    const res = await apiFetch('/api/attendance/clockout', { method:'POST', body:JSON.stringify({lat, lng}) });
+    const res = await apiFetch('/api/attendance/clockout', {
+      method: 'POST',
+      body: JSON.stringify({lat, lng})
+    });
     btn.textContent = '✗ Clock Out'; btn.disabled = false;
     if (res && !res.error) {
       await loadClockStatus();
       if (res.message) document.getElementById('clock-info').textContent = res.message;
-    } else { alert(res?.error || 'Error clocking out'); }
+    } else {
+      alert(res?.error || 'Error clocking out');
+    }
   }
 
+  // ── Overtime ──────────────────────────────────
   async function loadOTHistory() {
     const data = await apiFetch('/api/overtime');
     const list = data?.requests || [];
@@ -673,7 +737,7 @@
               ${a.is_pinned ? '<span style="font-size:11px;color:#888;">📌 Pinned</span>' : ''}
               <span style="font-size:11px;color:var(--gray);margin-left:auto;">${a.created_at?.slice(0,10)||''}</span>
             </div>
-            <div style="font-family:'Almarai',sans-serif;font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px;">${a.title}</div>
+            <div style="font-family:\'Almarai\',sans-serif;font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px;">${a.title}</div>
             <div style="font-size:13px;color:var(--charcoal);line-height:1.6;">${a.body}</div>
           </div>`).join('')}
       </div>`;
