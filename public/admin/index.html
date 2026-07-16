@@ -716,6 +716,36 @@ select.form-input{cursor:pointer}
     </div>
   </div>
 </div>
+<!-- RESET PASSWORD MODAL -->
+<div class="modal-overlay" id="modal-reset-pwd">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title">🔑 Reset Password</div>
+      <button class="modal-close" onclick="document.getElementById('modal-reset-pwd').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="reset-pwd-emp-name" style="font-weight:700;font-size:15px;margin-bottom:16px;color:#1a1a2e;"></div>
+      <div class="form-group" style="margin-bottom:16px;">
+        <label class="form-label">New Password</label>
+        <div style="position:relative;">
+          <input type="password" id="reset-pwd-input" class="form-control" placeholder="Enter new password" style="padding-right:48px;" oninput="document.getElementById('reset-pwd-result').style.display='none'">
+          <button type="button" onclick="toggleResetPwdVisibility()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;font-size:16px;" id="reset-eye-btn">👁</button>
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:4px;">Minimum 6 characters</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:16px;" onclick="saveResetPwd()">Save New Password</button>
+      <!-- Result box — shown after save -->
+      <div id="reset-pwd-result" style="display:none;background:#f0fff4;border:1.5px solid #68d391;border-radius:10px;padding:14px 16px;">
+        <div style="font-size:12px;font-weight:700;color:#1a7a42;margin-bottom:8px;">✅ Password reset successfully! Share this with the employee:</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div id="reset-pwd-display" style="flex:1;font-family:monospace;font-size:15px;font-weight:800;background:#fff;border:1px solid #a8e6c0;border-radius:6px;padding:8px 12px;letter-spacing:1px;color:#1a4da0;"></div>
+          <button onclick="copyResetPwd()" style="background:#1a7a42;color:#fff;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;" id="copy-reset-btn">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <script>
 const API='/api';
@@ -831,7 +861,7 @@ function filterEmployees(){
 function renderEmployeesTable(list){
   const el=document.getElementById('employees-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees found</div><div class="empty-sub">Add your first employee using the button above</div></div>';return;}
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Title / Dept</th><th>Nationality</th><th>Basic Salary</th><th>Hire Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((e,i)=>`<tr><td style="color:#888;font-size:12px">${i+1}</td><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></td><td><div>${getJobTitle(e.job_title_en)}</div><div style="font-size:11px;color:#888">${getDeptName(e.department)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="font-size:12px;color:#888">${e.hire_date||'—'}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button><button class="btn btn-purple btn-sm" onclick="viewEOS('${e.id}')">EOS</button></td></tr>`).join('')}</tbody></table></div>`;
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Title / Dept</th><th>Nationality</th><th>Basic Salary</th><th>Hire Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((e,i)=>`<tr><td style="color:#888;font-size:12px">${i+1}</td><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></td><td><div>${getJobTitle(e.job_title_en)}</div><div style="font-size:11px;color:#888">${getDeptName(e.department)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="font-size:12px;color:#888">${e.hire_date||'—'}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button><button class="btn btn-purple btn-sm" onclick="viewEOS('${e.id}')">EOS</button><button class="btn btn-sm" style="background:#f0f4ff;color:#1a4da0;border:1px solid #c0d0f0;" onclick="openResetPwd('${e.id}','${e.first_name_en} ${e.last_name_en}')">🔑 Reset</button></td></tr>`).join('')}</tbody></table></div>`;
 }
 function viewEOS(id){currentEOSId=id;document.getElementById('modal-eos').classList.add('open');loadEOS(id,'termination');}
 async function loadEOS(id,type){
@@ -1343,6 +1373,42 @@ async function loadMyFeedback(){
       <td style="font-size:12px;color:#555;max-width:200px">${f.admin_reply||'<span style="color:#ccc">—</span>'}</td>
     </tr>`).join('')}</tbody>
   </table></div>`;
+}
+
+/* ── RESET PASSWORD ── */
+let resetPwdEmpId=null;
+function openResetPwd(id,name){
+  resetPwdEmpId=id;
+  document.getElementById('reset-pwd-emp-name').textContent='Employee: '+name;
+  document.getElementById('reset-pwd-input').value='';
+  document.getElementById('reset-pwd-input').type='password';
+  document.getElementById('reset-eye-btn').textContent='👁';
+  document.getElementById('reset-pwd-result').style.display='none';
+  document.getElementById('modal-reset-pwd').classList.add('open');
+}
+function toggleResetPwdVisibility(){
+  const inp=document.getElementById('reset-pwd-input');
+  const btn=document.getElementById('reset-eye-btn');
+  if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}
+  else{inp.type='password';btn.textContent='👁';}
+}
+async function saveResetPwd(){
+  const pwd=document.getElementById('reset-pwd-input').value.trim();
+  if(!pwd||pwd.length<6){showToast('Password must be at least 6 characters','error');return;}
+  const res=await apicall('PUT',`/employees/${resetPwdEmpId}`,{password:pwd});
+  if(!res||res.error){showToast(res?.error||'Failed to reset password','error');return;}
+  document.getElementById('reset-pwd-display').textContent=pwd;
+  document.getElementById('reset-pwd-result').style.display='block';
+  document.getElementById('copy-reset-btn').textContent='Copy';
+  showToast('Password reset successfully');
+}
+function copyResetPwd(){
+  const pwd=document.getElementById('reset-pwd-display').textContent;
+  navigator.clipboard.writeText(pwd).then(()=>{
+    const btn=document.getElementById('copy-reset-btn');
+    btn.textContent='Copied!';
+    setTimeout(()=>btn.textContent='Copy',2000);
+  });
 }
 
 /* ── REPORTS & EXPORT ── */
