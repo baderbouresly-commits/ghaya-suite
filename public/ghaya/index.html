@@ -348,15 +348,9 @@ select.form-input{cursor:pointer}
       </div>
       <hr style="margin:16px 0;border:none;border-top:1px solid #f0ebe4"/>
       <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:12px">COMPANY ADMIN ACCOUNT</div>
-      <div class="form-grid">
-        <div class="form-row">
-          <label class="form-label">Admin Name</label>
-          <input class="form-input" id="co-admin-name" placeholder="Sara Al-Rashidi"/>
-        </div>
-        <div class="form-row">
-          <label class="form-label">Admin Email</label>
-          <input class="form-input" id="co-admin-email" type="email" placeholder="admin@company.com"/>
-        </div>
+      <div class="form-row">
+        <label class="form-label">Admin Email</label>
+        <input class="form-input" id="co-admin-email" type="email" placeholder="admin@company.com"/>
       </div>
       <div class="form-row">
         <label class="form-label">Temp Password</label>
@@ -634,7 +628,7 @@ async function viewCompany(id) {
     const admin = (udata?.users || []).find(u => u.company_id === id && u.role === 'admin');
     if (admin) {
       viewCompanyAdminUserId = admin.id;
-      document.getElementById('view-co-admin-info').textContent = `${admin.name || ''} — ${admin.email}`;
+      document.getElementById('view-co-admin-info').textContent = admin.email;
     } else {
       document.getElementById('view-co-admin-info').textContent = 'No admin user found for this company.';
     }
@@ -691,7 +685,6 @@ async function createCompany() {
   const tier = document.getElementById('co-tier').value;
   const size = document.getElementById('co-size').value;
   const managed = document.getElementById('co-managed').checked;
-  const adminName = document.getElementById('co-admin-name').value.trim();
   const adminEmail = document.getElementById('co-admin-email').value.trim();
   const adminPass = document.getElementById('co-admin-pass').value.trim();
 
@@ -704,7 +697,7 @@ async function createCompany() {
   const res = await api('POST', '/companies', {
     name_en: nameEn, name_ar: nameAr, cr_number: cr, industry,
     subscription_tier: tier, size_tier: size, managed_by_ghaya: managed,
-    admin_name: adminName, admin_email: adminEmail,
+    admin_email: adminEmail,
     admin_password: adminPass || 'TempPass2025!'
   });
 
@@ -721,7 +714,7 @@ async function createCompany() {
 }
 
 function clearAddForm() {
-  ['co-name-en','co-name-ar','co-cr','co-admin-name','co-admin-email','co-admin-pass'].forEach(id => {
+  ['co-name-en','co-name-ar','co-cr','co-admin-email','co-admin-pass'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('co-managed').checked = false;
@@ -748,12 +741,11 @@ function renderUsersTable(users) {
   }
   el.innerHTML = `<div class="table-wrap"><table>
     <thead><tr>
-      <th>Name</th><th>Email</th><th>Role</th><th>Company</th><th>Subscription</th><th>Actions</th>
+      <th>Email</th><th>Role</th><th>Company</th><th>Subscription</th><th>Actions</th>
     </tr></thead>
     <tbody>${users.map(u => `
       <tr>
-        <td style="font-weight:700">${u.name || '—'}</td>
-        <td style="font-size:13px;color:#555">${u.email}</td>
+        <td style="font-weight:700">${u.email}</td>
         <td>${u.role === 'ghaya_admin'
           ? '<span class="badge badge-orange">⚡ Ghaya Admin</span>'
           : '<span class="badge badge-blue">Admin</span>'}</td>
@@ -764,7 +756,7 @@ function renderUsersTable(users) {
               : '<span class="badge badge-red">Inactive</span>')
           : '<span class="badge badge-gray">—</span>'}</td>
         <td>
-          <button class="btn btn-ghost btn-sm" onclick="openResetUser('${u.id}','${(u.name||u.email).replace(/'/g,"\\'")}')">🔑 Reset PW</button>
+          <button class="btn btn-ghost btn-sm" onclick="openResetUser('${u.id}','${u.email.replace(/'/g,"\\'")}')">🔑 Reset PW</button>
         </td>
       </tr>`).join('')}
     </tbody></table></div>`;
