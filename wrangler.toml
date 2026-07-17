@@ -13,6 +13,7 @@ JWT_SECRET = "ghaya2025xK9mP3nQ7rL2sT8vW4yZ6aB1cD5eF0hJ"
 JWT_EXPIRES_IN = "86400"
 APP_NAME = "Ghaya Suite"
 SUPPORT_EMAIL = "support@ghaya.hr"
+ONESIGNAL_APP_ID = "ded12bcc-da9a-4dca-b800-c7d3622ef474"
 [[r2_buckets]]
 binding = "R2"
 bucket_name = "ghaya-documents"
