@@ -1090,8 +1090,8 @@ async function loadLeaveBalances(){
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No data</div></div>';return;}
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Hire Date</th><th>Accrued (days)</th><th>Taken</th><th>Remaining</th></tr></thead><tbody>${list.map(b=>`<tr><td style="font-weight:700">${b.employee_name||'—'}</td><td style="color:#888;font-size:12px">${b.hire_date||'—'}</td><td style="font-weight:700;color:#1a7a42">${typeof b.accrued==='number'?b.accrued.toFixed(1):'—'}</td><td>${b.taken||0}</td><td style="font-weight:700;color:${(b.remaining||0)>0?'#1a7a42':'#c42a00'}">${typeof b.remaining==='number'?b.remaining.toFixed(1):'—'}</td></tr>`).join('')}</tbody></table></div>`;
 }
-async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'approved'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
-async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'rejected'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
+async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'approve'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast(res?.error||'Error','error');}
+async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'reject'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast(res?.error||'Error','error');}
 
 /* ── PERMISSIONS ── */
 async function loadPerms(status){
