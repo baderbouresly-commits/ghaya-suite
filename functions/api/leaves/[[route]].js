@@ -158,20 +158,21 @@ export async function onRequest({ request, env, params }) {
     }
 
 // Push notification to the employee (non-blocking — never breaks approval)
-    try {
-      const emp = await db.prepare(
-        'SELECT user_id FROM employees WHERE id = ?'
-      ).bind(lr.employee_id).first();
-      if (emp?.user_id && typeof sendPushNotification === 'function') {
-        const emoji = newStatus === 'approved' ? '✅' : '❌';
-        await sendPushNotification(env, {
-          userIds: [emp.user_id],
-          heading: `Leave ${newStatus === 'approved' ? 'Approved' : 'Rejected'} ${emoji}`,
-          content: `Your leave request (${lr.days_count} day${lr.days_count !== 1 ? 's' : ''}) has been ${newStatus}.`,
-          url: 'https://ghaya-suite.pages.dev/employee/',
-        });
-      }
-    } catch { /* notification failure must never block the approval */ }
+try {
+  const emp = await db.prepare(
+    'SELECT user_id FROM employees WHERE id = ?'
+  ).bind(lr.employee_id).first();
+  console.log('[NOTIF] emp.user_id:', emp?.user_id, '| typeof fn:', typeof sendPushNotification);
+  if (emp?.user_id && typeof sendPushNotification === 'function') {
+    const emoji = newStatus === 'approved' ? '✅' : '❌';
+    await sendPushNotification(env, {
+      userIds: [emp.user_id],
+      heading: `Leave ${newStatus === 'approved' ? 'Approved' : 'Rejected'} ${emoji}`,
+      content: `Your leave request (${lr.days_count} day${lr.days_count !== 1 ? 's' : ''}) has been ${newStatus}.`,
+      url: 'https://ghaya-suite.pages.dev/employee/',
+    });
+  }
+} catch(e) { console.log('[NOTIF ERROR]', e?.message); }
 
     return json({ message: `Leave request ${newStatus}` });
 
