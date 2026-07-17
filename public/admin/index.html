@@ -6,7 +6,7 @@
 <title>Ghaya — Company Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet"/>
-  <!-- OneSignal Web Push -->
+<!-- OneSignal Web Push -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -133,6 +133,7 @@ select.form-input{cursor:pointer}
 .filter-btn.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px}
 .settings-col-title{font-size:13px;font-weight:800;color:#1a1a2e;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #E8472A}
+.kll-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:700;background:#dbeafe;color:#1a4da0;border-radius:4px;padding:2px 6px;margin-left:6px;white-space:nowrap}
 .tag-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;min-height:30px}
 .tag-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#faf6f1;border:1px solid #e8e0d8;border-radius:8px;font-size:13px}
 .tag-item-name{font-weight:700;color:#1a1a2e}
@@ -527,6 +528,98 @@ select.form-input{cursor:pointer}
         </div>
       </div>
 
+      <!-- Kuwait Labour Law Settings -->
+      <div class="section-card" style="margin-top:24px;">
+        <div class="section-header">
+          <div>
+            <div class="section-title">⚖️ Kuwait Labour Law Settings</div>
+            <div class="section-sub">Defaults set per Kuwait Labour Law No. 6 of 2010 — you can override any value for your company</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="resetKLLDefaults()" style="color:#1a4da0;border-color:#1a4da0;">🇰🇼 Reset to KLL Defaults</button>
+        </div>
+        <div style="padding:12px 24px 4px;background:#e6f0ff;border-bottom:1px solid #ccdcf5;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">🇰🇼</span>
+          <span style="font-size:12px;color:#1a4da0;font-weight:700;">All values below are pre-set to comply with Kuwait Labour Law No. 6 of 2010. You may change any value to match your company policy.</span>
+        </div>
+        <div style="padding:24px;">
+
+          <!-- Leave Entitlements -->
+          <div style="font-size:12px;font-weight:800;color:#888;letter-spacing:1px;margin-bottom:14px;">LEAVE ENTITLEMENTS (DAYS)</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px;">
+            <div class="form-row" style="margin:0">
+              <label class="form-label">Annual Leave <span class="kll-tag">🇰🇼 Min 30 days · Art. 70</span></label>
+              <input class="form-input" id="kll-annual-leave" type="number" min="30" step="1"/>
+            </div>
+            <div class="form-row" style="margin:0">
+              <label class="form-label">Sick Leave <span class="kll-tag">🇰🇼 15 days full pay · Art. 69</span></label>
+              <input class="form-input" id="kll-sick-leave" type="number" min="15" step="1"/>
+            </div>
+            <div class="form-row" style="margin:0">
+              <label class="form-label">Maternity Leave <span class="kll-tag">🇰🇼 70 days · Art. 75</span></label>
+              <input class="form-input" id="kll-maternity-leave" type="number" min="70" step="1"/>
+            </div>
+            <div class="form-row" style="margin:0">
+              <label class="form-label">Paternity Leave <span class="kll-tag" style="background:#f0ebe4;color:#888;">Company policy</span></label>
+              <input class="form-input" id="kll-paternity-leave" type="number" min="0" step="1"/>
+            </div>
+          </div>
+
+          <!-- Overtime Rates -->
+          <div style="font-size:12px;font-weight:800;color:#888;letter-spacing:1px;margin-bottom:14px;">OVERTIME RATES (multiplier of normal pay)</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+            <div class="form-row" style="margin:0">
+              <label class="form-label">Normal Day <span class="kll-tag">🇰🇼 1.25× · Art. 66</span></label>
+              <input class="form-input" id="kll-ot-day" type="number" min="1.25" step="0.05"/>
+            </div>
+            <div class="form-row" style="margin:0">
+              <label class="form-label">Night / Friday <span class="kll-tag">🇰🇼 1.50× · Art. 66</span></label>
+              <input class="form-input" id="kll-ot-night" type="number" min="1.50" step="0.05"/>
+            </div>
+            <div class="form-row" style="margin:0">
+              <label class="form-label">Public Holiday <span class="kll-tag">🇰🇼 2.00× · Art. 66</span></label>
+              <input class="form-input" id="kll-ot-holiday" type="number" min="2.00" step="0.05"/>
+            </div>
+          </div>
+
+          <!-- PIFSS -->
+          <div style="font-size:12px;font-weight:800;color:#888;letter-spacing:1px;margin-bottom:14px;">PIFSS CONTRIBUTIONS (Kuwaiti nationals only · Law 61/1976)</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px;">
+            <div class="form-row" style="margin:0">
+              <label class="form-label">Employee Rate (%) <span class="kll-tag">🇰🇼 10.5%</span></label>
+              <div style="position:relative">
+                <input class="form-input" id="kll-pifss-emp" type="number" min="0" max="100" step="0.1" style="padding-right:36px"/>
+                <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#888;font-weight:700;pointer-events:none">%</span>
+              </div>
+            </div>
+            <div class="form-row" style="margin:0">
+              <label class="form-label">Employer Rate (%) <span class="kll-tag">🇰🇼 11.5%</span></label>
+              <div style="position:relative">
+                <input class="form-input" id="kll-pifss-er" type="number" min="0" max="100" step="0.1" style="padding-right:36px"/>
+                <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#888;font-weight:700;pointer-events:none">%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Indemnity -->
+          <div style="font-size:12px;font-weight:800;color:#888;letter-spacing:1px;margin-bottom:14px;">END OF SERVICE INDEMNITY (days of pay per year)</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px;">
+            <div class="form-row" style="margin:0">
+              <label class="form-label">Years 1–5 <span class="kll-tag">🇰🇼 15 days/year · Art. 51</span></label>
+              <input class="form-input" id="kll-indem-y1" type="number" min="0" step="1"/>
+            </div>
+            <div class="form-row" style="margin:0">
+              <label class="form-label">Year 6 onwards <span class="kll-tag">🇰🇼 30 days/year · Art. 51</span></label>
+              <input class="form-input" id="kll-indem-y6" type="number" min="0" step="1"/>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary" onclick="saveKLLSettings()">Save Labour Law Settings</button>
+            <span style="font-size:12px;color:#888;">Changes apply to new leave assignments and future payroll runs.</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Manager Access -->
       <div class="section-card" style="margin-top:24px;">
         <div class="section-header">
@@ -879,10 +972,11 @@ async function init(){
     if(!me||me.error){logout();return;}
     if(!['company_admin','manager'].includes(me.user.role)){logout();return;}
     currentUser=me.user;
+    // Link this browser to the admin's OneSignal profile
     if(me.user.sub){
-  window.OneSignalDeferred=window.OneSignalDeferred||[];
-  OneSignalDeferred.push(async function(OneSignal){try{await OneSignal.login(me.user.sub);}catch(e){}});
-}
+      window.OneSignalDeferred=window.OneSignalDeferred||[];
+      OneSignalDeferred.push(async function(OneSignal){try{await OneSignal.login(me.user.sub);}catch(e){}});
+    }
     document.getElementById('user-name').textContent=me.user.name||me.user.email;
     document.getElementById('user-avatar').textContent=(me.user.name||me.user.email)[0].toUpperCase();
     if(me.user.company_id){
@@ -928,7 +1022,7 @@ function showPage(page){
   if(page==='payroll')loadPayroll();
   if(page==='reports')loadReports();
   if(page==='announcements')loadAnnouncements();
-  if(page==='settings'){renderSettings();loadAllSettings();}
+  if(page==='settings'){renderSettings();loadAllSettings();loadKLLSettings();}
   if(page==='feedback')loadMyFeedback();
 }
 
@@ -1090,8 +1184,8 @@ async function loadLeaveBalances(){
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No data</div></div>';return;}
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Hire Date</th><th>Accrued (days)</th><th>Taken</th><th>Remaining</th></tr></thead><tbody>${list.map(b=>`<tr><td style="font-weight:700">${b.employee_name||'—'}</td><td style="color:#888;font-size:12px">${b.hire_date||'—'}</td><td style="font-weight:700;color:#1a7a42">${typeof b.accrued==='number'?b.accrued.toFixed(1):'—'}</td><td>${b.taken||0}</td><td style="font-weight:700;color:${(b.remaining||0)>0?'#1a7a42':'#c42a00'}">${typeof b.remaining==='number'?b.remaining.toFixed(1):'—'}</td></tr>`).join('')}</tbody></table></div>`;
 }
-async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'approve'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast(res?.error||'Error','error');}
-async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{action:'reject'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast(res?.error||'Error','error');}
+async function approveLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'approved'});if(res&&!res.error){showToast('Leave approved ✓','success');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
+async function rejectLeave(id){const res=await apicall('PUT','/leaves/'+id,{status:'rejected'});if(res&&!res.error){showToast('Leave rejected','');loadDashboard();if(document.getElementById('page-leaves').style.display!=='none')loadLeaves();}else showToast('Error','error');}
 
 /* ── PERMISSIONS ── */
 async function loadPerms(status){
@@ -1242,6 +1336,47 @@ function useMyLocation(){
     document.getElementById('geo-lng').value=pos.coords.longitude.toFixed(6);
     showToast('Location captured ✓','success');
   },()=>showToast('Could not get location','error'),{timeout:7000});
+}
+/* ── KLL SETTINGS ── */
+async function loadKLLSettings(){
+  const res = await apicall('GET', '/settings');
+  if (!res?.settings) return;
+  const s = res.settings;
+  document.getElementById('kll-annual-leave').value = s.default_annual_leave ?? 30;
+  document.getElementById('kll-sick-leave').value   = s.default_sick_leave ?? 15;
+  document.getElementById('kll-maternity-leave').value = s.default_maternity_leave ?? 70;
+  document.getElementById('kll-paternity-leave').value = s.default_paternity_leave ?? 3;
+  document.getElementById('kll-ot-day').value    = s.overtime_rate_day ?? 1.25;
+  document.getElementById('kll-ot-night').value  = s.overtime_rate_night ?? 1.50;
+  document.getElementById('kll-ot-holiday').value = s.overtime_rate_holiday ?? 2.00;
+  document.getElementById('kll-pifss-emp').value = ((s.pifss_employee_rate ?? 0.105) * 100).toFixed(1);
+  document.getElementById('kll-pifss-er').value  = ((s.pifss_employer_rate ?? 0.115) * 100).toFixed(1);
+  document.getElementById('kll-indem-y1').value  = s.indemnity_year1_rate ?? 15;
+  document.getElementById('kll-indem-y6').value  = s.indemnity_year6_rate ?? 30;
+}
+async function saveKLLSettings(){
+  const body = {
+    default_annual_leave:    parseInt(document.getElementById('kll-annual-leave').value),
+    default_sick_leave:      parseInt(document.getElementById('kll-sick-leave').value),
+    default_maternity_leave: parseInt(document.getElementById('kll-maternity-leave').value),
+    default_paternity_leave: parseInt(document.getElementById('kll-paternity-leave').value),
+    overtime_rate_day:       parseFloat(document.getElementById('kll-ot-day').value),
+    overtime_rate_night:     parseFloat(document.getElementById('kll-ot-night').value),
+    overtime_rate_holiday:   parseFloat(document.getElementById('kll-ot-holiday').value),
+    pifss_employee_rate:     parseFloat(document.getElementById('kll-pifss-emp').value) / 100,
+    pifss_employer_rate:     parseFloat(document.getElementById('kll-pifss-er').value) / 100,
+    indemnity_year1_rate:    parseFloat(document.getElementById('kll-indem-y1').value),
+    indemnity_year6_rate:    parseFloat(document.getElementById('kll-indem-y6').value),
+  };
+  const res = await apicall('PUT', '/settings', body);
+  if (res?.settings) showToast('Labour Law settings saved ✓', 'success');
+  else showToast(res?.error || 'Error saving', 'error');
+}
+async function resetKLLDefaults(){
+  if (!confirm('Reset all Labour Law settings to Kuwait Law defaults?')) return;
+  const res = await apicall('PUT', '/settings', { reset_to_kll: true });
+  if (res?.settings) { loadKLLSettings(); showToast('Reset to Kuwait Law defaults ✓', 'success'); }
+  else showToast('Error resetting', 'error');
 }
 async function savePermLimit(){
   const val=parseFloat(document.getElementById('perm-hours-limit').value);
@@ -1796,7 +1931,7 @@ async function printPayslips(payrollId){
         <div class="ps-emp">${e.employee_name||'—'}</div>
       </div>
       <div class="ps-row"><span>Basic Salary</span><span>KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</span></div>
-      ${e.pifss_employee>0?`<div class="ps-row" style="color:#c42a00"><span>PIFSS Deduction (Employee 8%)</span><span>− KWD ${parseFloat(e.pifss_employee).toFixed(3)}</span></div>`:''}
+      ${e.pifss_employee>0?`<div class="ps-row" style="color:#c42a00"><span>PIFSS Deduction (Employee 10.5%)</span><span>− KWD ${parseFloat(e.pifss_employee).toFixed(3)}</span></div>`:''}
       <div class="ps-total"><span>Net Pay</span><span>KWD ${parseFloat(e.net_salary||0).toFixed(3)}</span></div>
       ${e.pifss_employer>0?`<div class="ps-note">Employer PIFSS contribution (11%): KWD ${parseFloat(e.pifss_employer).toFixed(3)} — paid by company, not deducted from salary</div>`:''}
     </div>`).join('');
@@ -1891,4 +2026,3 @@ init();
 </script>
 </body>
 </html>
-
