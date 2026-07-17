@@ -1,5 +1,5 @@
 // /api/leaves/* — Leave requests & balances
-import { requireAuth, json, error } from '../_lib/auth.js';
+import { requireAuth, json, error, sendPushNotification } from '../_lib/auth.js';
 
 export async function onRequest({ request, env, params }) {
   const result = await requireAuth(request, env);
@@ -155,6 +155,20 @@ export async function onRequest({ request, env, params }) {
       await db.prepare(
         "UPDATE leave_balances SET pending_days = MAX(0, pending_days - ?) WHERE employee_id = ? AND leave_type_id = ? AND year = ?"
       ).bind(lr.days_count, lr.employee_id, lr.leave_type_id, new Date(lr.start_date).getFullYear()).run();
+    }
+
+    // Push notification to the employee
+    const emp = await db.prepare(
+      'SELECT user_id FROM employees WHERE id = ?'
+    ).bind(lr.employee_id).first();
+    if (emp?.user_id) {
+      const emoji = newStatus === 'approved' ? '✅' : '❌';
+      await sendPushNotification(env, {
+        userIds: [emp.user_id],
+        heading: `Leave ${newStatus === 'approved' ? 'Approved' : 'Rejected'} ${emoji}`,
+        content: `Your leave request (${lr.days_count} day${lr.days_count !== 1 ? 's' : ''}) has been ${newStatus}.`,
+        url: 'https://ghaya-suite.pages.dev/employee/',
+      });
     }
 
     return json({ message: `Leave request ${newStatus}` });
