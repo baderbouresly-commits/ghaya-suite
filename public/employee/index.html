@@ -391,13 +391,13 @@
   const user = JSON.parse(localStorage.getItem('ghaya_user') || 'null');
   if (!token || !user) { window.location.href = '/'; }
 
-  // Link this browser to the user's OneSignal profile
-if (user?.sub) {
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    try { await OneSignal.login(user.sub); } catch(e) {}
-  });
-}
+// Link this browser to the user's OneSignal profile
+  if (user?.id) {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      try { await OneSignal.login(user.id); } catch(e) {}
+    });
+  }
 
   function logout() {
     localStorage.removeItem('ghaya_token');
