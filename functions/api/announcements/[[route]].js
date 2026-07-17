@@ -76,7 +76,7 @@ export async function onRequest({ request, env, params }) {
       expires_at || null
     ).run();
 
-// Push notification to all active employees (non-blocking)
+    // Push notification to all active employees (non-blocking)
     try {
       if (typeof sendPushNotification === 'function') {
         const { results: empUsers } = await db.prepare(
@@ -97,6 +97,7 @@ export async function onRequest({ request, env, params }) {
     } catch { /* notification failure must never block posting */ }
 
     return json({ message: 'Announcement posted', id }, 201);
+  }
 
   // ── PUT — company_admin edits or pins ──
   if (method === 'PUT' && annId) {
