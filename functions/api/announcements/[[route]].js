@@ -1,5 +1,5 @@
 // /api/announcements/* — company admins post, employees read
-import { requireAuth, json, error } from '../_lib/auth.js';
+import { requireAuth, json, error, sendPushNotification } from '../_lib/auth.js';
 
 export async function onRequest({ request, env, params }) {
   const result = await requireAuth(request, env);
@@ -16,6 +16,7 @@ export async function onRequest({ request, env, params }) {
     const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
     if (user.role === 'ghaya_admin') {
+      // Super admin sees everything across all companies
       const { results } = await db.prepare(`
         SELECT a.*, c.name_en as company_name
         FROM announcements a
@@ -28,6 +29,7 @@ export async function onRequest({ request, env, params }) {
     if (!user.company_id) return error('Forbidden', 403);
 
     if (['company_admin', 'manager'].includes(user.role)) {
+      // Admin sees all — including expired — so they can manage them
       const { results } = await db.prepare(`
         SELECT * FROM announcements
         WHERE company_id = ?
@@ -37,6 +39,7 @@ export async function onRequest({ request, env, params }) {
     }
 
     if (user.role === 'employee') {
+      // Employees only see active (non-expired) ones
       const { results } = await db.prepare(`
         SELECT * FROM announcements
         WHERE company_id = ?
@@ -73,6 +76,22 @@ export async function onRequest({ request, env, params }) {
       expires_at || null
     ).run();
 
+    // Push notification to all active employees in the company
+    const { results: empUsers } = await db.prepare(
+      `SELECT u.id FROM users u
+       JOIN employees e ON e.user_id = u.id
+       WHERE e.company_id = ? AND u.is_active = 1 AND u.role = 'employee'`
+    ).bind(user.company_id).all();
+    if (empUsers.length > 0) {
+      const typeEmoji = { urgent: '🚨', holiday: '🎉', policy: '📋', general: '📢' };
+      await sendPushNotification(env, {
+        userIds: empUsers.map(u => u.id),
+        heading: `${typeEmoji[annType] || '📢'} ${title.trim()}`,
+        content: msgBody.trim().substring(0, 120),
+        url: 'https://ghaya-suite.pages.dev/employee/',
+      });
+    }
+
     return json({ message: 'Announcement posted', id }, 201);
   }
 
@@ -86,6 +105,7 @@ export async function onRequest({ request, env, params }) {
     const updates = Object.entries(body).filter(([k]) => allowed.includes(k));
     if (!updates.length) return error('No valid fields');
 
+    // Ownership check
     const existing = await db.prepare('SELECT company_id FROM announcements WHERE id = ?').bind(annId).first();
     if (!existing) return error('Not found', 404);
     if (existing.company_id !== user.company_id) return error('Forbidden', 403);
