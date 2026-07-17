@@ -514,6 +514,15 @@ select.form-input{cursor:pointer}
           </div>
         </div>
       </div>
+
+      <!-- Manager Access -->
+      <div class="section-card" style="margin-top:24px;">
+        <div class="section-header">
+          <div><div class="section-title">👔 Manager Access</div><div class="section-sub">Give department managers their own login — they only see their team</div></div>
+          <button class="btn btn-primary btn-sm" onclick="openCreateManagerModal()">+ Add Manager</button>
+        </div>
+        <div id="managers-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
     </div>
     <!-- ANNOUNCEMENTS -->
     <div id="page-announcements" style="display:none">
@@ -716,6 +725,45 @@ select.form-input{cursor:pointer}
     </div>
   </div>
 </div>
+<!-- CREATE MANAGER MODAL -->
+<div class="modal-overlay" id="modal-create-manager">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header">
+      <div class="modal-title" id="mgr-modal-title">👔 Add Manager</div>
+      <button class="modal-close" onclick="closeManagerModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mgr-edit-id"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div>
+          <label class="form-label">First Name</label>
+          <input type="text" id="mgr-first" class="form-control" placeholder="Ahmad"/>
+        </div>
+        <div>
+          <label class="form-label">Last Name</label>
+          <input type="text" id="mgr-last" class="form-control" placeholder="Al-Rashidi"/>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">Email (login)</label>
+        <input type="email" id="mgr-email" class="form-control" placeholder="ahmad@company.com"/>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">Password</label>
+        <input type="password" id="mgr-password" class="form-control" placeholder="Min 6 characters"/>
+        <div style="font-size:11px;color:#888;margin-top:3px;" id="mgr-pwd-hint">Required for new managers</div>
+      </div>
+      <div class="form-group" style="margin-bottom:20px;">
+        <label class="form-label">Department</label>
+        <select id="mgr-dept" class="form-control">
+          <option value="">— Select department —</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="saveManager()">Save Manager</button>
+    </div>
+  </div>
+</div>
+
 <!-- DOCUMENTS MODAL -->
 <div class="modal-overlay" id="modal-docs">
   <div class="modal" style="max-width:560px;">
@@ -1088,7 +1136,7 @@ async function runPayroll(){
 async function publishPayroll(id){const res=await apicall('PUT','/payroll/'+id,{status:'published'});if(res&&!res.error){showToast('Payroll published ✓','success');viewPayrollDetail(id);}else showToast(res?.error||'Error','error');}
 
 /* ── SETTINGS ── */
-function renderSettings(){renderDeptList();renderJTList();}
+function renderSettings(){renderDeptList();renderJTList();loadManagers();}
 function renderDeptList(){
   const el=document.getElementById('dept-list');
   if(!deptsData.length){el.innerHTML='<div style="color:#888;font-size:13px;padding:8px 0">No departments yet. Add one below.</div>';return;}
@@ -1421,6 +1469,99 @@ async function loadMyFeedback(){
       <td style="font-size:12px;color:#555;max-width:200px">${f.admin_reply||'<span style="color:#ccc">—</span>'}</td>
     </tr>`).join('')}</tbody>
   </table></div>`;
+}
+
+/* ── MANAGER ACCESS ── */
+async function loadManagers(){
+  const el=document.getElementById('managers-list');
+  if(!el)return;
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const data=await apicall('GET','/managers');
+  const list=data?.managers||[];
+  if(!list.length){
+    el.innerHTML='<div class="empty" style="padding:24px 0;"><div class="empty-icon">👔</div><div class="empty-text">No managers yet</div><div class="empty-sub">Add a manager to give department heads their own login</div></div>';
+    return;
+  }
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map(m=>`<tr>
+    <td style="font-weight:700">${m.first_name_en||''} ${m.last_name_en||''}</td>
+    <td style="font-size:12px;color:#888">${m.email}</td>
+    <td>${m.department_name||'—'}</td>
+    <td><span class="badge ${m.is_active?'badge-green':'badge-gray'}">${m.is_active?'Active':'Inactive'}</span></td>
+    <td style="display:flex;gap:6px;">
+      <button class="btn btn-ghost btn-sm" onclick="openEditManager('${m.id}','${(m.first_name_en||'').replace(/'/g,"\\'")}','${(m.last_name_en||'').replace(/'/g,"\\'")}','${m.email}','${m.department_id||''}')">Edit</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleManagerActive('${m.id}',${m.is_active?0:1})">${m.is_active?'Deactivate':'Activate'}</button>
+      <button class="btn btn-ghost btn-sm" style="color:#c42a00;" onclick="deleteManager('${m.id}')">Delete</button>
+    </td>
+  </tr>`).join('')}</tbody></table></div>`;
+}
+
+function openCreateManagerModal(){
+  document.getElementById('mgr-edit-id').value='';
+  document.getElementById('mgr-modal-title').textContent='👔 Add Manager';
+  document.getElementById('mgr-first').value='';
+  document.getElementById('mgr-last').value='';
+  document.getElementById('mgr-email').value='';
+  document.getElementById('mgr-email').disabled=false;
+  document.getElementById('mgr-password').value='';
+  document.getElementById('mgr-pwd-hint').textContent='Required for new managers';
+  // Populate departments
+  const sel=document.getElementById('mgr-dept');
+  sel.innerHTML='<option value="">— Select department —</option>'+deptsData.map(d=>`<option value="${d.id}">${d.name_en}</option>`).join('');
+  document.getElementById('modal-create-manager').classList.add('open');
+}
+
+function openEditManager(id,first,last,email,deptId){
+  document.getElementById('mgr-edit-id').value=id;
+  document.getElementById('mgr-modal-title').textContent='✏️ Edit Manager';
+  document.getElementById('mgr-first').value=first;
+  document.getElementById('mgr-last').value=last;
+  document.getElementById('mgr-email').value=email;
+  document.getElementById('mgr-email').disabled=true;
+  document.getElementById('mgr-password').value='';
+  document.getElementById('mgr-pwd-hint').textContent='Leave blank to keep current password';
+  const sel=document.getElementById('mgr-dept');
+  sel.innerHTML='<option value="">— Select department —</option>'+deptsData.map(d=>`<option value="${d.id}" ${d.id===deptId?'selected':''}>${d.name_en}</option>`).join('');
+  document.getElementById('modal-create-manager').classList.add('open');
+}
+
+function closeManagerModal(){document.getElementById('modal-create-manager').classList.remove('open');}
+
+async function saveManager(){
+  const editId=document.getElementById('mgr-edit-id').value;
+  const first=document.getElementById('mgr-first').value.trim();
+  const last=document.getElementById('mgr-last').value.trim();
+  const email=document.getElementById('mgr-email').value.trim();
+  const password=document.getElementById('mgr-password').value;
+  const deptId=document.getElementById('mgr-dept').value;
+  if(!first){showToast('First name required','error');return;}
+  if(!editId&&!email){showToast('Email required','error');return;}
+  if(!deptId){showToast('Please select a department','error');return;}
+  let res;
+  if(editId){
+    const body={first_name:first,last_name:last,department_id:deptId};
+    if(password)body.password=password;
+    res=await apicall('PUT','/managers/'+editId,body);
+  }else{
+    if(!password||password.length<6){showToast('Password must be at least 6 characters','error');return;}
+    res=await apicall('POST','/managers',{first_name:first,last_name:last,email,password,department_id:deptId});
+  }
+  if(res?.error){showToast(res.error,'error');return;}
+  showToast(editId?'Manager updated':'Manager created ✓','success');
+  closeManagerModal();
+  loadManagers();
+}
+
+async function toggleManagerActive(id,active){
+  const res=await apicall('PUT','/managers/'+id,{is_active:active});
+  if(res?.error)showToast(res.error,'error');
+  else{showToast(active?'Activated':'Deactivated');loadManagers();}
+}
+
+async function deleteManager(id){
+  if(!confirm('Delete this manager account permanently?'))return;
+  const res=await apicall('DELETE','/managers/'+id);
+  if(res?.success){showToast('Deleted');loadManagers();}
+  else showToast(res?.error||'Delete failed','error');
 }
 
 /* ── DOCUMENTS ── */
