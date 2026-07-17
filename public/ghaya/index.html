@@ -70,11 +70,11 @@ body.ar .main{margin-left:0;margin-right:240px}
 .btn-primary:hover{background:#d03d22}
 .btn-ghost{background:#f5f0eb;color:#1a1a2e;border:1px solid #e8e0d8}
 .btn-ghost:hover{background:#e8e0d8}
+.btn-success{background:#1a7a42;color:#fff}
+.btn-success:hover{background:#145e32}
 .btn-sm{padding:6px 12px;font-size:12px}
 .btn-danger{background:#fff;color:#E8472A;border:1px solid #E8472A}
 .btn-danger:hover{background:#E8472A;color:#fff}
-.btn-success{background:#1a7a42;color:#fff}
-.btn-success:hover{background:#156234}
 
 /* ── Table ── */
 .table-wrap{overflow-x:auto}
@@ -95,7 +95,7 @@ tr:hover td{background:#faf6f1}
 /* ── Modal ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
 .modal-overlay.open{opacity:1;pointer-events:all}
-.modal{background:#fff;border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
 .modal-header{padding:24px 24px 0;display:flex;align-items:center;justify-content:space-between}
 .modal-title{font-size:18px;font-weight:800}
 .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#888;padding:4px}
@@ -135,6 +135,9 @@ select.form-input{cursor:pointer}
 .spinner{width:20px;height:20px;border:2px solid #e8e0d8;border-top-color:#E8472A;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ── Reset password box ── */
+.reset-box{background:#faf6f1;border:1px solid #e8e0d8;border-radius:10px;padding:16px;margin-top:12px}
+
 @media(max-width:768px){
   .sidebar{transform:translateX(-100%)}
   body.ar .sidebar{transform:translateX(100%)}
@@ -156,16 +159,16 @@ select.form-input{cursor:pointer}
         <div class="logo-sub">YOUR TRUSTED HR SUPPORT</div>
       </div>
     </div>
-    <div class="admin-badge" id="admin-badge">⚡ Ghaya Super Admin</div>
+    <div class="admin-badge">⚡ Ghaya Super Admin</div>
   </div>
 
   <nav class="nav">
-    <div class="nav-section" id="nav-overview">OVERVIEW</div>
+    <div class="nav-section">OVERVIEW</div>
     <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
       <span class="nav-icon">📊</span><span data-en="Dashboard" data-ar="لوحة التحكم">Dashboard</span>
     </div>
 
-    <div class="nav-section" id="nav-management-label" style="margin-top:8px">MANAGEMENT</div>
+    <div class="nav-section" style="margin-top:8px">MANAGEMENT</div>
     <div class="nav-item" onclick="showPage('companies')" id="nav-companies">
       <span class="nav-icon">🏢</span><span data-en="Companies" data-ar="الشركات">Companies</span>
     </div>
@@ -208,7 +211,7 @@ select.form-input{cursor:pointer}
 
     <!-- DASHBOARD PAGE -->
     <div id="page-dashboard">
-      <div class="stats-grid" id="stats-grid">
+      <div class="stats-grid">
         <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-label" data-en="Total Companies" data-ar="إجمالي الشركات">Total Companies</div><div class="stat-value" id="stat-companies">—</div></div>
         <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label" data-en="Total Employees" data-ar="إجمالي الموظفين">Total Employees</div><div class="stat-value" id="stat-employees">—</div></div>
         <div class="stat-card"><div class="stat-icon">🛡️</div><div class="stat-label" data-en="Managed by Ghaya" data-ar="تديرها غاية">Managed by Ghaya</div><div class="stat-value" id="stat-managed">—</div></div>
@@ -250,8 +253,8 @@ select.form-input{cursor:pointer}
       <div class="section-card">
         <div class="section-header">
           <div>
-            <div class="section-title" data-en="All Admin Users" data-ar="جميع المستخدمين">All Admin Users</div>
-            <div class="section-sub" data-en="Company admins and system users" data-ar="مدراء الشركات ومستخدمو النظام">Company admins and system users</div>
+            <div class="section-title" data-en="Admin Users" data-ar="المستخدمون">Admin Users</div>
+            <div class="section-sub" data-en="Company admins across all companies" data-ar="مدراء الشركات">Company admins across all companies</div>
           </div>
         </div>
         <div id="users-list"><div class="loading"><div class="spinner"></div></div></div>
@@ -267,18 +270,18 @@ select.form-input{cursor:pointer}
             <div class="section-sub" id="fb-count-sub">Submissions from your company admins</div>
           </div>
           <div style="display:flex;gap:8px;">
-            <button class="btn btn-ghost btn-sm" onclick="filterFeedback('unread',this)" style="border-radius:20px;font-size:12px;">🔴 Unread</button>
-            <button class="btn btn-ghost btn-sm" onclick="filterFeedback('all',this)" style="border-radius:20px;font-size:12px;">All</button>
+            <button class="btn btn-ghost btn-sm" onclick="filterFeedback('unread',this)" style="border-radius:20px">🔴 Unread</button>
+            <button class="btn btn-ghost btn-sm" onclick="filterFeedback('all',this)" style="border-radius:20px">All</button>
           </div>
         </div>
         <div id="fb-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
 
-  </div><!-- /content -->
-</div><!-- /main -->
+  </div>
+</div>
 
-<!-- Add Company Modal -->
+<!-- ══ Add Company Modal ══ -->
 <div class="modal-overlay" id="modal-add-company">
   <div class="modal">
     <div class="modal-header">
@@ -288,21 +291,21 @@ select.form-input{cursor:pointer}
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-row">
-          <label class="form-label" data-en="Company Name (EN)" data-ar="اسم الشركة (إنجليزي)">Company Name (EN)</label>
+          <label class="form-label">Company Name (EN)</label>
           <input class="form-input" id="co-name-en" placeholder="Acme Corp"/>
         </div>
         <div class="form-row">
-          <label class="form-label" data-en="Company Name (AR)" data-ar="اسم الشركة (عربي)">Company Name (AR)</label>
+          <label class="form-label">Company Name (AR)</label>
           <input class="form-input" id="co-name-ar" placeholder="أكمي"/>
         </div>
       </div>
       <div class="form-grid">
         <div class="form-row">
-          <label class="form-label" data-en="CR Number" data-ar="رقم السجل التجاري">CR Number</label>
+          <label class="form-label">CR Number</label>
           <input class="form-input" id="co-cr" placeholder="12345"/>
         </div>
         <div class="form-row">
-          <label class="form-label" data-en="Industry" data-ar="القطاع">Industry</label>
+          <label class="form-label">Industry</label>
           <select class="form-input" id="co-industry">
             <option value="">Select industry</option>
             <option value="retail">Retail</option>
@@ -319,7 +322,7 @@ select.form-input{cursor:pointer}
       </div>
       <div class="form-grid">
         <div class="form-row">
-          <label class="form-label" data-en="Subscription Tier" data-ar="مستوى الاشتراك">Subscription Tier</label>
+          <label class="form-label">Subscription Tier</label>
           <select class="form-input" id="co-tier">
             <option value="starter">Starter</option>
             <option value="growth">Growth</option>
@@ -327,7 +330,7 @@ select.form-input{cursor:pointer}
           </select>
         </div>
         <div class="form-row">
-          <label class="form-label" data-en="Size" data-ar="الحجم">Size</label>
+          <label class="form-label">Company Size</label>
           <select class="form-input" id="co-size">
             <option value="micro">Micro (1–9)</option>
             <option value="small">Small (10–49)</option>
@@ -339,26 +342,135 @@ select.form-input{cursor:pointer}
       <div class="form-row" style="display:flex;align-items:center;gap:12px">
         <label class="toggle"><input type="checkbox" id="co-managed"/><span class="toggle-slider"></span></label>
         <div>
-          <div style="font-size:13px;font-weight:700" data-en="Managed by Ghaya" data-ar="تديرها غاية">Managed by Ghaya</div>
-          <div style="font-size:11px;color:#888" data-en="Ghaya team handles HR operations for this company" data-ar="فريق غاية يتولى إدارة الموارد البشرية">Ghaya team handles HR operations for this company</div>
+          <div style="font-size:13px;font-weight:700">Managed by Ghaya</div>
+          <div style="font-size:11px;color:#888">Ghaya team handles HR operations for this company</div>
         </div>
       </div>
       <hr style="margin:16px 0;border:none;border-top:1px solid #f0ebe4"/>
-      <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:12px" data-en="COMPANY ADMIN ACCOUNT" data-ar="حساب مدير الشركة">COMPANY ADMIN ACCOUNT</div>
+      <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:12px">COMPANY ADMIN ACCOUNT</div>
       <div class="form-grid">
         <div class="form-row">
-          <label class="form-label" data-en="Admin Email" data-ar="البريد الإلكتروني">Admin Email</label>
-          <input class="form-input" id="co-admin-email" type="email" placeholder="admin@company.com"/>
+          <label class="form-label">Admin Name</label>
+          <input class="form-input" id="co-admin-name" placeholder="Sara Al-Rashidi"/>
         </div>
         <div class="form-row">
-          <label class="form-label" data-en="Temp Password" data-ar="كلمة مرور مؤقتة">Temp Password</label>
-          <input class="form-input" id="co-admin-pass" type="text" placeholder="TempPass123!"/>
+          <label class="form-label">Admin Email</label>
+          <input class="form-input" id="co-admin-email" type="email" placeholder="admin@company.com"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Temp Password</label>
+        <input class="form-input" id="co-admin-pass" type="text" placeholder="TempPass2025!"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-company')">Cancel</button>
+      <button class="btn btn-primary" id="btn-create-company" onclick="createCompany()">Create Company</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ View / Edit Company Modal ══ -->
+<div class="modal-overlay" id="modal-view-company">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div class="modal-title" id="view-co-title">Company Details</div>
+      <button class="modal-close" onclick="closeModal('modal-view-company')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="view-co-id"/>
+
+      <!-- Status bar -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;padding:16px;background:#faf6f1;border-radius:10px;border:1px solid #e8e0d8;align-items:center;">
+        <div style="flex:1">
+          <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:4px">SUBSCRIPTION</div>
+          <select class="form-input" id="view-co-tier" style="width:auto;padding:6px 10px;font-size:13px">
+            <option value="starter">Starter</option>
+            <option value="growth">Growth</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:8px">ACTIVE</div>
+          <label class="toggle"><input type="checkbox" id="view-co-active"/><span class="toggle-slider"></span></label>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:8px">MANAGED BY GHAYA</div>
+          <label class="toggle"><input type="checkbox" id="view-co-managed"/><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">Name (EN)</label>
+          <input class="form-input" id="view-co-name-en"/>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Name (AR)</label>
+          <input class="form-input" id="view-co-name-ar"/>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label class="form-label">CR Number</label>
+          <input class="form-input" id="view-co-cr"/>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Industry</label>
+          <select class="form-input" id="view-co-industry">
+            <option value="">— select —</option>
+            <option value="retail">Retail</option>
+            <option value="construction">Construction</option>
+            <option value="hospitality">Hospitality</option>
+            <option value="healthcare">Healthcare</option>
+            <option value="technology">Technology</option>
+            <option value="finance">Finance</option>
+            <option value="education">Education</option>
+            <option value="logistics">Logistics</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:8px;padding-top:16px;border-top:1px solid #f0ebe4">
+        <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:8px">ADMIN USER — RESET PASSWORD</div>
+        <div class="reset-box">
+          <div id="view-co-admin-info" style="font-size:13px;color:#555;margin-bottom:10px"></div>
+          <div class="form-grid">
+            <div class="form-row" style="margin:0">
+              <input class="form-input" id="view-co-new-pass" type="text" placeholder="New password (leave blank to keep)"/>
+            </div>
+            <div>
+              <button class="btn btn-ghost btn-sm" style="margin-top:2px" onclick="resetAdminPassword()">Reset Password</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-add-company')" data-en="Cancel" data-ar="إلغاء">Cancel</button>
-      <button class="btn btn-primary" onclick="createCompany()" data-en="Create Company" data-ar="إنشاء الشركة">Create Company</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-view-company')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCompany()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Reset User Password Modal ══ -->
+<div class="modal-overlay" id="modal-reset-user">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title">Reset Password</div>
+      <button class="modal-close" onclick="closeModal('modal-reset-user')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="reset-user-info" style="font-size:14px;color:#555;margin-bottom:16px"></div>
+      <div class="form-row">
+        <label class="form-label">New Password</label>
+        <input class="form-input" id="reset-user-pass" type="text" placeholder="NewPass2025!"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-reset-user')">Cancel</button>
+      <button class="btn btn-primary" onclick="doResetUserPass()">Reset Password</button>
     </div>
   </div>
 </div>
@@ -371,8 +483,10 @@ let token = localStorage.getItem('ghaya_token');
 let currentUser = null;
 let currentLang = localStorage.getItem('ghaya_lang') || 'en';
 let companiesData = [];
+let usersData = [];
+let viewCompanyAdminUserId = null;
+let resetTargetUserId = null;
 
-// ── Auth guard ──
 if (!token) { window.location.href = '/'; }
 
 async function api(method, path, body) {
@@ -408,7 +522,12 @@ function showPage(page) {
     const nav = document.getElementById('nav-' + p);
     if (nav) nav.classList.toggle('active', p === page);
   });
-  const titles = { dashboard:{en:'Dashboard',ar:'لوحة التحكم'}, companies:{en:'Companies',ar:'الشركات'}, users:{en:'Users',ar:'المستخدمون'}, feedback:{en:'Feedback',ar:'الملاحظات'} };
+  const titles = {
+    dashboard: { en: 'Dashboard', ar: 'لوحة التحكم' },
+    companies: { en: 'Companies', ar: 'الشركات' },
+    users: { en: 'Users', ar: 'المستخدمون' },
+    feedback: { en: 'Feedback', ar: 'الملاحظات' }
+  };
   document.getElementById('page-title').textContent = titles[page]?.[currentLang] || titles[page]?.en;
   if (page === 'dashboard') loadDashboard();
   if (page === 'companies') loadCompanies();
@@ -427,17 +546,19 @@ async function loadDashboard() {
     document.getElementById('stat-active').textContent = data.active_subscriptions ?? '—';
     renderRecentCompanies(data.recent_companies || []);
   } catch(e) {
-    document.getElementById('recent-companies-list').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Could not load data</div></div>';
+    document.getElementById('recent-companies-list').innerHTML =
+      '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Could not load data</div></div>';
   }
 }
 
 function renderRecentCompanies(companies) {
   const el = document.getElementById('recent-companies-list');
-  if (!companies.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏢</div><div class="empty-text">No companies yet</div><div class="empty-sub">Add your first company to get started</div></div>'; return; }
+  if (!companies.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🏢</div><div class="empty-text">No companies yet</div><div class="empty-sub">Add your first company to get started</div></div>';
+    return;
+  }
   el.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr>
-      <th>Company</th><th>Industry</th><th>Tier</th><th>Managed</th><th>Status</th>
-    </tr></thead>
+    <thead><tr><th>Company</th><th>Industry</th><th>Tier</th><th>Managed</th><th>Status</th></tr></thead>
     <tbody>${companies.slice(0,5).map(co => `
       <tr>
         <td><div style="font-weight:700">${co.name_en}</div><div style="font-size:12px;color:#888">${co.name_ar||''}</div></td>
@@ -456,7 +577,8 @@ async function loadCompanies() {
   try {
     const data = await api('GET', '/companies');
     companiesData = data?.companies || [];
-    document.getElementById('companies-count').textContent = `${companiesData.length} ${currentLang==='ar'?'شركة':'companies'}`;
+    document.getElementById('companies-count').textContent =
+      `${companiesData.length} ${currentLang === 'ar' ? 'شركة' : 'companies'}`;
     renderCompaniesTable(companiesData);
   } catch(e) {
     el.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Could not load companies</div></div>';
@@ -475,50 +597,84 @@ function renderCompaniesTable(companies) {
     </tr></thead>
     <tbody>${companies.map(co => `
       <tr>
-        <td><div style="font-weight:700">${co.name_en}</div><div style="font-size:12px;color:#888">${co.name_ar||''}</div></td>
+        <td>
+          <div style="font-weight:700">${co.name_en}</div>
+          <div style="font-size:12px;color:#888">${co.name_ar||''}</div>
+        </td>
         <td style="font-size:12px;color:#888">${co.cr_number||'—'}</td>
         <td style="font-size:13px">${co.industry||'—'}</td>
         <td><span class="badge badge-blue">${co.subscription_tier||'—'}</span></td>
-        <td>
-          <label class="toggle" onclick="toggleManaged('${co.id}',${co.managed_by_ghaya})">
-            <input type="checkbox" ${co.managed_by_ghaya?'checked':''} readonly/>
-            <span class="toggle-slider"></span>
-          </label>
-        </td>
-        <td><span class="badge ${co.subscription_active?'badge-green':'badge-red'}">${co.subscription_active?'Active':'Inactive'}</span></td>
-        <td><button class="btn btn-ghost btn-sm" onclick="viewCompany('${co.id}')">View →</button></td>
+        <td>${co.managed_by_ghaya ? '<span class="badge badge-orange">🛡️ Yes</span>' : '<span class="badge badge-gray">No</span>'}</td>
+        <td><span class="badge ${co.subscription_active ? 'badge-green' : 'badge-red'}">${co.subscription_active ? 'Active' : 'Inactive'}</span></td>
+        <td><button class="btn btn-ghost btn-sm" onclick="viewCompany('${co.id}')">Edit →</button></td>
       </tr>`).join('')}
     </tbody></table></div>`;
 }
 
-async function toggleManaged(id, current) {
-  const res = await api('PUT', `/companies/${id}`, { managed_by_ghaya: !current });
-  if (res && !res.error) { showToast(currentLang==='ar'?'تم التحديث':'Updated successfully','success'); loadCompanies(); }
-  else showToast(currentLang==='ar'?'حدث خطأ':'Error updating','error');
-}
+// ── View / Edit Company ──
+async function viewCompany(id) {
+  const co = companiesData.find(c => c.id === id);
+  if (!co) return;
 
-function viewCompany(id) {
-  showToast('Company detail view coming soon','');
-}
+  document.getElementById('view-co-id').value = co.id;
+  document.getElementById('view-co-title').textContent = co.name_en;
+  document.getElementById('view-co-name-en').value = co.name_en || '';
+  document.getElementById('view-co-name-ar').value = co.name_ar || '';
+  document.getElementById('view-co-cr').value = co.cr_number || '';
+  document.getElementById('view-co-industry').value = co.industry || '';
+  document.getElementById('view-co-tier').value = co.subscription_tier || 'starter';
+  document.getElementById('view-co-active').checked = !!co.subscription_active;
+  document.getElementById('view-co-managed').checked = !!co.managed_by_ghaya;
+  document.getElementById('view-co-new-pass').value = '';
+  viewCompanyAdminUserId = null;
 
-// ── Users ──
-async function loadUsers() {
-  const el = document.getElementById('users-list');
-  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  // Load admin user for this company
   try {
-    el.innerHTML = `<div class="table-wrap"><table>
-      <thead><tr><th>Email</th><th>Role</th><th>Company</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><div style="font-weight:700">admin@ghaya.hr</div></td>
-          <td><span class="badge badge-orange">⚡ ghaya_admin</span></td>
-          <td>—</td>
-          <td><span class="badge badge-green">Active</span></td>
-        </tr>
-      </tbody></table></div>
-      <div style="padding:16px 24px;font-size:12px;color:#888">Full user list requires /api/users endpoint — coming soon.</div>`;
-  } catch(e) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Could not load users</div></div>';
+    const udata = await api('GET', '/users');
+    const admin = (udata?.users || []).find(u => u.company_id === id && u.role === 'admin');
+    if (admin) {
+      viewCompanyAdminUserId = admin.id;
+      document.getElementById('view-co-admin-info').textContent = `${admin.name || ''} — ${admin.email}`;
+    } else {
+      document.getElementById('view-co-admin-info').textContent = 'No admin user found for this company.';
+    }
+  } catch(e) {}
+
+  document.getElementById('modal-view-company').classList.add('open');
+}
+
+async function saveCompany() {
+  const id = document.getElementById('view-co-id').value;
+  const body = {
+    name_en: document.getElementById('view-co-name-en').value.trim(),
+    name_ar: document.getElementById('view-co-name-ar').value.trim(),
+    cr_number: document.getElementById('view-co-cr').value.trim(),
+    industry: document.getElementById('view-co-industry').value,
+    subscription_tier: document.getElementById('view-co-tier').value,
+    subscription_active: document.getElementById('view-co-active').checked,
+    managed_by_ghaya: document.getElementById('view-co-managed').checked,
+  };
+
+  const res = await api('PUT', `/companies/${id}`, body);
+  if (res && !res.error) {
+    showToast('Company updated ✓', 'success');
+    closeModal('modal-view-company');
+    loadCompanies();
+  } else {
+    showToast(res?.error || 'Error saving', 'error');
+  }
+}
+
+async function resetAdminPassword() {
+  if (!viewCompanyAdminUserId) { showToast('No admin user found', 'error'); return; }
+  const pass = document.getElementById('view-co-new-pass').value.trim();
+  if (!pass) { showToast('Enter a new password first', 'error'); return; }
+  const res = await api('PUT', `/users/${viewCompanyAdminUserId}`, { password: pass });
+  if (res && !res.error) {
+    showToast('Password reset ✓', 'success');
+    document.getElementById('view-co-new-pass').value = '';
+  } else {
+    showToast(res?.error || 'Error resetting password', 'error');
   }
 }
 
@@ -535,56 +691,102 @@ async function createCompany() {
   const tier = document.getElementById('co-tier').value;
   const size = document.getElementById('co-size').value;
   const managed = document.getElementById('co-managed').checked;
+  const adminName = document.getElementById('co-admin-name').value.trim();
   const adminEmail = document.getElementById('co-admin-email').value.trim();
   const adminPass = document.getElementById('co-admin-pass').value.trim();
 
-  if (!nameEn) { showToast('Company name (EN) is required','error'); return; }
-  if (!adminEmail) { showToast('Admin email is required','error'); return; }
+  if (!nameEn) { showToast('Company name (EN) is required', 'error'); return; }
+  if (!adminEmail) { showToast('Admin email is required', 'error'); return; }
+
+  const btn = document.getElementById('btn-create-company');
+  btn.disabled = true; btn.textContent = 'Creating...';
 
   const res = await api('POST', '/companies', {
     name_en: nameEn, name_ar: nameAr, cr_number: cr, industry,
     subscription_tier: tier, size_tier: size, managed_by_ghaya: managed,
-    admin_email: adminEmail, admin_password: adminPass || 'TempPass2025!'
+    admin_name: adminName, admin_email: adminEmail,
+    admin_password: adminPass || 'TempPass2025!'
   });
 
+  btn.disabled = false; btn.textContent = 'Create Company';
+
   if (res && !res.error) {
-    showToast(currentLang==='ar'?'تم إنشاء الشركة':'Company created!','success');
+    showToast('Company created ✓', 'success');
     closeModal('modal-add-company');
     clearAddForm();
     loadCompanies();
   } else {
-    showToast(res?.error || 'Error creating company','error');
+    showToast(res?.error || 'Error creating company', 'error');
   }
 }
 
 function clearAddForm() {
-  ['co-name-en','co-name-ar','co-cr','co-admin-email','co-admin-pass'].forEach(id => document.getElementById(id).value = '');
+  ['co-name-en','co-name-ar','co-cr','co-admin-name','co-admin-email','co-admin-pass'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
   document.getElementById('co-managed').checked = false;
 }
 
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
+// ── Users ──
+async function loadUsers() {
+  const el = document.getElementById('users-list');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const data = await api('GET', '/users');
+    usersData = data?.users || [];
+    renderUsersTable(usersData);
+  } catch(e) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Could not load users</div></div>';
+  }
 }
 
-// ── Lang ──
-function setLang(lang, save=true) {
-  currentLang = lang;
-  if (save) localStorage.setItem('ghaya_lang', lang);
-  document.documentElement.lang = lang;
-  document.body.classList.toggle('ar', lang==='ar');
-  document.getElementById('btn-en').classList.toggle('active', lang==='en');
-  document.getElementById('btn-ar').classList.toggle('active', lang==='ar');
-  document.querySelectorAll('[data-en]').forEach(el => {
-    el.textContent = el.dataset[lang] || el.dataset.en;
-  });
+function renderUsersTable(users) {
+  const el = document.getElementById('users-list');
+  if (!users.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No users yet</div></div>';
+    return;
+  }
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr>
+      <th>Name</th><th>Email</th><th>Role</th><th>Company</th><th>Subscription</th><th>Actions</th>
+    </tr></thead>
+    <tbody>${users.map(u => `
+      <tr>
+        <td style="font-weight:700">${u.name || '—'}</td>
+        <td style="font-size:13px;color:#555">${u.email}</td>
+        <td>${u.role === 'ghaya_admin'
+          ? '<span class="badge badge-orange">⚡ Ghaya Admin</span>'
+          : '<span class="badge badge-blue">Admin</span>'}</td>
+        <td style="font-size:13px">${u.company_name_en || '<span style="color:#aaa">—</span>'}</td>
+        <td>${u.company_id
+          ? (u.subscription_active
+              ? '<span class="badge badge-green">Active</span>'
+              : '<span class="badge badge-red">Inactive</span>')
+          : '<span class="badge badge-gray">—</span>'}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="openResetUser('${u.id}','${(u.name||u.email).replace(/'/g,"\\'")}')">🔑 Reset PW</button>
+        </td>
+      </tr>`).join('')}
+    </tbody></table></div>`;
 }
 
-// ── Toast ──
-function showToast(msg, type='') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show ' + type;
-  setTimeout(() => t.classList.remove('show'), 3000);
+function openResetUser(id, name) {
+  resetTargetUserId = id;
+  document.getElementById('reset-user-info').textContent = `Reset password for: ${name}`;
+  document.getElementById('reset-user-pass').value = '';
+  document.getElementById('modal-reset-user').classList.add('open');
+}
+
+async function doResetUserPass() {
+  const pass = document.getElementById('reset-user-pass').value.trim();
+  if (!pass) { showToast('Enter a new password', 'error'); return; }
+  const res = await api('PUT', `/users/${resetTargetUserId}`, { password: pass });
+  if (res && !res.error) {
+    showToast('Password reset ✓', 'success');
+    closeModal('modal-reset-user');
+  } else {
+    showToast(res?.error || 'Error resetting password', 'error');
+  }
 }
 
 // ── Feedback ──
@@ -624,8 +826,12 @@ function renderFeedback(list) {
     el.innerHTML = '<div class="empty"><div class="empty-icon">💬</div><div class="empty-text">No feedback yet</div><div class="empty-sub">Company admins will see a "Send Feedback" option in their portal</div></div>';
     return;
   }
-  const typeIcon = { suggestion:'💡', bug:'🐛', idea:'🚀', complaint:'⚠️' };
-  const statusBadge = { unread:'<span class="badge badge-orange">Unread</span>', read:'<span class="badge badge-blue">Read</span>', resolved:'<span class="badge badge-green">Resolved ✓</span>' };
+  const typeIcon = { suggestion: '💡', bug: '🐛', idea: '🚀', complaint: '⚠️' };
+  const statusBadge = {
+    unread: '<span class="badge badge-orange">Unread</span>',
+    read: '<span class="badge badge-blue">Read</span>',
+    resolved: '<span class="badge badge-green">Resolved ✓</span>'
+  };
   el.innerHTML = list.map(f => `
     <div style="border-bottom:1px solid #f5f0eb;padding:20px 24px;${f.status==='unread'?'background:#fffdf9;':''}" id="fb-item-${f.id}">
       <div style="display:flex;align-items:flex-start;gap:12px;">
@@ -641,8 +847,8 @@ function renderFeedback(list) {
           <div style="font-size:13px;color:#444;line-height:1.6;margin-bottom:12px;">${f.message}</div>
           ${f.admin_reply ? `<div style="background:#faf6f1;border-left:3px solid #E8472A;padding:8px 12px;border-radius:0 6px 6px 0;font-size:12px;color:#555;margin-bottom:10px;"><strong>Your reply:</strong> ${f.admin_reply}</div>` : ''}
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-            ${f.status==='unread'?`<button class="btn btn-ghost btn-sm" onclick="markFeedback('${f.id}','read')">👁 Mark Read</button>`:''}
-            ${f.status!=='resolved'?`<button class="btn btn-success btn-sm" onclick="markFeedback('${f.id}','resolved')">✓ Resolve</button>`:''}
+            ${f.status==='unread' ? `<button class="btn btn-ghost btn-sm" onclick="markFeedback('${f.id}','read')">👁 Mark Read</button>` : ''}
+            ${f.status!=='resolved' ? `<button class="btn btn-success btn-sm" onclick="markFeedback('${f.id}','resolved')">✓ Resolve</button>` : ''}
             <button class="btn btn-ghost btn-sm" onclick="replyFeedback('${f.id}')">💬 Reply</button>
           </div>
           <div id="fb-reply-${f.id}" style="display:none;margin-top:10px;">
@@ -676,7 +882,30 @@ async function sendReply(id) {
   else showToast('Error sending reply', 'error');
 }
 
-// ── Logout ──
+// ── Helpers ──
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function setLang(lang, save = true) {
+  currentLang = lang;
+  if (save) localStorage.setItem('ghaya_lang', lang);
+  document.documentElement.lang = lang;
+  document.body.classList.toggle('ar', lang === 'ar');
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-ar').classList.toggle('active', lang === 'ar');
+  document.querySelectorAll('[data-en]').forEach(el => {
+    el.textContent = el.dataset[lang] || el.dataset.en;
+  });
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
 function logout() {
   localStorage.removeItem('ghaya_token');
   localStorage.removeItem('ghaya_user');
