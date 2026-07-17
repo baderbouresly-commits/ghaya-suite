@@ -34,6 +34,11 @@ export async function onRequest({ request, env, params }) {
 
   // GET /api/employees
   if (method === 'GET' && !employeeId) {
+    // Managers only see their own department
+    const deptFilter = user.role === 'manager' && user.department_id
+      ? 'AND e.department_id = ?' : '';
+    const binds = deptFilter
+      ? [companyId, user.department_id] : [companyId];
     const { results } = await db.prepare(`
       SELECT e.*, d.name_en as dept_name, j.title_en as job_title,
         u.email as login_email
@@ -41,9 +46,9 @@ export async function onRequest({ request, env, params }) {
       LEFT JOIN departments d ON d.id = e.department_id
       LEFT JOIN job_titles j ON j.id = e.job_title_id
       LEFT JOIN users u ON u.id = e.user_id
-      WHERE e.company_id = ? AND e.status != 'terminated'
+      WHERE e.company_id = ? AND e.status != 'terminated' ${deptFilter}
       ORDER BY e.first_name_en
-    `).bind(companyId).all();
+    `).bind(...binds).all();
     return json({ employees: results, total: results.length });
   }
 
@@ -118,21 +123,11 @@ export async function onRequest({ request, env, params }) {
       const tempPass = `${first_name_en}${hireYear}!`;
       const hash = await hashPassword(tempPass);
       await db.prepare(
-"INSERT OR IGNORE INTO users (id, company_id, email, password_hash, role, employee_id, is_active) VALUES (?,?,?,?,'employee',?,1)"      ).bind(userId, companyId, work_email.toLowerCase(), hash, id).run();
+        "INSERT OR IGNORE INTO users (id, company_id, email, password_hash, role, employee_id, is_active) VALUES (?,?,?,?,'employee',?,1)"
+      ).bind(userId, companyId, work_email.toLowerCase(), hash, id).run();
       await db.prepare("UPDATE employees SET user_id = ? WHERE id = ?").bind(userId, id).run();
     }
 
-    // Handle password update if provided
-if (body.initial_password && body.initial_password.trim().length >= 6) {
-  const { hashPassword } = await import('../_lib/auth.js');
-  const newHash = await hashPassword(body.initial_password.trim());
-  const emp = await db.prepare('SELECT user_id FROM employees WHERE id = ? AND company_id = ?').bind(employeeId, companyId).first();
-  if (emp?.user_id) {
-    await db.prepare("UPDATE users SET password_hash = ?, is_active = 1, updated_at = datetime('now') WHERE id = ?")
-      .bind(newHash, emp.user_id).run();
-  }
-}
-    
     // Audit log
     await db.prepare(
       "INSERT INTO audit_log (company_id, user_id, action, entity_type, entity_id, new_values) VALUES (?,?,?,?,?,?)"
