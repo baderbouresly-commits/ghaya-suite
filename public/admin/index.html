@@ -712,6 +712,16 @@ select.form-input{cursor:pointer}
         <div class="form-row"><label class="form-label">Phone</label><input class="form-input" id="emp-phone" placeholder="+965 9999 9999"/></div>
       </div>
       <div class="form-row"><label class="form-label">Contract Type</label><select class="form-input" id="emp-contract"><option value="full_time">Full Time</option><option value="part_time">Part Time</option><option value="contract">Contract</option></select></div>
+      <div class="form-grid" style="align-items:center;gap:16px;padding:10px 0;border-top:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0;margin:8px 0;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" id="emp-is-kuwaiti" style="width:16px;height:16px;accent-color:#E8472A;"/>
+          <span><strong>Kuwaiti National</strong> <span style="font-size:11px;color:#888;">(affects PIFSS)</span></span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" id="emp-pifss-enrolled" style="width:16px;height:16px;accent-color:#E8472A;"/>
+          <span><strong>PIFSS Enrolled</strong> <span style="font-size:11px;color:#888;">🇰🇼 Law 61/1976</span></span>
+        </label>
+      </div>
       <div class="form-row"><label class="form-label">Login Password</label><input class="form-input" id="emp-password" type="password" placeholder="Employee portal login password"/></div>
     </div>
     <div class="modal-footer">
@@ -1504,6 +1514,8 @@ async function editEmployee(id){
   document.getElementById('emp-salary').value=emp.basic_salary||'';document.getElementById('emp-start').value=emp.hire_date||'';
   document.getElementById('emp-email').value=emp.work_email||'';document.getElementById('emp-phone').value=emp.phone||emp.mobile||'';
   document.getElementById('emp-contract').value=emp.contract_type||'full_time';document.getElementById('emp-password').value='';
+  document.getElementById('emp-is-kuwaiti').checked=!!emp.is_kuwaiti;
+  document.getElementById('emp-pifss-enrolled').checked=!!emp.pifss_enrolled;
   populateEmpDropdowns();
   document.getElementById('emp-dept-id').value=emp.department||emp.department_id||'';
   document.getElementById('emp-job-title-id').value=emp.job_title_en||emp.job_title_id||'';
@@ -1517,7 +1529,9 @@ async function saveEmployee(){
     department:document.getElementById('emp-dept-id').value,job_title_en:document.getElementById('emp-job-title-id').value,
     basic_salary:parseFloat(document.getElementById('emp-salary').value)||0,hire_date:document.getElementById('emp-start').value,
     work_email:document.getElementById('emp-email').value.trim(),phone:document.getElementById('emp-phone').value.trim(),
-    contract_type:document.getElementById('emp-contract').value
+    contract_type:document.getElementById('emp-contract').value,
+    is_kuwaiti:document.getElementById('emp-is-kuwaiti').checked?1:0,
+    pifss_enrolled:document.getElementById('emp-pifss-enrolled').checked?1:0
   };
   const pwd=document.getElementById('emp-password').value;if(pwd)body.password=pwd;
   if(!body.first_name_en||!body.last_name_en){showToast('First and last name required','error');return;}
