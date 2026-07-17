@@ -42,7 +42,7 @@ export async function onRequest({ request, env, params }) {
     const body = await request.json();
 
     const { name_en, name_ar, cr_number, industry, size_tier, subscription_tier,
-            managed_by_ghaya, admin_email, admin_password, admin_name } = body;
+            managed_by_ghaya, admin_email, admin_password } = body;
 
     if (!name_en) return error('Company name (EN) is required');
     if (!admin_email) return error('Admin email is required');
@@ -62,9 +62,9 @@ export async function onRequest({ request, env, params }) {
             size_tier || 'small', subscription_tier || 'starter', managed_by_ghaya ? 1 : 0)
       .run();
 
-    await db.prepare(`INSERT INTO users (id, company_id, email, password_hash, name, role, created_at)
-      VALUES (?, ?, ?, ?, ?, 'admin', datetime('now'))`)
-      .bind(userId, compId, admin_email.toLowerCase(), passwordHash, admin_name || admin_email.split('@')[0])
+    await db.prepare(`INSERT INTO users (id, company_id, email, password_hash, role, created_at)
+      VALUES (?, ?, ?, ?, 'company_admin', datetime('now'))`)
+      .bind(userId, compId, admin_email.toLowerCase(), passwordHash)
       .run();
 
     const company = await db.prepare(COMPANY_SELECT + ' WHERE id=?').bind(compId).first();
@@ -81,6 +81,7 @@ export async function onRequest({ request, env, params }) {
     const nf = v => v !== undefined && v !== null ? parseFloat(v) : null;
     const nb = v => v !== undefined ? (v ? 1 : 0) : null;
 
+    // Fields only ghaya_admin can change
     const ghayaOnly = user.role === 'ghaya_admin';
     const managedVal   = ghayaOnly ? nb(body.managed_by_ghaya)   : null;
     const activeVal    = ghayaOnly ? nb(body.subscription_active) : null;
