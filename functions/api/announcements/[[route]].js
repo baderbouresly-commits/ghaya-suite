@@ -135,3 +135,4 @@ export async function onRequest({ request, env, params }) {
 
   return error('Not found', 404);
 }
+
