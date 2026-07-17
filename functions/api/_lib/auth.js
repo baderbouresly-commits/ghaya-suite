@@ -78,7 +78,6 @@ export async function requireRole(request, env, ...allowedRoles) {
   return result;
 }
 
-// Simple password hashing using Web Crypto (PBKDF2)
 export async function hashPassword(password) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
@@ -109,7 +108,6 @@ export function error(message, status = 400) {
   return json({ error: message }, status);
 }
 
-// ── OneSignal push notifications ──────────────────────────────
 export async function sendPushNotification(env, { userIds, heading, content, url }) {
   const appId = env.ONESIGNAL_APP_ID;
   const apiKey = env.ONESIGNAL_REST_API_KEY;
