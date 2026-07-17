@@ -110,12 +110,10 @@ export function error(message, status = 400) {
 }
 
 // ── OneSignal push notifications ──────────────────────────────
-// userIds: array of Ghaya user IDs (used as OneSignal external_id)
-// Pass empty/null to broadcast to all company subscribers
 export async function sendPushNotification(env, { userIds, heading, content, url }) {
   const appId = env.ONESIGNAL_APP_ID;
   const apiKey = env.ONESIGNAL_REST_API_KEY;
-  if (!appId || !apiKey) return; // not configured — skip silently
+  if (!appId || !apiKey) { console.log('[OneSignal] missing env vars'); return; }
 
   const body = {
     app_id: appId,
@@ -133,7 +131,7 @@ export async function sendPushNotification(env, { userIds, heading, content, url
   if (url) body.url = url;
 
   try {
-    await fetch('https://api.onesignal.com/notifications', {
+    const res = await fetch('https://api.onesignal.com/notifications', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -141,47 +139,9 @@ export async function sendPushNotification(env, { userIds, heading, content, url
       },
       body: JSON.stringify(body),
     });
-  } catch {
-    // notification failures must never break the main request
+    const data = await res.json();
+    console.log('[OneSignal]', res.status, JSON.stringify(data));
+  } catch(e) {
+    console.log('[OneSignal error]', e.message);
   }
-}
-export async function sendPushNotification(env, { userIds, heading, content, url }) {
-  const appId = env.ONESIGNAL_APP_ID;
-  const apiKey = env.ONESIGNAL_REST_API_KEY;
-  if (!appId || !apiKey) return;
-  const body = { app_id: appId, headings: { en: heading }, contents: { en: content } };
-  if (userIds && userIds.length > 0) {
-    body.include_aliases = { external_id: userIds.map(String) };
-    body.target_channel = 'push';
-  } else {
-    body.included_segments = ['All'];
-  }
-  if (url) body.url = url;
-  try {
-    await fetch('https://api.onesignal.com/notifications', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Key ${apiKey}` },
-      body: JSON.stringify(body),
-    });
-  } catch { }
-}
-export async function sendPushNotification(env, { userIds, heading, content, url }) {
-  const appId = env.ONESIGNAL_APP_ID;
-  const apiKey = env.ONESIGNAL_REST_API_KEY;
-  if (!appId || !apiKey) return;
-  const body = { app_id: appId, headings: { en: heading }, contents: { en: content } };
-  if (userIds && userIds.length > 0) {
-    body.include_aliases = { external_id: userIds.map(String) };
-    body.target_channel = 'push';
-  } else {
-    body.included_segments = ['All'];
-  }
-  if (url) body.url = url;
-  try {
-    await fetch('https://api.onesignal.com/notifications', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Key ${apiKey}` },
-      body: JSON.stringify(body),
-    });
-  } catch { }
 }
