@@ -1,194 +1,231 @@
-// /api/payroll/* — Payroll management
+// /api/payroll/* — payroll runs, entries, publish
 import { requireAuth, json, error } from '../_lib/auth.js';
 
-// Kuwait PIFSS rates — private sector
-const PIFSS_EMP  = 0.08;  // 8%  — employee deduction (Kuwaiti nationals)
-const PIFSS_EMPR = 0.11;  // 11% — employer cost      (Kuwaiti nationals)
-
-const MONTHS = ['January','February','March','April','May','June',
-                'July','August','September','October','November','December'];
-
-function round3(n){ return Math.round(n * 1000) / 1000; }
-
 export async function onRequest({ request, env, params }) {
-  const result = await requireAuth(request, env);
-  if (result.error) return error(result.error, result.status);
+  if (request.method === 'OPTIONS') return new Response(null, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE',
+      'Access-Control-Allow-Headers': 'Content-Type,Authorization'
+    }
+  });
 
-  const { user } = result;
+  const auth = await requireAuth(request, env);
+  if (auth.error) return error(auth.error, auth.status);
+  const { user } = auth;
+
+  if (!['company_admin', 'admin', 'ghaya_admin'].includes(user.role)) return error('Forbidden', 403);
+
   const db = env.DB;
-  const method = request.method;
-  const route = Array.isArray(params.route) ? params.route : (params.route ? [params.route] : []);
-  const runId = route[0];
+  const companyId = user.company_id;
+  if (!companyId) return error('No company associated', 400);
 
-  const companyId = user.role === 'ghaya_admin'
-    ? new URL(request.url).searchParams.get('company_id')
-    : user.company_id;
-  if (!companyId) return error('company_id required');
+  // Route segment after /payroll/
+  const slug = (params.route || []).join('/');
 
-  // ── Employee: GET /api/payroll → my payslips ──────────────────
-  if (method === 'GET' && !runId && user.role === 'employee') {
-    const { results } = await db.prepare(`
-      SELECT pe.*, pr.period_month, pr.period_year, pr.status as run_status
-      FROM payroll_entries pe
-      JOIN payroll_runs pr ON pr.id = pe.payroll_run_id
-      WHERE pe.employee_id = ? AND pe.payslip_published = 1
-      ORDER BY pr.period_year DESC, pr.period_month DESC
-    `).bind(user.employee_id).all();
-    return json({ payslips: results });
+  // ── GET /api/payroll — list all runs ──
+  if (request.method === 'GET' && !slug) {
+    const runs = await db.prepare(`
+      SELECT id, period_month, period_year, status,
+             total_gross, total_net, total_pifss_employee, total_pifss_employer,
+             created_at, approved_at, paid_at,
+             (SELECT COUNT(*) FROM payroll_entries WHERE payroll_run_id = payroll_runs.id) AS employee_count
+      FROM payroll_runs
+      WHERE company_id = ?
+      ORDER BY period_year DESC, period_month DESC
+    `).bind(companyId).all();
+    return json({ runs: runs.results || [] });
   }
 
-  // ── Admin: GET /api/payroll → list all runs ───────────────────
-  if (method === 'GET' && !runId) {
-    if (!['ghaya_admin','company_admin','manager'].includes(user.role)) return error('Forbidden', 403);
-    const { results } = await db.prepare(
-      'SELECT * FROM payroll_runs WHERE company_id = ? ORDER BY period_year DESC, period_month DESC'
-    ).bind(companyId).all();
-    return json({ runs: results });
-  }
-
-  // ── GET /api/payroll/:id → run detail ────────────────────────
-  if (method === 'GET' && runId) {
+  // ── GET /api/payroll/:id — single run with entries ──
+  if (request.method === 'GET' && slug) {
     const run = await db.prepare(
-      'SELECT * FROM payroll_runs WHERE id = ? AND company_id = ?'
-    ).bind(runId, companyId).first();
+      `SELECT * FROM payroll_runs WHERE id = ? AND company_id = ?`
+    ).bind(slug, companyId).first();
     if (!run) return error('Not found', 404);
 
-    if (user.role === 'employee') {
-      const entry = await db.prepare(`
-        SELECT pe.*, e.first_name_en, e.last_name_en, e.nationality
-        FROM payroll_entries pe JOIN employees e ON e.id = pe.employee_id
-        WHERE pe.payroll_run_id = ? AND pe.employee_id = ? AND pe.payslip_published = 1
-      `).bind(runId, user.employee_id).first();
-      if (!entry) return error('Payslip not available', 404);
-      return json({ run, entry });
-    }
+    const entries = await db.prepare(`
+      SELECT pe.*,
+             e.first_name_en || ' ' || e.last_name_en AS employee_name,
+             e.first_name_ar || ' ' || e.last_name_ar AS employee_name_ar,
+             e.is_kuwaiti, e.pifss_enrolled
+      FROM payroll_entries pe
+      JOIN employees e ON e.id = pe.employee_id
+      WHERE pe.payroll_run_id = ? AND pe.company_id = ?
+      ORDER BY employee_name
+    `).bind(slug, companyId).all();
 
-    const { results: entries } = await db.prepare(`
-      SELECT pe.*, e.first_name_en, e.last_name_en, e.nationality, e.civil_id
-      FROM payroll_entries pe JOIN employees e ON e.id = pe.employee_id
-      WHERE pe.payroll_run_id = ? ORDER BY e.first_name_en
-    `).bind(runId).all();
-    return json({ run, entries });
+    return json({ run, entries: entries.results || [] });
   }
 
-  // ── POST /api/payroll → run payroll for a month ───────────────
-  if (method === 'POST' && !runId) {
-    if (!['ghaya_admin','company_admin'].includes(user.role)) return error('Forbidden', 403);
-    let body;
-    try { body = await request.json(); } catch { return error('Invalid JSON'); }
+  // ── POST /api/payroll — run payroll for a period ──
+  if (request.method === 'POST') {
+    const body = await request.json();
+    const { period_month, period_year, apply_pifss = true } = body;
 
-    const month = parseInt(body.month) || (new Date().getMonth() + 1);
-    const year  = parseInt(body.year)  || new Date().getFullYear();
-    if (month < 1 || month > 12) return error('Invalid month');
+    if (!period_month || !period_year) return error('period_month and period_year required', 400);
 
-    // Prevent duplicate
+    // Check for duplicate
     const existing = await db.prepare(
-      'SELECT id FROM payroll_runs WHERE company_id = ? AND period_month = ? AND period_year = ?'
-    ).bind(companyId, month, year).first();
-    if (existing) return error(`Payroll for ${MONTHS[month-1]} ${year} already exists`, 409);
+      `SELECT id FROM payroll_runs WHERE company_id = ? AND period_month = ? AND period_year = ?`
+    ).bind(companyId, period_month, period_year).first();
+    if (existing) return error(`Payroll for ${period_month}/${period_year} already exists`, 409);
+
+    // Get company PIFSS settings
+    let settings = await db.prepare(
+      `SELECT pifss_employee_rate, pifss_employer_rate, pifss_salary_cap FROM company_settings WHERE company_id = ?`
+    ).bind(companyId).first();
+    if (!settings) settings = { pifss_employee_rate: 0.105, pifss_employer_rate: 0.115, pifss_salary_cap: 2750 };
 
     // Get active employees
-    const { results: employees } = await db.prepare(
-      "SELECT * FROM employees WHERE company_id = ? AND status = 'active'"
-    ).bind(companyId).all();
-    if (!employees.length) return error('No active employees found');
+    const empRows = await db.prepare(`
+      SELECT id, first_name_en, last_name_en,
+             basic_salary, housing_allowance, transport_allowance, other_allowances,
+             is_kuwaiti, pifss_enrolled
+      FROM employees
+      WHERE company_id = ? AND status = 'active'
+    `).bind(companyId).all();
+    const employees = empRows.results || [];
 
-    // Calculate
-    let totalGross = 0, totalNet = 0, totalPifssEmp = 0, totalPifssEmpr = 0;
-const apply_pifss = body.apply_pifss !== false;
-    const calcs = employees.map(emp => {
-      const basic    = parseFloat(emp.basic_salary || 0);
-      const kuwaiti  = (emp.nationality || '').toLowerCase() === 'kuwaiti';
-      const pifssE   = (kuwaiti && apply_pifss) ? round3(basic * PIFSS_EMP)  : 0;
-      const pifssEr  = (kuwaiti && apply_pifss) ? round3(basic * PIFSS_EMPR) : 0;
-      const net      = round3(basic - pifssE);
-      totalGross    += basic;
-      totalNet      += net;
-      totalPifssEmp  += pifssE;
-      totalPifssEmpr += pifssEr;
-      return { emp, basic, pifssE, pifssEr, net };
-    });
+    if (!employees.length) return error('No active employees found', 400);
 
-    // Create run
-    const newRunId = crypto.randomUUID();
+    // Get approved overtime for the period
+    const overtimeRows = await db.prepare(`
+      SELECT employee_id, SUM(overtime_pay) AS total_overtime
+      FROM overtime_requests
+      WHERE company_id = ? AND status = 'approved'
+        AND strftime('%m', date) = printf('%02d', ?)
+        AND strftime('%Y', date) = ?
+      GROUP BY employee_id
+    `).bind(companyId, period_month, String(period_year)).all();
+    const overtimeMap = {};
+    for (const ot of (overtimeRows.results || [])) {
+      overtimeMap[ot.employee_id] = ot.total_overtime || 0;
+    }
+
+    // Create payroll run
+    const runId = crypto.randomUUID();
     await db.prepare(`
-      INSERT INTO payroll_runs
-        (id, company_id, period_month, period_year, status,
-         total_gross, total_net, total_pifss_employee, total_pifss_employer, created_by)
-      VALUES (?,?,?,?,'draft',?,?,?,?,?)
-    `).bind(newRunId, companyId, month, year,
-      round3(totalGross), round3(totalNet),
-      round3(totalPifssEmp), round3(totalPifssEmpr),
-      user.sub
-    ).run();
+      INSERT INTO payroll_runs (id, company_id, period_month, period_year, status, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, 'draft', ?, datetime('now'), datetime('now'))
+    `).bind(runId, companyId, period_month, period_year, user.sub).run();
 
-    // Create entries
-    for (const { emp, basic, pifssE, pifssEr, net } of calcs) {
+    // Calculate and insert entries
+    let totalGross = 0, totalNet = 0, totalPifssEmp = 0, totalPifssEmr = 0;
+
+    for (const emp of employees) {
+      const gross = (emp.basic_salary || 0)
+        + (emp.housing_allowance || 0)
+        + (emp.transport_allowance || 0)
+        + (emp.other_allowances || 0);
+      const overtimePay = overtimeMap[emp.id] || 0;
+      const totalGrossEmp = gross + overtimePay;
+
+      let pifssEmployee = 0, pifssEmployer = 0;
+      if (apply_pifss && emp.is_kuwaiti && emp.pifss_enrolled) {
+        const base = Math.min(gross, settings.pifss_salary_cap);
+        pifssEmployee = Math.round(base * settings.pifss_employee_rate * 1000) / 1000;
+        pifssEmployer = Math.round(base * settings.pifss_employer_rate * 1000) / 1000;
+      }
+
+      const netSalary = totalGrossEmp - pifssEmployee;
+
       await db.prepare(`
         INSERT INTO payroll_entries
           (id, company_id, payroll_run_id, employee_id,
-           basic_salary, gross_salary, pifss_employee, pifss_employer, net_salary)
-        VALUES (?,?,?,?,?,?,?,?,?)
-      `).bind(crypto.randomUUID(), companyId, newRunId, emp.id,
-        basic, basic, pifssE, pifssEr, net
+           basic_salary, housing_allowance, transport_allowance, other_allowances,
+           gross_salary, overtime_pay, overtime_hours,
+           pifss_employee, pifss_employer,
+           net_salary, payslip_published)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, 0)
+      `).bind(
+        crypto.randomUUID(), companyId, runId, emp.id,
+        emp.basic_salary || 0, emp.housing_allowance || 0,
+        emp.transport_allowance || 0, emp.other_allowances || 0,
+        totalGrossEmp, overtimePay,
+        pifssEmployee, pifssEmployer,
+        netSalary
       ).run();
+
+      totalGross += totalGrossEmp;
+      totalNet += netSalary;
+      totalPifssEmp += pifssEmployee;
+      totalPifssEmr += pifssEmployer;
     }
 
-    return json({
-      run_id: newRunId,
-      period: `${MONTHS[month-1]} ${year}`,
-      employee_count: employees.length,
-      total_gross: round3(totalGross),
-      total_net: round3(totalNet),
-      total_pifss_employee: round3(totalPifssEmp),
-      total_pifss_employer: round3(totalPifssEmpr),
-    }, 201);
+    // Update run totals
+    await db.prepare(`
+      UPDATE payroll_runs SET
+        total_gross = ?, total_net = ?,
+        total_pifss_employee = ?, total_pifss_employer = ?,
+        updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(
+      Math.round(totalGross * 1000) / 1000,
+      Math.round(totalNet * 1000) / 1000,
+      Math.round(totalPifssEmp * 1000) / 1000,
+      Math.round(totalPifssEmr * 1000) / 1000,
+      runId
+    ).run();
+
+    const run = await db.prepare(`SELECT * FROM payroll_runs WHERE id = ?`).bind(runId).first();
+    return json({ run, employees_processed: employees.length }, 201);
   }
 
-  // ── PUT /api/payroll/:id → publish / pay / delete ─────────────
-  if (method === 'PUT' && runId) {
-    if (!['ghaya_admin','company_admin'].includes(user.role)) return error('Forbidden', 403);
-    let body;
-    try { body = await request.json(); } catch { return error('Invalid JSON'); }
-    const { action } = body;
+  // ── PUT /api/payroll/:id — publish / update status ──
+  if (request.method === 'PUT' && slug) {
+    const body = await request.json();
+    const { status } = body;
 
     const run = await db.prepare(
-      'SELECT * FROM payroll_runs WHERE id = ? AND company_id = ?'
-    ).bind(runId, companyId).first();
+      `SELECT * FROM payroll_runs WHERE id = ? AND company_id = ?`
+    ).bind(slug, companyId).first();
     if (!run) return error('Not found', 404);
 
-    if (action === 'publish') {
-      await db.prepare(
-        "UPDATE payroll_entries SET payslip_published=1, payslip_published_at=datetime('now') WHERE payroll_run_id=?"
-      ).bind(runId).run();
-      await db.prepare(
-        "UPDATE payroll_runs SET status='approved', updated_at=datetime('now') WHERE id=?"
-      ).bind(runId).run();
-      return json({ message: 'Payslips published to employees ✓' });
+    // Map 'published' → 'approved' (schema allows: draft/processing/approved/paid/locked)
+    const newStatus = status === 'published' ? 'approved' : status;
+    const allowed = ['draft', 'processing', 'approved', 'paid', 'locked'];
+    if (!allowed.includes(newStatus)) return error('Invalid status', 400);
+
+    if (newStatus === 'approved') {
+      // Mark all payslips as published (visible to employees)
+      await db.prepare(`
+        UPDATE payroll_entries SET
+          payslip_published = 1,
+          payslip_published_at = datetime('now')
+        WHERE payroll_run_id = ? AND company_id = ?
+      `).bind(slug, companyId).run();
+
+      await db.prepare(`
+        UPDATE payroll_runs SET
+          status = 'approved',
+          approved_by = ?,
+          approved_at = datetime('now'),
+          updated_at = datetime('now')
+        WHERE id = ? AND company_id = ?
+      `).bind(user.sub, slug, companyId).run();
+    } else {
+      await db.prepare(`
+        UPDATE payroll_runs SET status = ?, updated_at = datetime('now')
+        WHERE id = ? AND company_id = ?
+      `).bind(newStatus, slug, companyId).run();
     }
 
-    if (action === 'pay') {
-      await db.prepare(
-        "UPDATE payroll_runs SET status='paid', paid_at=datetime('now'), updated_at=datetime('now') WHERE id=?"
-      ).bind(runId).run();
-      return json({ message: 'Payroll marked as paid ✓' });
-    }
-
-    return error('Unknown action');
+    const updated = await db.prepare(`SELECT * FROM payroll_runs WHERE id = ?`).bind(slug).first();
+    return json({ run: updated });
   }
 
-  // ── DELETE /api/payroll/:id → delete draft ────────────────────
-  if (method === 'DELETE' && runId) {
-    if (!['ghaya_admin','company_admin'].includes(user.role)) return error('Forbidden', 403);
+  // ── DELETE /api/payroll/:id — delete draft run ──
+  if (request.method === 'DELETE' && slug) {
     const run = await db.prepare(
-      'SELECT * FROM payroll_runs WHERE id = ? AND company_id = ?'
-    ).bind(runId, companyId).first();
+      `SELECT status FROM payroll_runs WHERE id = ? AND company_id = ?`
+    ).bind(slug, companyId).first();
     if (!run) return error('Not found', 404);
-    if (run.status === 'paid') return error('Cannot delete a paid payroll run');
-    await db.prepare('DELETE FROM payroll_entries WHERE payroll_run_id=?').bind(runId).run();
-    await db.prepare('DELETE FROM payroll_runs WHERE id=?').bind(runId).run();
-    return json({ message: 'Deleted' });
+    if (run.status !== 'draft') return error('Can only delete draft payroll runs', 400);
+
+    await db.prepare(`DELETE FROM payroll_runs WHERE id = ? AND company_id = ?`).bind(slug, companyId).run();
+    return json({ deleted: true });
   }
 
-  return error('Not found', 404);
+  return error('Method not allowed', 405);
 }
