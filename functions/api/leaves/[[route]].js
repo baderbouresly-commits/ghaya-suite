@@ -162,7 +162,6 @@ try {
   const emp = await db.prepare(
     'SELECT user_id FROM employees WHERE id = ?'
   ).bind(lr.employee_id).first();
-  console.log('[NOTIF] emp.user_id:', emp?.user_id, '| typeof fn:', typeof sendPushNotification);
   if (emp?.user_id && typeof sendPushNotification === 'function') {
     const emoji = newStatus === 'approved' ? '✅' : '❌';
     await sendPushNotification(env, {
