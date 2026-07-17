@@ -6,6 +6,18 @@
 <title>Ghaya — Company Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet"/>
+  <!-- OneSignal Web Push -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "ded12bcc-da9a-4dca-b800-c7d3622ef474",
+      safari_web_id: "web.onesignal.auto.36762c33-c595-4251-8e66-ea9a822d3713",
+      notifyButton: { enable: true },
+    });
+  });
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Almarai',sans-serif;background:#FAF6F1;color:#1a1a2e;min-height:100vh}
@@ -867,6 +879,10 @@ async function init(){
     if(!me||me.error){logout();return;}
     if(!['company_admin','manager'].includes(me.user.role)){logout();return;}
     currentUser=me.user;
+    if(me.user.sub){
+  window.OneSignalDeferred=window.OneSignalDeferred||[];
+  OneSignalDeferred.push(async function(OneSignal){try{await OneSignal.login(me.user.sub);}catch(e){}});
+}
     document.getElementById('user-name').textContent=me.user.name||me.user.email;
     document.getElementById('user-avatar').textContent=(me.user.name||me.user.email)[0].toUpperCase();
     if(me.user.company_id){
