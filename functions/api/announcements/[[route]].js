@@ -76,24 +76,27 @@ export async function onRequest({ request, env, params }) {
       expires_at || null
     ).run();
 
-    // Push notification to all active employees in the company
-    const { results: empUsers } = await db.prepare(
-      `SELECT u.id FROM users u
-       JOIN employees e ON e.user_id = u.id
-       WHERE e.company_id = ? AND u.is_active = 1 AND u.role = 'employee'`
-    ).bind(user.company_id).all();
-    if (empUsers.length > 0) {
-      const typeEmoji = { urgent: '🚨', holiday: '🎉', policy: '📋', general: '📢' };
-      await sendPushNotification(env, {
-        userIds: empUsers.map(u => u.id),
-        heading: `${typeEmoji[annType] || '📢'} ${title.trim()}`,
-        content: msgBody.trim().substring(0, 120),
-        url: 'https://ghaya-suite.pages.dev/employee/',
-      });
-    }
+// Push notification to all active employees (non-blocking)
+    try {
+      if (typeof sendPushNotification === 'function') {
+        const { results: empUsers } = await db.prepare(
+          `SELECT u.id FROM users u
+           JOIN employees e ON e.user_id = u.id
+           WHERE e.company_id = ? AND u.is_active = 1 AND u.role = 'employee'`
+        ).bind(user.company_id).all();
+        if (empUsers.length > 0) {
+          const typeEmoji = { urgent: '🚨', holiday: '🎉', policy: '📋', general: '📢' };
+          await sendPushNotification(env, {
+            userIds: empUsers.map(u => u.id),
+            heading: `${typeEmoji[annType] || '📢'} ${title.trim()}`,
+            content: msgBody.trim().substring(0, 120),
+            url: 'https://ghaya-suite.pages.dev/employee/',
+          });
+        }
+      }
+    } catch { /* notification failure must never block posting */ }
 
     return json({ message: 'Announcement posted', id }, 201);
-  }
 
   // ── PUT — company_admin edits or pins ──
   if (method === 'PUT' && annId) {
