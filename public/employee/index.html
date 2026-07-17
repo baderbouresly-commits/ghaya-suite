@@ -8,6 +8,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <!-- OneSignal Web Push -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "ded12bcc-da9a-4dca-b800-c7d3622ef474",
+      safari_web_id: "web.onesignal.auto.36762c33-c595-4251-8e66-ea9a822d3713",
+      notifyButton: { enable: true },
+    });
+  });
+</script>
   <style>
     :root {
       --cream:#FAF6F1; --coral:#E8472A; --navy:#0A2540; --teal:#00BFA6;
@@ -378,6 +390,14 @@
   const token = localStorage.getItem('ghaya_token');
   const user = JSON.parse(localStorage.getItem('ghaya_user') || 'null');
   if (!token || !user) { window.location.href = '/'; }
+
+  // Link this browser to the user's OneSignal profile
+if (user?.sub) {
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    try { await OneSignal.login(user.sub); } catch(e) {}
+  });
+}
 
   function logout() {
     localStorage.removeItem('ghaya_token');
