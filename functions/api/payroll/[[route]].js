@@ -92,7 +92,7 @@ export async function onRequest({ request, env, params }) {
     // Get approved overtime for the period
     const overtimeRows = await db.prepare(`
       SELECT employee_id, SUM(overtime_pay) AS total_overtime
-      FROM overtime_requests
+      FROM overtime_records
       WHERE company_id = ? AND status = 'approved'
         AND strftime('%m', date) = printf('%02d', ?)
         AND strftime('%Y', date) = ?
