@@ -377,7 +377,7 @@ select.form-input{cursor:pointer}
               <div style="display:flex;align-items:center;gap:6px;padding:0 10px;border-left:1px solid #e8e0d8;">
                 <span style="font-size:12px;font-weight:700;color:#555;">PIFSS</span>
                 <label class="toggle-wrap"><input type="checkbox" id="pifss-toggle" checked><span class="toggle-slider"></span></label>
-                <span class="info-icon" data-tip="Kuwaiti nationals: 8% deducted from salary + 11% employer cost. Non-Kuwaitis: exempt.">ℹ</span>
+                <span class="info-icon" data-tip="Kuwaiti nationals: 10.5% deducted from salary + 11.5% employer cost. Non-Kuwaitis: exempt.">ℹ</span>
               </div>
               <button class="btn btn-primary" onclick="runPayroll()">▶ Run Payroll</button>
             </div>
@@ -1933,7 +1933,7 @@ async function printPayslips(payrollId){
       <div class="ps-row"><span>Basic Salary</span><span>KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</span></div>
       ${e.pifss_employee>0?`<div class="ps-row" style="color:#c42a00"><span>PIFSS Deduction (Employee 10.5%)</span><span>− KWD ${parseFloat(e.pifss_employee).toFixed(3)}</span></div>`:''}
       <div class="ps-total"><span>Net Pay</span><span>KWD ${parseFloat(e.net_salary||0).toFixed(3)}</span></div>
-      ${e.pifss_employer>0?`<div class="ps-note">Employer PIFSS contribution (11%): KWD ${parseFloat(e.pifss_employer).toFixed(3)} — paid by company, not deducted from salary</div>`:''}
+      ${e.pifss_employer>0?`<div class="ps-note">Employer PIFSS contribution (11.5%): KWD ${parseFloat(e.pifss_employer).toFixed(3)} — paid by company, not deducted from salary</div>`:''}
     </div>`).join('');
   printWindow(`Payslips — ${period}`,`<h1>Payslips — ${period}</h1><div class="sub">${companyName} · Generated: ${new Date().toLocaleDateString('en-GB')}</div>${slips}`);
 }
