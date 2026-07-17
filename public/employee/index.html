@@ -541,7 +541,7 @@
     document.getElementById('docs-modal').classList.add('open');
     const el = document.getElementById('emp-docs-list');
     el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);">Loading…</div>';
-    const data = await apicall('GET', '/documents');
+    const data = await apiFetch('/api/documents');
     const docs = data?.documents || [];
     if (!docs.length) {
       el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;">📄 No documents uploaded yet.<br><span style="font-size:12px;">Your HR admin will upload documents here (contracts, IDs, certificates, etc.)</span></div>';
