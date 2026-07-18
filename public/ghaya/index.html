@@ -176,6 +176,11 @@ select.form-input{cursor:pointer}
       <span class="nav-icon">👥</span><span data-en="Users" data-ar="المستخدمون">Users</span>
     </div>
 
+    <div class="nav-item" onclick="showPage('recruitment')" id="nav-recruitment">
+      <span class="nav-icon">🎯</span><span data-en="Recruitment" data-ar="التوظيف">Recruitment</span>
+      <span id="rec-badge" style="margin-left:auto;background:#E8472A;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:800;display:none">0</span>
+    </div>
+
     <div class="nav-section" style="margin-top:8px">INBOX</div>
     <div class="nav-item" onclick="showPage('feedback')" id="nav-feedback">
       <span class="nav-icon">💬</span><span data-en="Feedback" data-ar="الملاحظات">Feedback</span>
@@ -258,6 +263,123 @@ select.form-input{cursor:pointer}
           </div>
         </div>
         <div id="users-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- RECRUITMENT PAGE (Ghaya view) -->
+    <div id="page-recruitment" style="display:none">
+      <div id="grec-list-view">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">🎯 Recruitment Requests</div>
+              <div class="section-sub">All hiring requests from companies — review, send candidates, share contacts</div>
+            </div>
+          </div>
+          <div id="grec-filter-row" style="padding:12px 24px;border-bottom:1px solid #f0ebe4;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="filter-btn active" onclick="gFilterRec(this,'')">All</button>
+            <button class="filter-btn" onclick="gFilterRec(this,'pending')">⏳ Pending</button>
+            <button class="filter-btn" onclick="gFilterRec(this,'candidates_sent')">📋 Candidates Sent</button>
+            <button class="filter-btn" onclick="gFilterRec(this,'selection_made')">✅ Selection Made</button>
+            <button class="filter-btn" onclick="gFilterRec(this,'completed')">🏁 Completed</button>
+            <button class="filter-btn" onclick="gFilterRec(this,'rejected')">❌ Rejected</button>
+          </div>
+          <div id="grec-list"><div class="loading"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+      <div id="grec-detail-view" style="display:none">
+        <div style="margin-bottom:20px;"><button class="btn btn-ghost btn-sm" onclick="showGRecList()">← Back to Requests</button></div>
+        <div id="grec-detail-content"></div>
+      </div>
+    </div>
+
+    <!-- RECRUITMENT: Add Candidate Modal -->
+    <div class="modal-overlay" id="grec-cand-modal">
+      <div class="modal" style="max-width:560px;">
+        <div class="modal-header">
+          <div class="modal-title">👤 Add Candidate</div>
+          <button class="modal-close" onclick="closeGCandModal()">✕</button>
+        </div>
+        <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Full Name *</label>
+              <input class="form-input" id="gc-name" placeholder="Candidate full name"/>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Nationality</label>
+              <input class="form-input" id="gc-nat" placeholder="e.g. Egyptian, Filipino"/>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Current Location</label>
+              <input class="form-input" id="gc-location" placeholder="e.g. Kuwait, India"/>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Visa Status</label>
+              <select class="form-input" id="gc-visa">
+                <option value="">Select...</option>
+                <option value="in_kuwait">Already in Kuwait (transferable)</option>
+                <option value="from_abroad">From abroad (new visa)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Experience (years)</label>
+              <input class="form-input" id="gc-exp" type="number" min="0" value="0"/>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Expected Salary (KWD)</label>
+              <input class="form-input" id="gc-salary" type="number" step="0.001" placeholder="Optional"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Contact Phone</label>
+            <input class="form-input" id="gc-phone" placeholder="+965 XXXX XXXX" type="tel"/>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Contact Email</label>
+            <input class="form-input" id="gc-email" placeholder="candidate@email.com" type="email"/>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Notes (visible to company)</label>
+            <textarea class="form-input" id="gc-notes" rows="2" placeholder="Brief summary, key strengths..."></textarea>
+          </div>
+          <div class="form-row">
+            <label class="form-label">CV File (PDF/DOC — upload as base64)</label>
+            <input class="form-input" id="gc-cv-file" type="file" accept=".pdf,.doc,.docx" onchange="handleCVUpload(this)"/>
+            <div id="gc-cv-status" style="font-size:11px;color:#888;margin-top:4px;"></div>
+          </div>
+          <input type="hidden" id="gc-cv-name"/>
+          <input type="hidden" id="gc-cv-data"/>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeGCandModal()">Cancel</button>
+          <button class="btn btn-primary" id="gc-submit-btn" onclick="submitGCandidate()">Add Candidate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECRUITMENT: Reject Modal -->
+    <div class="modal-overlay" id="grec-reject-modal">
+      <div class="modal" style="max-width:440px;">
+        <div class="modal-header">
+          <div class="modal-title">❌ Reject Request</div>
+          <button class="modal-close" onclick="document.getElementById('grec-reject-modal').classList.remove('open')">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <label class="form-label">Reason for rejection</label>
+            <textarea class="form-input" id="grec-reject-reason" rows="3" placeholder="Explain why this request cannot be fulfilled..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="document.getElementById('grec-reject-modal').classList.remove('open')">Cancel</button>
+          <button class="btn btn-danger" onclick="confirmGReject()">Reject Request</button>
+        </div>
       </div>
     </div>
 
@@ -511,7 +633,7 @@ async function init() {
 
 // ── Pages ──
 function showPage(page) {
-  ['dashboard','companies','users','feedback'].forEach(p => {
+  ['dashboard','companies','users','recruitment','feedback'].forEach(p => {
     document.getElementById('page-' + p).style.display = p === page ? '' : 'none';
     const nav = document.getElementById('nav-' + p);
     if (nav) nav.classList.toggle('active', p === page);
@@ -520,12 +642,14 @@ function showPage(page) {
     dashboard: { en: 'Dashboard', ar: 'لوحة التحكم' },
     companies: { en: 'Companies', ar: 'الشركات' },
     users: { en: 'Users', ar: 'المستخدمون' },
+    recruitment: { en: 'Recruitment', ar: 'التوظيف' },
     feedback: { en: 'Feedback', ar: 'الملاحظات' }
   };
   document.getElementById('page-title').textContent = titles[page]?.[currentLang] || titles[page]?.en;
   if (page === 'dashboard') loadDashboard();
   if (page === 'companies') loadCompanies();
   if (page === 'users') loadUsers();
+  if (page === 'recruitment') loadGRecruitment();
   if (page === 'feedback') loadFeedback('all');
 }
 
@@ -902,6 +1026,230 @@ function logout() {
   localStorage.removeItem('ghaya_token');
   localStorage.removeItem('ghaya_user');
   window.location.href = '/';
+}
+
+/* ── GHAYA RECRUITMENT ── */
+let gRecFilterStatus = '';
+let gCurrentRecId = null;
+
+const G_REC_STATUS = {
+  pending: {label:'⏳ Pending', cls:'badge-orange'},
+  candidates_sent: {label:'📋 Candidates Sent', cls:'badge-blue'},
+  selection_made: {label:'✅ Selection Made', cls:'badge-purple'},
+  completed: {label:'🏁 Completed', cls:'badge-green'},
+  rejected: {label:'❌ Rejected', cls:'badge-red'},
+};
+const G_COLLAR = { blue:'🔵 Blue Collar', white:'⚪ White Collar' };
+const G_WORK = { full_time:'Full-time', part_time:'Part-time', contract:'Contract' };
+const G_VISA = { in_kuwait:'Already in Kuwait', from_abroad:'From abroad', any:'Any' };
+const G_GENDER = { male:'Male', female:'Female', any:'Any' };
+const G_NAT = { kuwaiti:'Kuwaiti', non_kuwaiti:'Non-Kuwaiti', any:'Any' };
+
+function gFilterRec(btn, status) {
+  gRecFilterStatus = status;
+  document.querySelectorAll('#grec-filter-row .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadGRecruitment();
+}
+function showGRecList() {
+  document.getElementById('grec-list-view').style.display = '';
+  document.getElementById('grec-detail-view').style.display = 'none';
+  loadGRecruitment();
+}
+function openGCandModal(reqId) {
+  gCurrentRecId = reqId;
+  ['gc-name','gc-nat','gc-location','gc-phone','gc-email','gc-notes','gc-cv-name','gc-cv-data'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('gc-exp').value = '0';
+  document.getElementById('gc-salary').value = '';
+  document.getElementById('gc-visa').value = '';
+  document.getElementById('gc-cv-file').value = '';
+  document.getElementById('gc-cv-status').textContent = '';
+  document.getElementById('grec-cand-modal').classList.add('open');
+}
+function closeGCandModal() { document.getElementById('grec-cand-modal').classList.remove('open'); }
+
+function handleCVUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { showToast('File too large (max 5MB)', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('gc-cv-data').value = e.target.result;
+    document.getElementById('gc-cv-name').value = file.name;
+    document.getElementById('gc-cv-status').textContent = `✅ ${file.name} ready`;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function loadGRecruitment() {
+  const el = document.getElementById('grec-list');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const url = gRecFilterStatus ? `/recruitment?status=${gRecFilterStatus}` : '/recruitment';
+  const data = await api('GET', url);
+  const requests = data?.requests || [];
+
+  // Update badge
+  const pending = data?.pending_count || 0;
+  const badge = document.getElementById('rec-badge');
+  if (badge) { badge.style.display = pending > 0 ? '' : 'none'; badge.textContent = pending; }
+
+  if (!requests.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">No recruitment requests</div><div class="empty-sub">Companies will submit hiring requests here</div></div>';
+    return;
+  }
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Company</th><th>Job Title</th><th>Type</th><th>Positions</th><th>Urgency</th><th>Status</th><th>Date</th><th></th></tr></thead>
+    <tbody>${requests.map(r => {
+      const s = G_REC_STATUS[r.status] || {label:r.status, cls:'badge-gray'};
+      return `<tr>
+        <td><strong>${r.company_name||'—'}</strong></td>
+        <td>${r.job_title}<br><span style="font-size:11px;color:#888;">${r.department||''}</span></td>
+        <td>${G_COLLAR[r.collar_type]||r.collar_type}<br><span style="font-size:11px;color:#888;">${G_WORK[r.work_type]||''}</span></td>
+        <td style="text-align:center;">${r.positions_count}</td>
+        <td>${r.urgency==='urgent'?'<span class="badge badge-red">🔴 Urgent</span>':'Normal'}</td>
+        <td><span class="badge ${s.cls}">${s.label}</span></td>
+        <td style="font-size:12px;color:#888;">${r.created_at?.slice(0,10)||''}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="viewGRecDetail('${r.id}')">Manage →</button></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+async function viewGRecDetail(id) {
+  gCurrentRecId = id;
+  document.getElementById('grec-list-view').style.display = 'none';
+  document.getElementById('grec-detail-view').style.display = '';
+  document.getElementById('grec-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const data = await api('GET', `/recruitment/${id}`);
+  if (!data || data.error) { document.getElementById('grec-detail-content').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error loading</div></div>'; return; }
+  const r = data.request;
+  const candidates = data.candidates || [];
+  const s = G_REC_STATUS[r.status] || {label:r.status, cls:'badge-gray'};
+
+  const canReject = !['completed','rejected'].includes(r.status);
+  const canAddCand = !['completed','rejected'].includes(r.status);
+
+  const candidatesHtml = candidates.length ? candidates.map(c => `
+    <div style="border:1px solid #e8e0d8;border-radius:10px;padding:14px 18px;margin-bottom:10px;background:${c.selected_by_company?'#f0faf4':'#fff'};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-weight:700;">${c.full_name} ${c.selected_by_company?'<span class="badge badge-green">✅ Company Selected</span>':''} ${c.contact_shared?'<span class="badge badge-blue">📞 Contact Shared</span>':''}</div>
+          <div style="font-size:12px;color:#888;margin-top:3px;">
+            ${c.nationality||''} ${c.experience_years?`· ${c.experience_years} yrs`:''} ${c.current_location?`· 📍 ${c.current_location}`:''} ${c.visa_status?`· ${G_VISA[c.visa_status]||c.visa_status}`:''}
+          </div>
+          <div style="font-size:12px;color:#555;margin-top:4px;">📞 ${c.contact_phone||'—'} · ✉️ ${c.contact_email||'—'}</div>
+          ${c.notes?`<div style="font-size:12px;color:#555;margin-top:4px;">${c.notes}</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${c.cv_file_data?`<a href="${c.cv_file_data}" download="${c.cv_file_name||'CV'}" class="btn btn-ghost btn-sm">📄 CV</a>`:''}
+          ${c.selected_by_company && !c.contact_shared ? `<button class="btn btn-success btn-sm" onclick="shareContact('${id}','${c.id}')">📞 Share Contact</button>` : ''}
+          ${!c.selected_by_company ? `<button class="btn btn-danger btn-sm" onclick="removeCandidate('${id}','${c.id}')">Remove</button>` : ''}
+        </div>
+      </div>
+    </div>`).join('') :
+    `<div style="padding:24px;text-align:center;color:#888;font-size:13px;">No candidates added yet. Click "Add Candidate" to attach one.</div>`;
+
+  document.getElementById('grec-detail-content').innerHTML = `
+    <div class="section-card" style="margin-bottom:20px;">
+      <div class="section-header">
+        <div>
+          <div class="section-title">${r.job_title} — ${r.company_name||''}</div>
+          <div class="section-sub">Submitted ${r.created_at?.slice(0,10)||''}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span class="badge ${s.cls}" style="font-size:13px;padding:6px 14px;">${s.label}</span>
+          ${canReject?`<button class="btn btn-danger btn-sm" onclick="openGReject('${id}')">❌ Reject</button>`:''}
+        </div>
+      </div>
+      <div style="padding:20px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;font-size:13px;">
+        <div><div style="font-size:11px;color:#888;font-weight:700;">TYPE</div>${G_COLLAR[r.collar_type]||r.collar_type} · ${G_WORK[r.work_type]||''}</div>
+        <div><div style="font-size:11px;color:#888;font-weight:700;">POSITIONS</div>${r.positions_count}</div>
+        <div><div style="font-size:11px;color:#888;font-weight:700;">GENDER</div>${G_GENDER[r.gender]||r.gender}</div>
+        <div><div style="font-size:11px;color:#888;font-weight:700;">NATIONALITY</div>${G_NAT[r.nationality]||r.nationality}</div>
+        <div><div style="font-size:11px;color:#888;font-weight:700;">VISA</div>${G_VISA[r.visa_status]||r.visa_status}</div>
+        <div><div style="font-size:11px;color:#888;font-weight:700;">EXPERIENCE</div>${r.experience_years||0}+ yrs</div>
+        ${r.salary_budget?`<div><div style="font-size:11px;color:#888;font-weight:700;">BUDGET</div>KWD ${Number(r.salary_budget).toFixed(0)}/mo</div>`:''}
+      </div>
+      ${r.notes?`<div style="padding:0 24px 16px;font-size:13px;"><strong>Company notes:</strong> ${r.notes}</div>`:''}
+      <div style="padding:0 24px 20px;">
+        <label style="font-size:11px;color:#888;font-weight:700;display:block;margin-bottom:4px;">YOUR INTERNAL NOTES</label>
+        <div style="display:flex;gap:8px;">
+          <textarea class="form-input" id="grec-internal-notes" rows="2" style="flex:1;" placeholder="Internal notes (not visible to company)...">${r.ghaya_notes||''}</textarea>
+          <button class="btn btn-ghost btn-sm" style="align-self:flex-end;" onclick="saveGNotes('${id}')">Save</button>
+        </div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">Candidates</div>
+        ${canAddCand?`<button class="btn btn-primary btn-sm" onclick="openGCandModal('${id}')">+ Add Candidate</button>`:''}
+      </div>
+      <div style="padding:16px 20px;">${candidatesHtml}</div>
+    </div>`;
+}
+
+async function saveGNotes(reqId) {
+  const notes = document.getElementById('grec-internal-notes').value;
+  const res = await api('PUT', `/recruitment/${reqId}`, { ghaya_notes: notes });
+  if (res && !res.error) showToast('Notes saved ✓', 'success');
+  else showToast('Error saving notes', 'error');
+}
+
+let gRejectId = null;
+function openGReject(reqId) {
+  gRejectId = reqId;
+  document.getElementById('grec-reject-reason').value = '';
+  document.getElementById('grec-reject-modal').classList.add('open');
+}
+async function confirmGReject() {
+  const reason = document.getElementById('grec-reject-reason').value.trim();
+  if (!reason) { showToast('Please enter a reason', 'error'); return; }
+  const res = await api('PUT', `/recruitment/${gRejectId}`, { status: 'rejected', rejection_reason: reason });
+  if (res && !res.error) {
+    document.getElementById('grec-reject-modal').classList.remove('open');
+    showToast('Request rejected', 'success');
+    viewGRecDetail(gRejectId);
+  } else showToast(res?.error || 'Error', 'error');
+}
+
+async function submitGCandidate() {
+  const btn = document.getElementById('gc-submit-btn');
+  const full_name = document.getElementById('gc-name').value.trim();
+  if (!full_name) { showToast('Candidate name required', 'error'); return; }
+  btn.disabled = true; btn.textContent = 'Adding…';
+  const res = await api('POST', `/recruitment/${gCurrentRecId}/candidates`, {
+    full_name,
+    nationality: document.getElementById('gc-nat').value.trim() || null,
+    current_location: document.getElementById('gc-location').value.trim() || null,
+    visa_status: document.getElementById('gc-visa').value || null,
+    experience_years: parseInt(document.getElementById('gc-exp').value) || 0,
+    expected_salary: parseFloat(document.getElementById('gc-salary').value) || null,
+    contact_phone: document.getElementById('gc-phone').value.trim() || null,
+    contact_email: document.getElementById('gc-email').value.trim() || null,
+    notes: document.getElementById('gc-notes').value.trim() || null,
+    cv_file_name: document.getElementById('gc-cv-name').value || null,
+    cv_file_data: document.getElementById('gc-cv-data').value || null,
+  });
+  btn.disabled = false; btn.textContent = 'Add Candidate';
+  if (res?.candidate) {
+    closeGCandModal();
+    showToast('Candidate added ✓', 'success');
+    viewGRecDetail(gCurrentRecId);
+  } else showToast(res?.error || 'Error', 'error');
+}
+
+async function shareContact(reqId, candidateId) {
+  if (!confirm('Share contact details with the company? They will be able to see the phone and email.')) return;
+  const res = await api('PUT', `/recruitment/${reqId}/candidates/${candidateId}`, { share_contact: true });
+  if (res && !res.error) { showToast('Contact shared ✓', 'success'); viewGRecDetail(reqId); }
+  else showToast(res?.error || 'Error', 'error');
+}
+
+async function removeCandidate(reqId, candidateId) {
+  if (!confirm('Remove this candidate?')) return;
+  const res = await api('DELETE', `/recruitment/${reqId}/candidates/${candidateId}`);
+  if (res?.success) { showToast('Removed', 'success'); viewGRecDetail(reqId); }
+  else showToast('Error', 'error');
 }
 
 init();
