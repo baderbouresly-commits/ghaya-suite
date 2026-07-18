@@ -4,6 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Ghaya — Company Admin</title>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#0A2540"/>
+<link rel="apple-touch-icon" href="/icon-192.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet"/>
 <!-- OneSignal Web Push -->
@@ -1249,7 +1252,7 @@ async function loadPayroll(){
   const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Period</th><th>Employees</th><th>Total Gross</th><th>Total Net</th><th>Status</th><th>Actions</th></tr></thead><tbody>${runs.map(r=>{const isPublished=['approved','paid','locked'].includes(r.status);return`<tr><td style="font-weight:700">${months[(r.period_month||1)-1]} ${r.period_year}</td><td>${r.employee_count||'—'}</td><td>KWD ${parseFloat(r.total_gross||0).toFixed(3)}</td><td style="font-weight:700;color:#1a7a42">KWD ${parseFloat(r.total_net||0).toFixed(3)}</td><td><span class="badge ${isPublished?'badge-green':'badge-orange'}">${isPublished?'Published':r.status||'draft'}</span></td><td><button class="btn btn-ghost btn-sm" onclick="viewPayrollDetail('${r.id}')">View →</button></td></tr>`;}).join('')}</tbody></table></div>`;
 }
-function showPayrollList(){document.getElementById('payroll-runs-view').style.display='';document.getElementById('payroll-detail-view').style.display='none';}
+function showPayrollList(){document.getElementById('payroll-runs-view').style.display='';document.getElementById('payroll-detail-view').style.display='none';loadPayroll();}
 async function viewPayrollDetail(id){
   document.getElementById('payroll-runs-view').style.display='none';document.getElementById('payroll-detail-view').style.display='';
   document.getElementById('payroll-detail-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
@@ -2071,6 +2074,41 @@ document.querySelectorAll('.info-icon').forEach(icon=>{
   icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
 });
 init();
+</script>
+
+<!-- PWA: Add to Home Screen banner -->
+<div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;background:#0A2540;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
+  <img src="/icon-192.png" style="width:44px;height:44px;border-radius:10px;flex-shrink:0;"/>
+  <div style="flex:1;">
+    <div style="font-weight:800;font-size:14px;">Install Ghaya Suite</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:2px;">Add to your home screen for quick access</div>
+  </div>
+  <button id="pwa-install-btn" style="background:#E8472A;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;">Install</button>
+  <button onclick="document.getElementById('pwa-banner').style.display='none';localStorage.setItem('pwa-dismissed','1');" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;">✕</button>
+</div>
+<script>
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+  // PWA install prompt
+  let _pwaPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    _pwaPrompt = e;
+    if (!localStorage.getItem('pwa-dismissed') && !window.matchMedia('(display-mode: standalone)').matches) {
+      const banner = document.getElementById('pwa-banner');
+      if (banner) banner.style.display = 'flex';
+    }
+  });
+  document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
+    if (!_pwaPrompt) return;
+    _pwaPrompt.prompt();
+    const { outcome } = await _pwaPrompt.userChoice;
+    _pwaPrompt = null;
+    document.getElementById('pwa-banner').style.display = 'none';
+    if (outcome === 'accepted') localStorage.setItem('pwa-dismissed', '1');
+  });
 </script>
 </body>
 </html>
