@@ -5,21 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="theme-color" content="#0A2540"/>
   <title>Ghaya Suite — My Dashboard</title>
+  <link rel="manifest" href="/manifest.json"/>
+  <link rel="apple-touch-icon" href="/icon-192.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
   <!-- OneSignal Web Push -->
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "ded12bcc-da9a-4dca-b800-c7d3622ef474",
-      safari_web_id: "web.onesignal.auto.36762c33-c595-4251-8e66-ea9a822d3713",
-      notifyButton: { enable: true },
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "ded12bcc-da9a-4dca-b800-c7d3622ef474",
+        safari_web_id: "web.onesignal.auto.36762c33-c595-4251-8e66-ea9a822d3713",
+        notifyButton: { enable: true },
+      });
+      // Show in-page toast when a notification arrives while the tab is focused
+      OneSignal.Notifications.addEventListener('foregroundWillDisplay', function(event) {
+        event.preventDefault(); // suppress OS popup (tab is focused)
+        const n = event.notification;
+        showInPageToast(n.title, n.body);
+      });
     });
-  });
-</script>
+  </script>
   <style>
     :root {
       --cream:#FAF6F1; --coral:#E8472A; --navy:#0A2540; --teal:#00BFA6;
@@ -391,7 +399,7 @@
   const user = JSON.parse(localStorage.getItem('ghaya_user') || 'null');
   if (!token || !user) { window.location.href = '/'; }
 
-// Link this browser to the user's OneSignal profile
+  // Link this browser to the user's OneSignal profile
   if (user?.id) {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
@@ -592,7 +600,114 @@
       .then(blob => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href); })
       .catch(() => alert('Download failed. Please try again.'));
   }
-  function downloadPayslip() { alert('Payslip download coming soon!'); }
+  function downloadPayslip() {
+    const ps = dashData?.latest_payslip;
+    const emp = dashData?.employee;
+    const company = dashData?.company;
+    if (!ps) { alert('No payslip available.'); return; }
+
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const period = `${monthNames[(ps.period_month||1)-1]} ${ps.period_year}`;
+    const fmt = v => `KWD ${Number(v||0).toFixed(3)}`;
+    const empName = lang === 'ar' && emp?.name_ar ? emp.name_ar : (emp?.name_en || '');
+    const coName  = lang === 'ar' && company?.name_ar ? company.name_ar : (company?.name_en || 'Company');
+    const pubDate = ps.payslip_published_at ? new Date(ps.payslip_published_at).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'}) : '';
+
+    const rows = [
+      ['Basic Salary', ps.basic_salary],
+      ps.housing_allowance   > 0 ? ['Housing Allowance',   ps.housing_allowance]   : null,
+      ps.transport_allowance > 0 ? ['Transport Allowance', ps.transport_allowance] : null,
+      ps.other_allowances    > 0 ? ['Other Allowances',    ps.other_allowances]    : null,
+      ps.overtime_pay        > 0 ? ['Overtime Pay',        ps.overtime_pay]        : null,
+    ].filter(Boolean);
+
+    const deductRows = [
+      ps.pifss_employee > 0 ? ['PIFSS Contribution (10.5%)', ps.pifss_employee] : null,
+    ].filter(Boolean);
+
+    const totalDeductions = deductRows.reduce((s,[,v]) => s + Number(v||0), 0);
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Payslip – ${period}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1a1a2e; background: #fff; }
+  .page { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 20mm; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 16px; border-bottom: 3px solid #1a1a2e; margin-bottom: 20px; }
+  .company-name { font-size: 22px; font-weight: 800; color: #1a1a2e; }
+  .payslip-title { font-size: 13px; color: #666; margin-top: 4px; }
+  .badge { background: #1a1a2e; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
+  .employee-box { background: #f7f5f0; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; }
+  .emp-info div { margin-bottom: 4px; font-size: 13px; }
+  .emp-info .emp-name { font-size: 16px; font-weight: 700; }
+  .emp-info .emp-period { color: #666; font-size: 12px; }
+  .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #888; margin-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  td { padding: 9px 12px; border-bottom: 1px solid #eee; font-size: 13px; }
+  td:last-child { text-align: right; font-weight: 600; }
+  .total-row td { background: #1a1a2e; color: #fff; font-weight: 700; font-size: 14px; border-radius: 0; }
+  .net-box { background: #e8f5e9; border: 2px solid #2e7d32; border-radius: 10px; padding: 16px 20px; text-align: center; margin-top: 10px; }
+  .net-label { font-size: 12px; color: #2e7d32; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
+  .net-amount { font-size: 28px; font-weight: 900; color: #1a1a2e; margin-top: 4px; }
+  .footer { margin-top: 30px; font-size: 10px; color: #aaa; text-align: center; border-top: 1px solid #eee; padding-top: 14px; }
+  .notice { margin-top: 16px; background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 10px 14px; font-size: 11px; color: #555; line-height: 1.5; }
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <div class="company-name">${coName}</div>
+      <div class="payslip-title">Official Payslip</div>
+    </div>
+    <div class="badge">PAYSLIP</div>
+  </div>
+
+  <div class="employee-box">
+    <div class="emp-info">
+      <div class="emp-name">${empName}</div>
+      <div class="emp-period">Pay Period: ${period}</div>
+      ${pubDate ? `<div class="emp-period">Issued: ${pubDate}</div>` : ''}
+    </div>
+  </div>
+
+  <div class="section-title">Earnings</div>
+  <table>
+    ${rows.map(([label, val]) => `<tr><td>${label}</td><td>${fmt(val)}</td></tr>`).join('')}
+    <tr class="total-row"><td>Gross Salary</td><td>${fmt(ps.gross_salary)}</td></tr>
+  </table>
+
+  ${deductRows.length ? `
+  <div class="section-title">Deductions</div>
+  <table>
+    ${deductRows.map(([label, val]) => `<tr><td>${label}</td><td>- ${fmt(val)}</td></tr>`).join('')}
+    <tr class="total-row"><td>Total Deductions</td><td>- ${fmt(totalDeductions)}</td></tr>
+  </table>` : ''}
+
+  <div class="net-box">
+    <div class="net-label">Net Pay</div>
+    <div class="net-amount">${fmt(ps.net_salary)}</div>
+  </div>
+
+  ${ps.pifss_employer > 0 ? `<div class="notice">ℹ️ <strong>Employer PIFSS contribution (11.5%):</strong> ${fmt(ps.pifss_employer)} — paid directly by employer and not deducted from your salary.</div>` : ''}
+
+  <div class="footer">
+    This payslip is generated in accordance with Kuwait Labour Law No. 6 of 2010 and PIFSS Law 61/1976.<br>
+    ${coName} · ${period} · Confidential
+  </div>
+</div>
+<script>window.onload = function() { window.print(); };<\/script>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank', 'width=900,height=700');
+    win.document.write(html);
+    win.document.close();
+  }
 
   // ── Clock In / Out ────────────────────────────
   let currentAttRecord = null;
@@ -763,10 +878,84 @@
       </div>`;
   }
 
+  // ── In-page notification toast ─────────────────
+  function showInPageToast(title, body) {
+    // Remove any existing toast
+    const old = document.getElementById('ghaya-toast');
+    if (old) old.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'ghaya-toast';
+    toast.innerHTML = `
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="font-size:22px;flex-shrink:0;">🔔</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:14px;margin-bottom:3px;">${title || 'Notification'}</div>
+          ${body ? `<div style="font-size:13px;color:#eee;line-height:1.4;">${body}</div>` : ''}
+        </div>
+        <button onclick="document.getElementById('ghaya-toast').remove()"
+          style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">✕</button>
+      </div>`;
+    Object.assign(toast.style, {
+      position:'fixed', bottom:'24px', right:'24px', zIndex:'9999',
+      background:'#0A2540', color:'#fff', padding:'14px 18px',
+      borderRadius:'14px', maxWidth:'340px', width:'calc(100% - 48px)',
+      boxShadow:'0 8px 32px rgba(0,0,0,0.35)',
+      animation:'slideUp .3s ease', cursor:'default',
+    });
+
+    // Inject keyframe once
+    if (!document.getElementById('toast-style')) {
+      const s = document.createElement('style');
+      s.id = 'toast-style';
+      s.textContent = `@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`;
+      document.head.appendChild(s);
+    }
+
+    document.body.appendChild(toast);
+    // Auto-dismiss after 6 seconds
+    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 6000);
+  }
+
+  // ── PWA install prompt ────────────────────────
+  let _pwaPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    _pwaPrompt = e;
+    if (!localStorage.getItem('pwa-dismissed') && !window.matchMedia('(display-mode: standalone)').matches) {
+      const banner = document.getElementById('pwa-banner');
+      if (banner) banner.style.display = 'flex';
+    }
+  });
+
   // ── Start ─────────────────────────────────────
   applyLang();
   startLiveClock();
   loadDashboard();
+</script>
+
+<!-- PWA: Add to Home Screen banner -->
+<div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;background:#0A2540;color:#fff;padding:14px 20px;align-items:center;gap:14px;box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
+  <img src="/icon-192.png" style="width:44px;height:44px;border-radius:10px;flex-shrink:0;"/>
+  <div style="flex:1;">
+    <div style="font-weight:800;font-size:14px;">Install Ghaya Suite</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:2px;">Add to your home screen for quick access</div>
+  </div>
+  <button id="pwa-install-btn" style="background:#E8472A;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;">Install</button>
+  <button onclick="document.getElementById('pwa-banner').style.display='none';localStorage.setItem('pwa-dismissed','1');" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;">✕</button>
+</div>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+  document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
+    if (!_pwaPrompt) return;
+    _pwaPrompt.prompt();
+    const { outcome } = await _pwaPrompt.userChoice;
+    _pwaPrompt = null;
+    document.getElementById('pwa-banner').style.display = 'none';
+    if (outcome === 'accepted') localStorage.setItem('pwa-dismissed', '1');
+  });
 </script>
 </body>
 </html>
