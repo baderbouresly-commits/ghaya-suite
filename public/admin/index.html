@@ -613,6 +613,17 @@ select.form-input{cursor:pointer}
             </div>
           </div>
 
+          <!-- Allowances toggle -->
+          <div style="margin:16px 0;padding:14px 16px;background:#f8f9fb;border-radius:8px;border:1px solid #e8e8e8;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div style="font-weight:700;font-size:13px;">💰 Housing & Transport Allowances</div>
+                <div style="font-size:12px;color:#888;margin-top:2px;">Show allowance fields in employee profiles and include in payroll gross</div>
+              </div>
+              <label class="toggle-wrap"><input type="checkbox" id="kll-allowances-enabled" onchange="saveKLLSettings()"><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
             <button class="btn btn-primary" onclick="saveKLLSettings()">Save Labour Law Settings</button>
             <span style="font-size:12px;color:#888;">Changes apply to new leave assignments and future payroll runs.</span>
@@ -706,6 +717,13 @@ select.form-input{cursor:pointer}
       <div class="form-grid">
         <div class="form-row"><label class="form-label">Basic Salary (KWD)</label><input class="form-input" id="emp-salary" type="number" step="0.001" placeholder="350.000"/></div>
         <div class="form-row"><label class="form-label">Hire Date</label><input class="form-input" id="emp-start" type="date"/></div>
+      </div>
+      <div id="emp-allowances-section" style="display:none;">
+        <div class="form-grid">
+          <div class="form-row"><label class="form-label">Housing Allowance (KWD) <span style="font-size:11px;color:#888;">بدل سكن</span></label><input class="form-input" id="emp-housing" type="number" step="0.001" placeholder="0.000"/></div>
+          <div class="form-row"><label class="form-label">Transport Allowance (KWD) <span style="font-size:11px;color:#888;">بدل مواصلات</span></label><input class="form-input" id="emp-transport" type="number" step="0.001" placeholder="0.000"/></div>
+        </div>
+        <div class="form-row"><label class="form-label">Other Allowances (KWD)</label><input class="form-input" id="emp-other-allowance" type="number" step="0.001" placeholder="0.000"/></div>
       </div>
       <div class="form-grid">
         <div class="form-row"><label class="form-label">Work Email</label><input class="form-input" id="emp-email" type="email" placeholder="ahmed@company.com"/></div>
@@ -1363,6 +1381,13 @@ async function loadKLLSettings(){
   document.getElementById('kll-pifss-er').value  = ((s.pifss_employer_rate ?? 0.115) * 100).toFixed(1);
   document.getElementById('kll-indem-y1').value  = s.indemnity_year1_rate ?? 15;
   document.getElementById('kll-indem-y6').value  = s.indemnity_year6_rate ?? 30;
+  const allowOn = s.allowances_enabled !== 0;
+  document.getElementById('kll-allowances-enabled').checked = allowOn;
+  applyAllowancesVisibility(allowOn);
+}
+function applyAllowancesVisibility(enabled){
+  const sec = document.getElementById('emp-allowances-section');
+  if (sec) sec.style.display = enabled ? '' : 'none';
 }
 async function saveKLLSettings(){
   const body = {
@@ -1377,10 +1402,13 @@ async function saveKLLSettings(){
     pifss_employer_rate:     parseFloat(document.getElementById('kll-pifss-er').value) / 100,
     indemnity_year1_rate:    parseFloat(document.getElementById('kll-indem-y1').value),
     indemnity_year6_rate:    parseFloat(document.getElementById('kll-indem-y6').value),
+    allowances_enabled:      document.getElementById('kll-allowances-enabled').checked,
   };
   const res = await apicall('PUT', '/settings', body);
-  if (res?.settings) showToast('Labour Law settings saved ✓', 'success');
-  else showToast(res?.error || 'Error saving', 'error');
+  if (res?.settings) {
+    applyAllowancesVisibility(body.allowances_enabled);
+    showToast('Labour Law settings saved ✓', 'success');
+  } else showToast(res?.error || 'Error saving', 'error');
 }
 async function resetKLLDefaults(){
   if (!confirm('Reset all Labour Law settings to Kuwait Law defaults?')) return;
@@ -1516,6 +1544,9 @@ async function editEmployee(id){
   document.getElementById('emp-contract').value=emp.contract_type||'full_time';document.getElementById('emp-password').value='';
   document.getElementById('emp-is-kuwaiti').checked=!!emp.is_kuwaiti;
   document.getElementById('emp-pifss-enrolled').checked=!!emp.pifss_enrolled;
+  document.getElementById('emp-housing').value=emp.housing_allowance||'';
+  document.getElementById('emp-transport').value=emp.transport_allowance||'';
+  document.getElementById('emp-other-allowance').value=emp.other_allowances||'';
   populateEmpDropdowns();
   document.getElementById('emp-dept-id').value=emp.department||emp.department_id||'';
   document.getElementById('emp-job-title-id').value=emp.job_title_en||emp.job_title_id||'';
@@ -1531,7 +1562,10 @@ async function saveEmployee(){
     work_email:document.getElementById('emp-email').value.trim(),phone:document.getElementById('emp-phone').value.trim(),
     contract_type:document.getElementById('emp-contract').value,
     is_kuwaiti:document.getElementById('emp-is-kuwaiti').checked?1:0,
-    pifss_enrolled:document.getElementById('emp-pifss-enrolled').checked?1:0
+    pifss_enrolled:document.getElementById('emp-pifss-enrolled').checked?1:0,
+    housing_allowance:parseFloat(document.getElementById('emp-housing').value)||0,
+    transport_allowance:parseFloat(document.getElementById('emp-transport').value)||0,
+    other_allowances:parseFloat(document.getElementById('emp-other-allowance').value)||0,
   };
   const pwd=document.getElementById('emp-password').value;if(pwd)body.password=pwd;
   if(!body.first_name_en||!body.last_name_en){showToast('First and last name required','error');return;}
