@@ -120,7 +120,7 @@ export async function onRequest({request,env,params}){
     const id=crypto.randomUUID();
     // Admin entries auto-approved
     const status=isAdmin?'approved':'pending';
-    const approved_by=isAdmin?user.id:null;
+    const approved_by=isAdmin?(user.sub||user.id):null;
     const approved_at=isAdmin?new Date().toISOString().replace('T',' ').slice(0,19):null;
 
     await db.prepare(`INSERT INTO overtime_records(id,company_id,employee_id,date,hours,day_type,rate_multiplier,hourly_rate,overtime_pay,reason,status,approved_by,approved_at)
@@ -140,8 +140,8 @@ export async function onRequest({request,env,params}){
     if(!['approved','rejected'].includes(status))return err('status must be approved or rejected');
     const rec=await db.prepare('SELECT * FROM overtime_records WHERE id=? AND company_id=?').bind(seg0,companyId).first();
     if(!rec)return err('Not found',404);
-    await db.prepare(`UPDATE overtime_records SET status=?,approved_by=?,approved_at=datetime('now'),notes=?,updated_at=datetime('now') WHERE id=?`)
-      .bind(status,user.id,notes||null,seg0).run();
+    await db.prepare(`UPDATE overtime_records SET status=?,approved_by=?,approved_at=datetime('now'),notes=? WHERE id=?`)
+      .bind(status,user.sub||user.id,notes||null,seg0).run();
     const updated=await db.prepare('SELECT * FROM overtime_records WHERE id=?').bind(seg0).first();
     return json({record:updated});
   }
