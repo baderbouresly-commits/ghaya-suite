@@ -25,6 +25,7 @@ const KLL_DEFAULTS = {
   show_colleagues_to_employee:     0,
   show_manager_to_employee:        1,
   show_documents_to_employee:      1,
+  allowances_enabled:              1,
 };
 
 export async function onRequest({ request, env, params }) {
@@ -106,7 +107,8 @@ export async function onRequest({ request, env, params }) {
       show_org_chart_to_employee       = CASE WHEN ? IS NOT NULL THEN ? ELSE show_org_chart_to_employee END,
       show_colleagues_to_employee      = CASE WHEN ? IS NOT NULL THEN ? ELSE show_colleagues_to_employee END,
       show_manager_to_employee         = CASE WHEN ? IS NOT NULL THEN ? ELSE show_manager_to_employee END,
-      show_documents_to_employee       = CASE WHEN ? IS NOT NULL THEN ? ELSE show_documents_to_employee END
+      show_documents_to_employee       = CASE WHEN ? IS NOT NULL THEN ? ELSE show_documents_to_employee END,
+      allowances_enabled               = CASE WHEN ? IS NOT NULL THEN ? ELSE allowances_enabled END
       WHERE company_id = ?`)
       .bind(
         ni(body.default_annual_leave),
@@ -128,6 +130,7 @@ export async function onRequest({ request, env, params }) {
         nb(body.show_colleagues_to_employee), nb(body.show_colleagues_to_employee),
         nb(body.show_manager_to_employee), nb(body.show_manager_to_employee),
         nb(body.show_documents_to_employee), nb(body.show_documents_to_employee),
+        nb(body.allowances_enabled), nb(body.allowances_enabled),
         companyId
       ).run();
 
