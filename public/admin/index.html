@@ -209,6 +209,9 @@ select.form-input{cursor:pointer}
     <div class="nav-item" onclick="showPage('announcements')" id="nav-announcements">
       <span class="nav-icon">📢</span><span data-en="Announcements" data-ar="الإعلانات">Announcements</span>
     </div>
+    <div class="nav-item" onclick="showPage('recruitment')" id="nav-recruitment">
+      <span class="nav-icon">🎯</span><span data-en="Recruitment" data-ar="التوظيف">Recruitment</span><span class="nav-badge" id="recruitment-badge" style="display:none">0</span>
+    </div>
     <div class="nav-section" style="margin-top:8px">SETTINGS</div>
     <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
       <span class="nav-icon">⚙️</span><span data-en="Settings" data-ar="الإعدادات">Settings</span>
@@ -656,6 +659,143 @@ select.form-input{cursor:pointer}
         <div id="ann-list"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
+    <!-- RECRUITMENT -->
+    <div id="page-recruitment" style="display:none">
+      <!-- List view -->
+      <div id="rec-list-view">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">🎯 Recruitment Requests</div>
+              <div class="section-sub">Submit a hiring request — Ghaya will find the right candidates for you</div>
+            </div>
+            <button class="btn btn-primary" onclick="openRecModal()">+ New Request</button>
+          </div>
+          <div id="rec-filter-row" style="padding:12px 24px;border-bottom:1px solid #f0ebe4;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="filter-btn active" onclick="filterRec(this,'')">All</button>
+            <button class="filter-btn" onclick="filterRec(this,'pending')">⏳ Pending</button>
+            <button class="filter-btn" onclick="filterRec(this,'candidates_sent')">📋 Review Candidates</button>
+            <button class="filter-btn" onclick="filterRec(this,'selection_made')">✅ Selected</button>
+            <button class="filter-btn" onclick="filterRec(this,'completed')">🏁 Completed</button>
+            <button class="filter-btn" onclick="filterRec(this,'rejected')">❌ Rejected</button>
+          </div>
+          <div id="rec-list"><div class="loading"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Detail view -->
+      <div id="rec-detail-view" style="display:none">
+        <div style="margin-bottom:20px;"><button class="btn btn-ghost btn-sm" onclick="showRecList()">← Back to Requests</button></div>
+        <div id="rec-detail-content"></div>
+      </div>
+    </div>
+
+    <!-- RECRUITMENT: New Request Modal -->
+    <div class="modal-overlay" id="rec-modal">
+      <div class="modal" style="max-width:640px;">
+        <div class="modal-header">
+          <div class="modal-title">🎯 New Recruitment Request</div>
+          <button class="modal-close" onclick="closeRecModal()">✕</button>
+        </div>
+        <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Job Title *</label>
+              <input class="form-input" id="rec-job-title" placeholder="e.g. Accountant, Driver, Sales Manager"/>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Department</label>
+              <input class="form-input" id="rec-department" placeholder="e.g. Finance, Operations"/>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Number of Positions *</label>
+              <input class="form-input" id="rec-positions" type="number" min="1" value="1"/>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Urgency</label>
+              <select class="form-input" id="rec-urgency">
+                <option value="normal">Normal</option>
+                <option value="urgent">🔴 Urgent</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Collar Type *
+              <span class="info-icon" style="margin-left:6px;" data-tip="Blue Collar: manual/physical workers (drivers, laborers, technicians, cleaners, security). White Collar: office/professional roles (accountants, managers, engineers, sales, admin).">i</span>
+            </label>
+            <select class="form-input" id="rec-collar">
+              <option value="">Select type...</option>
+              <option value="blue">🔵 Blue Collar — Manual / Physical workers (drivers, laborers, technicians, cleaners, security)</option>
+              <option value="white">⚪ White Collar — Office / Professional roles (accountants, managers, engineers, sales, admin)</option>
+            </select>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Work Type</label>
+              <select class="form-input" id="rec-work-type">
+                <option value="full_time">Full-time</option>
+                <option value="part_time">Part-time</option>
+                <option value="contract">Contract</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Gender Preference</label>
+              <select class="form-input" id="rec-gender">
+                <option value="any">Any</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Nationality Preference</label>
+              <select class="form-input" id="rec-nationality">
+                <option value="any">Any</option>
+                <option value="kuwaiti">Kuwaiti</option>
+                <option value="non_kuwaiti">Non-Kuwaiti</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Visa / Residency Status
+                <span class="info-icon" style="margin-left:6px;" data-tip="Already in Kuwait: candidate has a transferable visa and can start faster. From abroad: candidate needs a new work visa (longer process). Doesn't matter: open to both.">i</span>
+              </label>
+              <select class="form-input" id="rec-visa">
+                <option value="any">Doesn't matter</option>
+                <option value="in_kuwait">Already in Kuwait (transferable visa)</option>
+                <option value="from_abroad">From abroad (new visa needed)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Experience Required (years)</label>
+              <input class="form-input" id="rec-exp" type="number" min="0" value="0"/>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Salary Budget (KWD/month)</label>
+              <input class="form-input" id="rec-salary" type="number" step="0.001" placeholder="Optional"/>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Additional Notes</label>
+            <textarea class="form-input" id="rec-notes" rows="3" placeholder="Any specific requirements, skills, or instructions for Ghaya..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeRecModal()">Cancel</button>
+          <button class="btn btn-primary" id="rec-submit-btn" onclick="submitRecRequest()">Submit Request</button>
+        </div>
+      </div>
+    </div>
+
     <!-- FEEDBACK -->
     <div id="page-feedback" style="display:none">
       <div class="section-card">
@@ -1037,12 +1177,12 @@ async function loadDeptsAndTitles(){
 
 function showPage(page){
   localStorage.setItem('ghaya_page',page);
-  ['dashboard','employees','attendance','leaves','permissions','overtime','payroll','reports','announcements','settings','feedback'].forEach(p=>{
+  ['dashboard','employees','attendance','leaves','permissions','overtime','payroll','reports','announcements','recruitment','settings','feedback'].forEach(p=>{
     document.getElementById('page-'+p).style.display=p===page?'':'none';
     const nav=document.getElementById('nav-'+p);
     if(nav)nav.classList.toggle('active',p===page);
   });
-  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},overtime:{en:'Overtime',ar:'العمل الإضافي'},payroll:{en:'Payroll',ar:'الرواتب'},reports:{en:'Reports & Export',ar:'التقارير'},announcements:{en:'Announcements',ar:'الإعلانات'},settings:{en:'Settings',ar:'الإعدادات'},feedback:{en:'Send Feedback',ar:'إرسال ملاحظات'}};
+  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},overtime:{en:'Overtime',ar:'العمل الإضافي'},payroll:{en:'Payroll',ar:'الرواتب'},reports:{en:'Reports & Export',ar:'التقارير'},announcements:{en:'Announcements',ar:'الإعلانات'},recruitment:{en:'Recruitment',ar:'التوظيف'},settings:{en:'Settings',ar:'الإعدادات'},feedback:{en:'Send Feedback',ar:'إرسال ملاحظات'}};
   document.getElementById('page-title').textContent=titles[page]?.[currentLang]||titles[page]?.en;
   if(page==='dashboard')loadDashboard();
   if(page==='employees')loadEmployees();
@@ -1053,6 +1193,7 @@ function showPage(page){
   if(page==='payroll')loadPayroll();
   if(page==='reports')loadReports();
   if(page==='announcements')loadAnnouncements();
+  if(page==='recruitment')loadRecruitment();
   if(page==='settings'){renderSettings();loadAllSettings();loadKLLSettings();}
   if(page==='feedback')loadMyFeedback();
 }
@@ -2066,6 +2207,174 @@ function closeModal(id){
   document.getElementById(id).classList.remove('open');
   const attEmp=document.getElementById('att-emp-id');if(attEmp)attEmp.disabled=false;
 }
+/* ── RECRUITMENT ── */
+let recFilterStatus = '';
+function filterRec(btn, status) {
+  recFilterStatus = status;
+  document.querySelectorAll('#rec-filter-row .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadRecruitment();
+}
+function showRecList() {
+  document.getElementById('rec-list-view').style.display = '';
+  document.getElementById('rec-detail-view').style.display = 'none';
+  loadRecruitment();
+}
+function openRecModal() { document.getElementById('rec-modal').classList.add('open'); }
+function closeRecModal() { document.getElementById('rec-modal').classList.remove('open'); }
+
+const REC_STATUS_LABELS = {
+  pending: {label:'⏳ Pending', cls:'badge-orange'},
+  candidates_sent: {label:'📋 Review Candidates', cls:'badge-blue'},
+  selection_made: {label:'✅ Selection Made', cls:'badge-purple'},
+  completed: {label:'🏁 Completed', cls:'badge-green'},
+  rejected: {label:'❌ Rejected', cls:'badge-red'},
+};
+const COLLAR_LABELS = { blue:'🔵 Blue Collar', white:'⚪ White Collar' };
+const WORK_LABELS = { full_time:'Full-time', part_time:'Part-time', contract:'Contract' };
+const VISA_LABELS = { in_kuwait:'Already in Kuwait', from_abroad:'From abroad', any:'Any' };
+const GENDER_LABELS = { male:'Male', female:'Female', any:'Any' };
+const NAT_LABELS = { kuwaiti:'Kuwaiti', non_kuwaiti:'Non-Kuwaiti', any:'Any' };
+
+async function loadRecruitment() {
+  const el = document.getElementById('rec-list');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const url = recFilterStatus ? `/recruitment?status=${recFilterStatus}` : '/recruitment';
+  const data = await apicall('GET', url);
+  const requests = data?.requests || [];
+  if (!requests.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">No recruitment requests yet</div><div class="empty-sub">Click "New Request" to submit your first hiring request to Ghaya</div></div>';
+    return;
+  }
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr>
+      <th>Job Title</th><th>Type</th><th>Positions</th><th>Urgency</th><th>Status</th><th>Candidates</th><th>Date</th><th></th>
+    </tr></thead>
+    <tbody>${requests.map(r => {
+      const s = REC_STATUS_LABELS[r.status] || {label:r.status, cls:'badge-gray'};
+      const urgent = r.urgency === 'urgent' ? '<span class="badge badge-red" style="margin-left:6px;">🔴 Urgent</span>' : '';
+      return `<tr>
+        <td><strong>${r.job_title}</strong>${urgent}<br><span style="font-size:11px;color:#888;">${r.department||''}</span></td>
+        <td>${COLLAR_LABELS[r.collar_type]||r.collar_type}<br><span style="font-size:11px;color:#888;">${WORK_LABELS[r.work_type]||r.work_type}</span></td>
+        <td style="text-align:center;">${r.positions_count}</td>
+        <td>${r.urgency==='urgent'?'🔴 Urgent':'Normal'}</td>
+        <td><span class="badge ${s.cls}">${s.label}</span></td>
+        <td style="text-align:center;">${r.candidates_count||0}${r.selected_count>0?` <span style="color:#1a7a42;font-size:11px;">(${r.selected_count} selected)</span>`:''}</td>
+        <td style="font-size:12px;color:#888;">${r.created_at?.slice(0,10)||''}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="viewRecDetail('${r.id}')">View →</button></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+async function viewRecDetail(id) {
+  document.getElementById('rec-list-view').style.display = 'none';
+  document.getElementById('rec-detail-view').style.display = '';
+  document.getElementById('rec-detail-content').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const data = await apicall('GET', `/recruitment/${id}`);
+  if (!data || data.error) { document.getElementById('rec-detail-content').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error loading request</div></div>'; return; }
+  const r = data.request;
+  const candidates = data.candidates || [];
+  const s = REC_STATUS_LABELS[r.status] || {label:r.status, cls:'badge-gray'};
+
+  const canSelect = r.status === 'candidates_sent';
+
+  let candidatesHtml = '';
+  if (!candidates.length) {
+    candidatesHtml = `<div style="padding:32px;text-align:center;color:#888;font-size:13px;">⏳ Waiting for Ghaya to review your request and send candidates.</div>`;
+  } else {
+    candidatesHtml = candidates.map(c => `
+      <div style="border:1px solid #e8e0d8;border-radius:10px;padding:16px 20px;margin-bottom:12px;background:${c.selected_by_company?'#f0faf4':'#fff'};">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-weight:700;font-size:15px;">${c.full_name} ${c.selected_by_company?'<span class="badge badge-green">✅ Selected</span>':''}</div>
+            <div style="font-size:12px;color:#888;margin-top:4px;">
+              ${c.nationality?`🌍 ${c.nationality}`:''}
+              ${c.experience_years?` · ${c.experience_years} yrs exp`:''}
+              ${c.current_location?` · 📍 ${c.current_location}`:''}
+              ${c.visa_status?` · ${VISA_LABELS[c.visa_status]||c.visa_status}`:''}
+              ${c.expected_salary?` · KWD ${Number(c.expected_salary).toFixed(0)}/mo`:''}
+            </div>
+            ${c.notes?`<div style="font-size:12px;color:#555;margin-top:6px;">${c.notes}</div>`:''}
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0;align-items:center;">
+            ${c.cv_file_data?`<a href="${c.cv_file_data}" download="${c.cv_file_name||'CV.pdf'}" class="btn btn-ghost btn-sm">📄 Download CV</a>`:''}
+            ${canSelect&&!c.selected_by_company?`<button class="btn btn-success btn-sm" onclick="selectCandidate('${r.id}','${c.id}')">✅ Select</button>`:''}
+          </div>
+        </div>
+        ${c.contact_shared?`<div style="margin-top:10px;padding:10px 14px;background:#e8f5e9;border-radius:8px;font-size:13px;">📞 <strong>${c.contact_phone||''}</strong>${c.contact_email?` · ✉️ ${c.contact_email}`:''}<br><span style="font-size:11px;color:#555;">Contact this candidate directly. Do not share these details externally.</span></div>`:''}
+      </div>`).join('');
+  }
+
+  document.getElementById('rec-detail-content').innerHTML = `
+    <div class="section-card" style="margin-bottom:20px;">
+      <div class="section-header">
+        <div>
+          <div class="section-title">${r.job_title} ${r.urgency==='urgent'?'<span class="badge badge-red">🔴 Urgent</span>':''}</div>
+          <div class="section-sub">${r.department||''} · Submitted ${r.created_at?.slice(0,10)||''}</div>
+        </div>
+        <span class="badge ${s.cls}" style="font-size:13px;padding:6px 14px;">${s.label}</span>
+      </div>
+      <div style="padding:20px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;">
+        <div><div style="font-size:11px;color:#888;font-weight:700;margin-bottom:3px;">TYPE</div><div>${COLLAR_LABELS[r.collar_type]||r.collar_type} · ${WORK_LABELS[r.work_type]||r.work_type}</div></div>
+        <div><div style="font-size:11px;color:#888;font-weight:700;margin-bottom:3px;">POSITIONS</div><div>${r.positions_count}</div></div>
+        <div><div style="font-size:11px;color:#888;font-weight:700;margin-bottom:3px;">GENDER</div><div>${GENDER_LABELS[r.gender]||r.gender}</div></div>
+        <div><div style="font-size:11px;color:#888;font-weight:700;margin-bottom:3px;">NATIONALITY</div><div>${NAT_LABELS[r.nationality]||r.nationality}</div></div>
+        <div><div style="font-size:11px;color:#888;font-weight:700;margin-bottom:3px;">VISA STATUS</div><div>${VISA_LABELS[r.visa_status]||r.visa_status}</div></div>
+        <div><div style="font-size:11px;color:#888;font-weight:700;margin-bottom:3px;">EXPERIENCE</div><div>${r.experience_years||0}+ years</div></div>
+        ${r.salary_budget?`<div><div style="font-size:11px;color:#888;font-weight:700;margin-bottom:3px;">BUDGET</div><div>KWD ${Number(r.salary_budget).toFixed(0)}/mo</div></div>`:''}
+      </div>
+      ${r.notes?`<div style="padding:0 24px 20px;"><div style="font-size:11px;color:#888;font-weight:700;margin-bottom:4px;">YOUR NOTES</div><div style="font-size:13px;">${r.notes}</div></div>`:''}
+      ${r.rejection_reason?`<div style="padding:0 24px 20px;"><div style="background:#ffeee6;border-radius:8px;padding:12px 16px;font-size:13px;color:#c42a00;">❌ Rejected: ${r.rejection_reason}</div></div>`:''}
+    </div>
+    <div class="section-card">
+      <div class="section-header"><div class="section-title">Candidates from Ghaya</div></div>
+      <div style="padding:16px 20px;">${candidatesHtml}</div>
+    </div>`;
+}
+
+async function selectCandidate(reqId, candidateId) {
+  if (!confirm('Select this candidate? This will notify Ghaya to share their contact details.')) return;
+  const res = await apicall('PUT', `/recruitment/${reqId}/candidates/${candidateId}`, { selected: true });
+  if (res && !res.error) { showToast('Candidate selected ✓', 'success'); viewRecDetail(reqId); }
+  else showToast(res?.error || 'Error', 'error');
+}
+
+async function submitRecRequest() {
+  const btn = document.getElementById('rec-submit-btn');
+  const job_title = document.getElementById('rec-job-title').value.trim();
+  const collar_type = document.getElementById('rec-collar').value;
+  if (!job_title) { showToast('Job title is required', 'error'); return; }
+  if (!collar_type) { showToast('Please select collar type', 'error'); return; }
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  const res = await apicall('POST', '/recruitment', {
+    job_title,
+    department: document.getElementById('rec-department').value.trim() || null,
+    positions_count: parseInt(document.getElementById('rec-positions').value) || 1,
+    collar_type,
+    work_type: document.getElementById('rec-work-type').value,
+    gender: document.getElementById('rec-gender').value,
+    nationality: document.getElementById('rec-nationality').value,
+    visa_status: document.getElementById('rec-visa').value,
+    experience_years: parseInt(document.getElementById('rec-exp').value) || 0,
+    salary_budget: parseFloat(document.getElementById('rec-salary').value) || null,
+    urgency: document.getElementById('rec-urgency').value,
+    notes: document.getElementById('rec-notes').value.trim() || null,
+  });
+  btn.disabled = false; btn.textContent = 'Submit Request';
+  if (res?.request) {
+    closeRecModal();
+    showToast('Request submitted ✓ — Ghaya will review and send candidates', 'success');
+    // Reset form
+    ['rec-job-title','rec-department','rec-notes','rec-salary'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('rec-collar').value = '';
+    document.getElementById('rec-positions').value = '1';
+    loadRecruitment();
+  } else {
+    showToast(res?.error || 'Error submitting request', 'error');
+  }
+}
+
 function setLang(lang,save=true){currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);document.documentElement.lang=lang;document.body.classList.toggle('ar',lang==='ar');document.getElementById('btn-en').classList.toggle('active',lang==='en');document.getElementById('btn-ar').classList.toggle('active',lang==='ar');document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.dataset[lang]||el.dataset.en;});}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3000);}
 function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem('ghaya_user');localStorage.removeItem('ghaya_page');window.location.href='/';}
