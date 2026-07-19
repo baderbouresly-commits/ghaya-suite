@@ -209,8 +209,14 @@ select.form-input{cursor:pointer}
     <div class="nav-item" onclick="showPage('announcements')" id="nav-announcements">
       <span class="nav-icon">📢</span><span data-en="Announcements" data-ar="الإعلانات">Announcements</span>
     </div>
+    <div style="margin:8px 20px 4px;border-top:1px solid rgba(255,255,255,.08);padding-top:8px;">
+      <div style="font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1.5px;font-weight:700;margin-bottom:4px;">TALENT</div>
+    </div>
     <div class="nav-item" onclick="showPage('recruitment')" id="nav-recruitment">
       <span class="nav-icon">🎯</span><span data-en="Recruitment" data-ar="التوظيف">Recruitment</span><span class="nav-badge" id="recruitment-badge" style="display:none">0</span>
+    </div>
+    <div class="nav-item" onclick="showPage('training')" id="nav-training">
+      <span class="nav-icon">🎓</span><span data-en="Training" data-ar="التدريب">Training</span>
     </div>
     <div class="nav-section" style="margin-top:8px">SETTINGS</div>
     <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
@@ -796,6 +802,110 @@ select.form-input{cursor:pointer}
       </div>
     </div>
 
+    <!-- TRAINING PAGE -->
+    <div id="page-training" style="display:none">
+      <!-- Catalog view -->
+      <div id="tr-catalog-view">
+        <!-- Featured Billboard -->
+        <div id="tr-billboard" style="display:none;border-radius:16px;overflow:hidden;margin-bottom:24px;position:relative;min-height:180px;background:#0A2540;color:#fff;">
+          <div id="tr-billboard-bg" style="position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.25;"></div>
+          <div style="position:relative;z-index:1;padding:32px 36px;display:flex;align-items:center;gap:32px;">
+            <div id="tr-billboard-img-wrap" style="display:none;flex-shrink:0;">
+              <img id="tr-billboard-img" style="width:100px;height:100px;border-radius:12px;object-fit:cover;border:3px solid rgba(255,255,255,0.3);" src="" alt=""/>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#E8472A;margin-bottom:8px;">⭐ FEATURED</div>
+              <div id="tr-billboard-title" style="font-size:24px;font-weight:800;margin-bottom:8px;"></div>
+              <div id="tr-billboard-meta" style="font-size:13px;color:rgba(255,255,255,.7);margin-bottom:12px;"></div>
+              <div id="tr-billboard-desc" style="font-size:14px;color:rgba(255,255,255,.85);line-height:1.6;max-width:600px;"></div>
+            </div>
+            <div style="flex-shrink:0;">
+              <button class="btn btn-primary" id="tr-billboard-btn" onclick="">+ Add to Request</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters + Programs -->
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">🎓 Training & Workshops</div>
+              <div class="section-sub">Browse available programs — select what you need and submit a request to Ghaya</div>
+            </div>
+            <button class="btn btn-primary" onclick="openTrCart()" id="tr-cart-btn" style="display:none">🛒 My Selection (<span id="tr-cart-count">0</span>)</button>
+          </div>
+
+          <!-- Filter bar -->
+          <div style="padding:12px 24px;border-bottom:1px solid #f0ebe4;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <input class="form-input" id="tr-search" placeholder="Search programs..." style="width:200px;padding:8px 12px;" oninput="renderTrPrograms()"/>
+            <select class="form-input" id="tr-filter-cat" style="width:180px;padding:8px 12px;" onchange="renderTrPrograms()">
+              <option value="">All Categories</option>
+            </select>
+            <select class="form-input" id="tr-filter-type" style="width:150px;padding:8px 12px;" onchange="renderTrPrograms()">
+              <option value="">All Types</option>
+              <option value="training">📚 Training</option>
+              <option value="workshop">🔧 Workshop</option>
+            </select>
+            <select class="form-input" id="tr-filter-level" style="width:150px;padding:8px 12px;" onchange="renderTrPrograms()">
+              <option value="">All Levels</option>
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+          </div>
+
+          <!-- Programs grid -->
+          <div id="tr-programs-grid" style="padding:24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- My Requests -->
+        <div class="section-card" style="margin-top:20px;">
+          <div class="section-header">
+            <div>
+              <div class="section-title">📋 My Training Requests</div>
+              <div class="section-sub">Track the status of your submitted requests</div>
+            </div>
+          </div>
+          <div id="tr-requests-list" style="padding:0 24px 24px;"><div class="loading"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Request detail view -->
+      <div id="tr-detail-view" style="display:none">
+        <div style="margin-bottom:20px;"><button class="btn btn-ghost btn-sm" onclick="showTrCatalog()">← Back to Training</button></div>
+        <div id="tr-detail-content"></div>
+      </div>
+    </div>
+
+    <!-- TRAINING: Cart / Submit Modal -->
+    <div class="modal-overlay" id="tr-cart-modal">
+      <div class="modal" style="max-width:600px;">
+        <div class="modal-header">
+          <div class="modal-title">🛒 Submit Training Request</div>
+          <button class="modal-close" onclick="closeTrCart()">✕</button>
+        </div>
+        <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
+          <div id="tr-cart-items" style="margin-bottom:20px;"></div>
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Number of Employees</label>
+              <input class="form-input" id="tr-employees-count" type="number" min="1" value="1"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Notes for Ghaya</label>
+            <textarea class="form-input" id="tr-req-notes" rows="3" placeholder="Any specific requirements, schedule preferences, or notes..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeTrCart()">Cancel</button>
+          <button class="btn btn-primary" id="tr-submit-btn" onclick="submitTrRequest()">Submit Request</button>
+        </div>
+      </div>
+    </div>
+
     <!-- FEEDBACK -->
     <div id="page-feedback" style="display:none">
       <div class="section-card">
@@ -1177,12 +1287,12 @@ async function loadDeptsAndTitles(){
 
 function showPage(page){
   localStorage.setItem('ghaya_page',page);
-  ['dashboard','employees','attendance','leaves','permissions','overtime','payroll','reports','announcements','recruitment','settings','feedback'].forEach(p=>{
+  ['dashboard','employees','attendance','leaves','permissions','overtime','payroll','reports','announcements','recruitment','training','settings','feedback'].forEach(p=>{
     document.getElementById('page-'+p).style.display=p===page?'':'none';
     const nav=document.getElementById('nav-'+p);
     if(nav)nav.classList.toggle('active',p===page);
   });
-  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},overtime:{en:'Overtime',ar:'العمل الإضافي'},payroll:{en:'Payroll',ar:'الرواتب'},reports:{en:'Reports & Export',ar:'التقارير'},announcements:{en:'Announcements',ar:'الإعلانات'},recruitment:{en:'Recruitment',ar:'التوظيف'},settings:{en:'Settings',ar:'الإعدادات'},feedback:{en:'Send Feedback',ar:'إرسال ملاحظات'}};
+  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},overtime:{en:'Overtime',ar:'العمل الإضافي'},payroll:{en:'Payroll',ar:'الرواتب'},reports:{en:'Reports & Export',ar:'التقارير'},announcements:{en:'Announcements',ar:'الإعلانات'},recruitment:{en:'Recruitment',ar:'التوظيف'},training:{en:'Training & Workshops',ar:'التدريب'},settings:{en:'Settings',ar:'الإعدادات'},feedback:{en:'Send Feedback',ar:'إرسال ملاحظات'}};
   document.getElementById('page-title').textContent=titles[page]?.[currentLang]||titles[page]?.en;
   if(page==='dashboard')loadDashboard();
   if(page==='employees')loadEmployees();
@@ -1194,6 +1304,7 @@ function showPage(page){
   if(page==='reports')loadReports();
   if(page==='announcements')loadAnnouncements();
   if(page==='recruitment')loadRecruitment();
+  if(page==='training')loadTraining();
   if(page==='settings'){renderSettings();loadAllSettings();loadKLLSettings();}
   if(page==='feedback')loadMyFeedback();
 }
@@ -2373,6 +2484,242 @@ async function submitRecRequest() {
   } else {
     showToast(res?.error || 'Error submitting request', 'error');
   }
+}
+
+/* ── TRAINING ── */
+let trPrograms = [], trCategories = [], trCart = [], trRequests = [];
+
+async function loadTraining() {
+  const [progRes, catRes, reqRes] = await Promise.all([
+    apicall('GET', '/training/programs'),
+    apicall('GET', '/training/categories'),
+    apicall('GET', '/training/requests'),
+  ]);
+  trPrograms = progRes?.programs || [];
+  trCategories = catRes?.categories || [];
+  trRequests = reqRes?.requests || [];
+
+  // Populate category dropdown
+  const catSel = document.getElementById('tr-filter-cat');
+  catSel.innerHTML = '<option value="">All Categories</option>' +
+    trCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+  renderTrBillboard();
+  renderTrPrograms();
+  renderTrRequests();
+}
+
+function renderTrBillboard() {
+  const featured = trPrograms.find(p => p.is_featured);
+  const bb = document.getElementById('tr-billboard');
+  if (!featured) { bb.style.display = 'none'; return; }
+  bb.style.display = '';
+
+  document.getElementById('tr-billboard-title').textContent = featured.title;
+  document.getElementById('tr-billboard-desc').textContent = featured.description || '';
+
+  const meta = [
+    featured.program_type === 'workshop' ? '🔧 Workshop' : '📚 Training',
+    featured.provider_name || '',
+    featured.duration || '',
+    featured.level !== 'any' ? featured.level : ''
+  ].filter(Boolean).join(' · ');
+  document.getElementById('tr-billboard-meta').textContent = meta;
+
+  const imgWrap = document.getElementById('tr-billboard-img-wrap');
+  const img = document.getElementById('tr-billboard-img');
+  if (featured.featured_image) {
+    img.src = featured.featured_image;
+    imgWrap.style.display = '';
+    document.getElementById('tr-billboard-bg').style.backgroundImage = `url('${featured.featured_image}')`;
+  } else {
+    imgWrap.style.display = 'none';
+  }
+
+  const btn = document.getElementById('tr-billboard-btn');
+  const inCart = trCart.find(i => i.id === featured.id);
+  btn.textContent = inCart ? '✓ Added' : '+ Add to Request';
+  btn.onclick = () => addToTrCart(featured);
+}
+
+function renderTrPrograms() {
+  const search = document.getElementById('tr-search').value.toLowerCase();
+  const cat = document.getElementById('tr-filter-cat').value;
+  const type = document.getElementById('tr-filter-type').value;
+  const level = document.getElementById('tr-filter-level').value;
+
+  const filtered = trPrograms.filter(p => {
+    if (p.is_featured) return false; // featured shown in billboard
+    if (search && !`${p.title} ${p.description || ''} ${p.provider_name || ''}`.toLowerCase().includes(search)) return false;
+    if (cat && p.category_id !== cat) return false;
+    if (type && p.program_type !== type) return false;
+    if (level && p.level !== level && p.level !== 'any') return false;
+    return true;
+  });
+
+  const grid = document.getElementById('tr-programs-grid');
+  if (!filtered.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#888;">No programs found</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(p => {
+    const inCart = trCart.find(i => i.id === p.id);
+    const typeLabel = p.program_type === 'workshop' ? '🔧 Workshop' : '📚 Training';
+    const levelBadge = p.level !== 'any' ? `<span style="background:#EEF2FF;color:#6366F1;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">${p.level}</span>` : '';
+    return `<div style="border:1px solid #e8e0d8;border-radius:12px;padding:20px;background:#fff;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="font-weight:700;font-size:15px;line-height:1.3;">${p.title}</div>
+        ${levelBadge}
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">${typeLabel}</span>
+        ${p.category_name ? `<span style="background:#F0FDF4;color:#166534;padding:2px 8px;border-radius:10px;font-size:11px;">${p.category_name}</span>` : ''}
+      </div>
+      ${p.provider_name ? `<div style="font-size:12px;color:#666;">🏢 ${p.provider_name}${p.duration ? ' · ⏱ ' + p.duration : ''}</div>` : ''}
+      ${p.description ? `<div style="font-size:13px;color:#555;line-height:1.5;flex:1;">${p.description.length > 120 ? p.description.slice(0,120)+'…' : p.description}</div>` : ''}
+      <button onclick="addToTrCart(${JSON.stringify(p).replace(/"/g,'&quot;')})"
+        style="margin-top:auto;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:13px;transition:all .2s;
+        ${inCart ? 'background:#D1FAE5;color:#065F46;' : 'background:#E8472A;color:#fff;'}">
+        ${inCart ? '✓ Added to Request' : '+ Add to Request'}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function addToTrCart(program) {
+  const exists = trCart.findIndex(i => i.id === program.id);
+  if (exists >= 0) {
+    trCart.splice(exists, 1);
+    showToast('Removed from selection', '');
+  } else {
+    trCart.push(program);
+    showToast('Added to selection ✓', 'success');
+  }
+  const btn = document.getElementById('tr-cart-btn');
+  btn.style.display = trCart.length ? '' : 'none';
+  document.getElementById('tr-cart-count').textContent = trCart.length;
+  renderTrPrograms();
+  renderTrBillboard();
+}
+
+function openTrCart() {
+  document.getElementById('tr-cart-items').innerHTML = trCart.map(p => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid #e8e0d8;border-radius:8px;margin-bottom:8px;">
+      <div>
+        <div style="font-weight:700;">${p.title}</div>
+        <div style="font-size:12px;color:#666;">${p.program_type === 'workshop' ? '🔧 Workshop' : '📚 Training'}${p.provider_name ? ' · ' + p.provider_name : ''}</div>
+      </div>
+      <button onclick="addToTrCart(${JSON.stringify(p).replace(/"/g,'&quot;')})" style="background:none;border:none;color:#E8472A;cursor:pointer;font-size:18px;">✕</button>
+    </div>`).join('');
+  document.getElementById('tr-cart-modal').style.display = 'flex';
+}
+function closeTrCart() { document.getElementById('tr-cart-modal').style.display = 'none'; }
+
+async function submitTrRequest() {
+  if (!trCart.length) { showToast('Select at least one program', 'error'); return; }
+  const btn = document.getElementById('tr-submit-btn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  const res = await apicall('POST', '/training/requests', {
+    program_ids: trCart.map(p => p.id),
+    employees_count: parseInt(document.getElementById('tr-employees-count').value) || 1,
+    notes: document.getElementById('tr-req-notes').value.trim() || null,
+  });
+  btn.disabled = false; btn.textContent = 'Submit Request';
+  if (res?.request) {
+    closeTrCart();
+    trCart = [];
+    document.getElementById('tr-cart-btn').style.display = 'none';
+    document.getElementById('tr-cart-count').textContent = '0';
+    document.getElementById('tr-req-notes').value = '';
+    document.getElementById('tr-employees-count').value = '1';
+    showToast('Request submitted ✓ — Ghaya will review and reply with pricing', 'success');
+    const reqRes = await apicall('GET', '/training/requests');
+    trRequests = reqRes?.requests || [];
+    renderTrPrograms();
+    renderTrRequests();
+  } else {
+    showToast(res?.error || 'Error submitting request', 'error');
+  }
+}
+
+function renderTrRequests() {
+  const el = document.getElementById('tr-requests-list');
+  if (!trRequests.length) {
+    el.innerHTML = '<div style="padding:20px 0;text-align:center;color:#888;">No requests yet — browse programs above and submit your first request</div>';
+    return;
+  }
+  const statusMap = { pending:'⏳ Pending', approved:'✅ Approved', rejected:'❌ Rejected' };
+  const statusColor = { pending:'#92400E', approved:'#065F46', rejected:'#991B1B' };
+  const statusBg = { pending:'#FEF3C7', approved:'#D1FAE5', rejected:'#FEE2E2' };
+  el.innerHTML = `<table class="data-table" style="margin-top:0;"><thead><tr>
+    <th>Date</th><th>Programs</th><th>Employees</th><th>Status</th><th></th>
+  </tr></thead><tbody>` + trRequests.map(r => `<tr>
+    <td>${r.created_at?.slice(0,10)||'—'}</td>
+    <td>${r.programs_count} program${r.programs_count!==1?'s':''}</td>
+    <td>${r.employees_count}</td>
+    <td><span style="background:${statusBg[r.status]};color:${statusColor[r.status]};padding:3px 10px;border-radius:10px;font-size:12px;font-weight:700;">${statusMap[r.status]||r.status}</span></td>
+    <td><button class="btn btn-ghost btn-sm" onclick="viewTrDetail('${r.id}')">View →</button></td>
+  </tr>`).join('') + '</tbody></table>';
+}
+
+async function viewTrDetail(id) {
+  const res = await apicall('GET', `/training/requests/${id}`);
+  if (!res?.request) { showToast('Could not load request', 'error'); return; }
+  const r = res.request;
+  const items = res.items || [];
+  const isApproved = r.status === 'approved';
+  const statusMap = { pending:'⏳ Pending', approved:'✅ Approved', rejected:'❌ Rejected' };
+  const statusColor = { pending:'#92400E', approved:'#065F46', rejected:'#991B1B' };
+  const statusBg = { pending:'#FEF3C7', approved:'#D1FAE5', rejected:'#FEE2E2' };
+
+  document.getElementById('tr-detail-content').innerHTML = `
+    <div class="section-card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Training Request</div>
+          <div class="section-sub">Submitted ${r.created_at?.slice(0,10)||''} · ${r.employees_count} employee${r.employees_count!==1?'s':''}</div>
+        </div>
+        <span style="background:${statusBg[r.status]};color:${statusColor[r.status]};padding:6px 16px;border-radius:20px;font-weight:700;">${statusMap[r.status]||r.status}</span>
+      </div>
+      <div style="padding:24px;">
+        ${r.notes ? `<div style="background:#FFF8F0;border-left:3px solid #E8472A;padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:20px;font-size:14px;"><b>Your notes:</b> ${r.notes}</div>` : ''}
+        ${r.ghaya_notes ? `<div style="background:#F0FDF4;border-left:3px solid #22C55E;padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:20px;font-size:14px;"><b>Ghaya's notes:</b> ${r.ghaya_notes}</div>` : ''}
+        ${r.status === 'rejected' && r.rejection_reason ? `<div style="background:#FEF2F2;border-left:3px solid #EF4444;padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:20px;font-size:14px;"><b>Rejection reason:</b> ${r.rejection_reason}</div>` : ''}
+
+        <div style="font-weight:700;margin-bottom:16px;font-size:15px;">Selected Programs (${items.length})</div>
+        ${items.map(item => `
+          <div style="border:1px solid ${isApproved ? '#D1FAE5' : '#e8e0d8'};border-radius:12px;padding:20px;margin-bottom:16px;background:${isApproved ? '#F0FDF4' : '#fff'};">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px;">
+              <div>
+                <div style="font-weight:700;font-size:16px;">${item.title}</div>
+                <div style="font-size:12px;color:#666;margin-top:4px;">${item.program_type === 'workshop' ? '🔧 Workshop' : '📚 Training'}${item.provider_name ? ' · 🏢 ' + item.provider_name : ''}${item.duration ? ' · ⏱ ' + item.duration : ''}</div>
+              </div>
+              ${item.category_name ? `<span style="background:#EEF2FF;color:#6366F1;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;flex-shrink:0;">${item.category_name}</span>` : ''}
+            </div>
+            ${item.description ? `<div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:12px;">${item.description}</div>` : ''}
+            ${isApproved ? `
+              <div style="border-top:1px solid #A7F3D0;padding-top:12px;margin-top:4px;">
+                <div style="font-weight:700;color:#065F46;margin-bottom:8px;">💰 Pricing & Contact Details</div>
+                ${item.pricing_details ? `<div style="font-size:14px;margin-bottom:8px;"><b>Pricing:</b> ${item.pricing_details}</div>` : ''}
+                ${item.contact_name || item.contact_phone || item.contact_email ? `
+                  <div style="font-size:14px;display:flex;gap:16px;flex-wrap:wrap;">
+                    ${item.contact_name ? `<span>👤 ${item.contact_name}</span>` : ''}
+                    ${item.contact_phone ? `<span>📞 <a href="tel:${item.contact_phone}" style="color:#E8472A;">${item.contact_phone}</a></span>` : ''}
+                    ${item.contact_email ? `<span>📧 <a href="mailto:${item.contact_email}" style="color:#E8472A;">${item.contact_email}</a></span>` : ''}
+                  </div>` : ''}
+              </div>` : `<div style="border-top:1px solid #e8e0d8;padding-top:12px;margin-top:4px;font-size:13px;color:#999;">🔒 Pricing & contact details will be revealed once Ghaya approves your request</div>`}
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  document.getElementById('tr-catalog-view').style.display = 'none';
+  document.getElementById('tr-detail-view').style.display = '';
+}
+
+function showTrCatalog() {
+  document.getElementById('tr-catalog-view').style.display = '';
+  document.getElementById('tr-detail-view').style.display = 'none';
 }
 
 function setLang(lang,save=true){currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);document.documentElement.lang=lang;document.body.classList.toggle('ar',lang==='ar');document.getElementById('btn-en').classList.toggle('active',lang==='en');document.getElementById('btn-ar').classList.toggle('active',lang==='ar');document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.dataset[lang]||el.dataset.en;});}
