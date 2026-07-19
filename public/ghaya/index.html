@@ -393,9 +393,9 @@ select.form-input{cursor:pointer}
     <!-- TRAINING PAGE (Ghaya view) -->
     <div id="page-training" style="display:none">
       <!-- Tabs -->
-      <div style="display:flex;gap:4px;margin-bottom:20px;background:#fff;border-radius:12px;padding:6px;border:1px solid #e8e0d8;width:fit-content;">
-        <button id="gtr-tab-catalog" onclick="showGTrTab('catalog')" style="padding:8px 20px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:#0A2540;color:#fff;">📚 Programs Catalog</button>
-        <button id="gtr-tab-requests" onclick="showGTrTab('requests')" style="padding:8px 20px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:transparent;color:#666;">📋 Requests <span id="gtr-pending-badge" style="display:none;background:#E8472A;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;">0</span></button>
+      <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid #e8e0d8;">
+        <button id="gtr-tab-catalog" onclick="showGTrTab('catalog')" style="padding:10px 24px;border:none;cursor:pointer;font-weight:700;font-size:14px;background:transparent;color:#E8472A;border-bottom:2px solid #E8472A;margin-bottom:-2px;">📚 Programs Catalog</button>
+        <button id="gtr-tab-requests" onclick="showGTrTab('requests')" style="padding:10px 24px;border:none;cursor:pointer;font-weight:700;font-size:14px;background:transparent;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;">📋 Requests <span id="gtr-pending-badge" style="display:none;background:#E8472A;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;">0</span></button>
       </div>
 
       <!-- CATALOG TAB -->
@@ -566,7 +566,7 @@ select.form-input{cursor:pointer}
     </div>
 
     <!-- TRAINING: Add Category Modal -->
-    <div class="modal-overlay" id="gtr-cat-modal">
+    <div class="modal-overlay" id="gtr-cat-modal" onclick="if(event.target===this)closeGTrAddCat()">
       <div class="modal" style="max-width:400px;">
         <div class="modal-header">
           <div class="modal-title">+ Add Category</div>
@@ -586,7 +586,7 @@ select.form-input{cursor:pointer}
     </div>
 
     <!-- TRAINING: Reject Modal -->
-    <div class="modal-overlay" id="gtr-reject-modal">
+    <div class="modal-overlay" id="gtr-reject-modal" onclick="if(event.target===this)closeGTrReject()">
       <div class="modal" style="max-width:480px;">
         <div class="modal-header">
           <div class="modal-title">❌ Reject Training Request</div>
@@ -1256,10 +1256,12 @@ function showGTrTab(tab) {
   gtrCurrentTab = tab;
   document.getElementById('gtr-catalog-tab').style.display = tab === 'catalog' ? '' : 'none';
   document.getElementById('gtr-requests-tab').style.display = tab === 'requests' ? '' : 'none';
-  document.getElementById('gtr-tab-catalog').style.background = tab === 'catalog' ? '#0A2540' : 'transparent';
-  document.getElementById('gtr-tab-catalog').style.color = tab === 'catalog' ? '#fff' : '#666';
-  document.getElementById('gtr-tab-requests').style.background = tab === 'requests' ? '#0A2540' : 'transparent';
-  document.getElementById('gtr-tab-requests').style.color = tab === 'requests' ? '#fff' : '#666';
+  const catBtn = document.getElementById('gtr-tab-catalog');
+  const reqBtn = document.getElementById('gtr-tab-requests');
+  catBtn.style.color = tab === 'catalog' ? '#E8472A' : '#888';
+  catBtn.style.borderBottom = tab === 'catalog' ? '2px solid #E8472A' : '2px solid transparent';
+  reqBtn.style.color = tab === 'requests' ? '#E8472A' : '#888';
+  reqBtn.style.borderBottom = tab === 'requests' ? '2px solid #E8472A' : '2px solid transparent';
 }
 
 function populateGTrCatDropdowns() {
@@ -1325,9 +1327,9 @@ function openGTrProgramModal(reset=true) {
     document.getElementById('gtr-img-preview').style.display = 'none';
     gtrCurrentImage = null;
   }
-  document.getElementById('gtr-program-modal').style.display = 'flex';
+  document.getElementById('gtr-program-modal').classList.add('open');
 }
-function closeGTrProgramModal() { document.getElementById('gtr-program-modal').style.display = 'none'; }
+function closeGTrProgramModal() { document.getElementById('gtr-program-modal').classList.remove('open'); }
 
 function editGTrProgram(p) {
   document.getElementById('gtr-prog-id').value = p.id;
@@ -1430,8 +1432,8 @@ async function archiveGTrProgram(id, isActive) {
   }
 }
 
-function openGTrAddCat() { document.getElementById('gtr-cat-modal').style.display = 'flex'; document.getElementById('gtr-new-cat-name').value = ''; }
-function closeGTrAddCat() { document.getElementById('gtr-cat-modal').style.display = 'none'; }
+function openGTrAddCat() { document.getElementById('gtr-cat-modal').classList.add('open'); document.getElementById('gtr-new-cat-name').value = ''; }
+function closeGTrAddCat() { document.getElementById('gtr-cat-modal').classList.remove('open'); }
 
 async function saveGTrCategory() {
   const name = document.getElementById('gtr-new-cat-name').value.trim();
@@ -1556,9 +1558,9 @@ async function saveGTrNotes(id) {
 function openGTrReject(id) {
   gtrRejectId = id;
   document.getElementById('gtr-reject-reason').value = '';
-  document.getElementById('gtr-reject-modal').style.display = 'flex';
+  document.getElementById('gtr-reject-modal').classList.add('open');
 }
-function closeGTrReject() { document.getElementById('gtr-reject-modal').style.display = 'none'; gtrRejectId = null; }
+function closeGTrReject() { document.getElementById('gtr-reject-modal').classList.remove('open'); gtrRejectId = null; }
 
 async function confirmGTrReject() {
   if (!gtrRejectId) return;
