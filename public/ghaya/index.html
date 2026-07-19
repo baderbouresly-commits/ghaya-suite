@@ -176,9 +176,16 @@ select.form-input{cursor:pointer}
       <span class="nav-icon">👥</span><span data-en="Users" data-ar="المستخدمون">Users</span>
     </div>
 
+    <div style="margin:8px 20px 4px;border-top:1px solid rgba(255,255,255,.08);padding-top:8px;">
+      <div style="font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1.5px;font-weight:700;margin-bottom:4px;">TALENT</div>
+    </div>
     <div class="nav-item" onclick="showPage('recruitment')" id="nav-recruitment">
       <span class="nav-icon">🎯</span><span data-en="Recruitment" data-ar="التوظيف">Recruitment</span>
       <span id="rec-badge" style="margin-left:auto;background:#E8472A;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:800;display:none">0</span>
+    </div>
+    <div class="nav-item" onclick="showPage('training')" id="nav-training">
+      <span class="nav-icon">🎓</span><span data-en="Training" data-ar="التدريب">Training</span>
+      <span id="tr-badge" style="margin-left:auto;background:#E8472A;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:800;display:none">0</span>
     </div>
 
     <div class="nav-section" style="margin-top:8px">INBOX</div>
@@ -379,6 +386,221 @@ select.form-input{cursor:pointer}
         <div class="modal-footer">
           <button class="btn btn-ghost" onclick="document.getElementById('grec-reject-modal').classList.remove('open')">Cancel</button>
           <button class="btn btn-danger" onclick="confirmGReject()">Reject Request</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRAINING PAGE (Ghaya view) -->
+    <div id="page-training" style="display:none">
+      <!-- Tabs -->
+      <div style="display:flex;gap:4px;margin-bottom:20px;background:#fff;border-radius:12px;padding:6px;border:1px solid #e8e0d8;width:fit-content;">
+        <button id="gtr-tab-catalog" onclick="showGTrTab('catalog')" style="padding:8px 20px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:#0A2540;color:#fff;">📚 Programs Catalog</button>
+        <button id="gtr-tab-requests" onclick="showGTrTab('requests')" style="padding:8px 20px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:transparent;color:#666;">📋 Requests <span id="gtr-pending-badge" style="display:none;background:#E8472A;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;">0</span></button>
+      </div>
+
+      <!-- CATALOG TAB -->
+      <div id="gtr-catalog-tab">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">📚 Training Programs & Workshops</div>
+              <div class="section-sub">Manage the catalog companies browse to select training programs</div>
+            </div>
+            <button class="btn btn-primary" onclick="openGTrProgramModal()">+ Add Program</button>
+          </div>
+          <div style="padding:12px 24px;border-bottom:1px solid #f0ebe4;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <select class="form-input" id="gtr-filter-cat" style="width:180px;padding:8px 12px;" onchange="renderGTrPrograms()">
+              <option value="">All Categories</option>
+            </select>
+            <select class="form-input" id="gtr-filter-type" style="width:150px;padding:8px 12px;" onchange="renderGTrPrograms()">
+              <option value="">All Types</option>
+              <option value="training">📚 Training</option>
+              <option value="workshop">🔧 Workshop</option>
+            </select>
+            <select class="form-input" id="gtr-filter-active" style="width:130px;padding:8px 12px;" onchange="renderGTrPrograms()">
+              <option value="">All Status</option>
+              <option value="1">Active</option>
+              <option value="0">Archived</option>
+            </select>
+          </div>
+          <div id="gtr-programs-list" style="padding:24px;"><div class="loading"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+      <!-- REQUESTS TAB -->
+      <div id="gtr-requests-tab" style="display:none">
+        <div id="gtr-req-list-view">
+          <div class="section-card">
+            <div class="section-header">
+              <div>
+                <div class="section-title">📋 Training Requests</div>
+                <div class="section-sub">Review company requests and approve to reveal pricing & contact details</div>
+              </div>
+            </div>
+            <div style="padding:12px 24px;border-bottom:1px solid #f0ebe4;display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="filter-btn active" onclick="gtrFilter(this,'')">All</button>
+              <button class="filter-btn" onclick="gtrFilter(this,'pending')">⏳ Pending</button>
+              <button class="filter-btn" onclick="gtrFilter(this,'approved')">✅ Approved</button>
+              <button class="filter-btn" onclick="gtrFilter(this,'rejected')">❌ Rejected</button>
+            </div>
+            <div id="gtr-requests-list"><div class="loading"><div class="spinner"></div></div></div>
+          </div>
+        </div>
+        <div id="gtr-req-detail-view" style="display:none">
+          <div style="margin-bottom:20px;"><button class="btn btn-ghost btn-sm" onclick="showGTrReqList()">← Back to Requests</button></div>
+          <div id="gtr-req-detail-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRAINING: Add/Edit Program Modal -->
+    <div class="modal-overlay" id="gtr-program-modal">
+      <div class="modal" style="max-width:680px;">
+        <div class="modal-header">
+          <div class="modal-title" id="gtr-modal-title">📚 Add Training Program</div>
+          <button class="modal-close" onclick="closeGTrProgramModal()">✕</button>
+        </div>
+        <div class="modal-body" style="max-height:75vh;overflow-y:auto;">
+          <input type="hidden" id="gtr-prog-id"/>
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Title *</label>
+              <input class="form-input" id="gtr-prog-title" placeholder="e.g. Barista Certification, Excel Advanced"/>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Type *</label>
+              <select class="form-input" id="gtr-prog-type">
+                <option value="training">📚 Training Program</option>
+                <option value="workshop">🔧 Workshop</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Category</label>
+              <div style="display:flex;gap:8px;">
+                <select class="form-input" id="gtr-prog-cat" style="flex:1;"></select>
+                <button onclick="openGTrAddCat()" style="padding:8px 12px;border-radius:8px;border:1px solid #e8e0d8;background:#fff;cursor:pointer;font-size:16px;font-weight:700;color:#E8472A;" title="Add new category">+</button>
+              </div>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Level</label>
+              <select class="form-input" id="gtr-prog-level">
+                <option value="any">Any Level</option>
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">Provider / Training Center</label>
+              <input class="form-input" id="gtr-prog-provider" placeholder="e.g. Kuwait Culinary Institute"/>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Duration</label>
+              <input class="form-input" id="gtr-prog-duration" placeholder="e.g. 3 days, 2 weeks, 40 hours"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Target Roles</label>
+            <input class="form-input" id="gtr-prog-roles" placeholder="e.g. Baristas, Kitchen Staff, All Employees"/>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Description</label>
+            <textarea class="form-input" id="gtr-prog-desc" rows="3" placeholder="Brief overview of what this program covers..."></textarea>
+          </div>
+
+          <div style="border-top:1px solid #e8e0d8;margin:16px 0;padding-top:16px;">
+            <div style="font-weight:700;font-size:13px;color:#666;margin-bottom:12px;">🔒 HIDDEN FROM COMPANY — revealed only after approval</div>
+            <div class="form-grid">
+              <div class="form-row">
+                <label class="form-label">Contact Name</label>
+                <input class="form-input" id="gtr-prog-cname" placeholder="Training center contact person"/>
+              </div>
+              <div class="form-row">
+                <label class="form-label">Contact Phone</label>
+                <input class="form-input" id="gtr-prog-cphone" placeholder="+965 XXXX XXXX"/>
+              </div>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Contact Email</label>
+              <input class="form-input" id="gtr-prog-cemail" placeholder="contact@trainingcenter.com"/>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Pricing Details</label>
+              <textarea class="form-input" id="gtr-prog-pricing" rows="2" placeholder="e.g. KWD 150 per person, group discounts available for 5+..."></textarea>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid #e8e0d8;margin:16px 0;padding-top:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div style="font-weight:700;font-size:13px;">⭐ Featured Billboard</div>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="gtr-prog-featured" onchange="toggleGTrFeatured()"/>
+                <span style="font-size:13px;">Mark as Featured</span>
+              </label>
+            </div>
+            <div id="gtr-featured-section" style="display:none;">
+              <div class="form-row">
+                <label class="form-label">Featured Image (max 2MB)</label>
+                <input type="file" id="gtr-prog-image" accept="image/*" onchange="handleGTrImage(this)" style="padding:8px;border:1px solid #e8e0d8;border-radius:8px;width:100%;"/>
+              </div>
+              <div id="gtr-img-preview" style="display:none;margin-top:8px;">
+                <img id="gtr-img-preview-img" style="max-width:100%;max-height:150px;border-radius:8px;border:1px solid #e8e0d8;" src="" alt=""/>
+              </div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid #e8e0d8;margin:16px 0;padding-top:16px;display:flex;align-items:center;gap:10px;">
+            <input type="checkbox" id="gtr-prog-active" checked/>
+            <label for="gtr-prog-active" style="font-size:14px;cursor:pointer;">Active (visible to companies)</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeGTrProgramModal()">Cancel</button>
+          <button class="btn btn-primary" id="gtr-prog-save-btn" onclick="saveGTrProgram()">Save Program</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRAINING: Add Category Modal -->
+    <div class="modal-overlay" id="gtr-cat-modal">
+      <div class="modal" style="max-width:400px;">
+        <div class="modal-header">
+          <div class="modal-title">+ Add Category</div>
+          <button class="modal-close" onclick="closeGTrAddCat()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <label class="form-label">Category Name</label>
+            <input class="form-input" id="gtr-new-cat-name" placeholder="e.g. Real Estate, Maritime, Sports"/>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeGTrAddCat()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveGTrCategory()">Add Category</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRAINING: Reject Modal -->
+    <div class="modal-overlay" id="gtr-reject-modal">
+      <div class="modal" style="max-width:480px;">
+        <div class="modal-header">
+          <div class="modal-title">❌ Reject Training Request</div>
+          <button class="modal-close" onclick="closeGTrReject()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <label class="form-label">Reason (optional)</label>
+            <textarea class="form-input" id="gtr-reject-reason" rows="3" placeholder="Explain why this request cannot be fulfilled..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeGTrReject()">Cancel</button>
+          <button class="btn btn-danger" onclick="confirmGTrReject()">Reject Request</button>
         </div>
       </div>
     </div>
@@ -633,7 +855,7 @@ async function init() {
 
 // ── Pages ──
 function showPage(page) {
-  ['dashboard','companies','users','recruitment','feedback'].forEach(p => {
+  ['dashboard','companies','users','recruitment','training','feedback'].forEach(p => {
     document.getElementById('page-' + p).style.display = p === page ? '' : 'none';
     const nav = document.getElementById('nav-' + p);
     if (nav) nav.classList.toggle('active', p === page);
@@ -643,6 +865,7 @@ function showPage(page) {
     companies: { en: 'Companies', ar: 'الشركات' },
     users: { en: 'Users', ar: 'المستخدمون' },
     recruitment: { en: 'Recruitment', ar: 'التوظيف' },
+    training: { en: 'Training & Workshops', ar: 'التدريب' },
     feedback: { en: 'Feedback', ar: 'الملاحظات' }
   };
   document.getElementById('page-title').textContent = titles[page]?.[currentLang] || titles[page]?.en;
@@ -650,6 +873,7 @@ function showPage(page) {
   if (page === 'companies') loadCompanies();
   if (page === 'users') loadUsers();
   if (page === 'recruitment') loadGRecruitment();
+  if (page === 'training') loadGTraining();
   if (page === 'feedback') loadFeedback('all');
 }
 
@@ -1001,6 +1225,351 @@ async function sendReply(id) {
 // ── Helpers ──
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
+}
+
+/* ── GHAYA TRAINING ── */
+let gtrPrograms = [], gtrCategories = [], gtrRequests = [], gtrCurrentImage = null, gtrRejectId = null, gtrCurrentTab = 'catalog', gtrStatusFilter = '';
+
+async function loadGTraining() {
+  const [progRes, catRes, reqRes] = await Promise.all([
+    apicall('GET', '/training/programs'),
+    apicall('GET', '/training/categories'),
+    apicall('GET', '/training/requests'),
+  ]);
+  gtrPrograms = progRes?.programs || [];
+  gtrCategories = catRes?.categories || [];
+  gtrRequests = reqRes?.requests || [];
+
+  // Update badge
+  const pending = reqRes?.pending_count || 0;
+  const badge = document.getElementById('tr-badge');
+  if (badge) { badge.style.display = pending ? '' : 'none'; badge.textContent = pending; }
+  const gtrBadge = document.getElementById('gtr-pending-badge');
+  if (gtrBadge) { gtrBadge.style.display = pending ? '' : 'none'; gtrBadge.textContent = pending; }
+
+  populateGTrCatDropdowns();
+  renderGTrPrograms();
+  renderGTrRequests();
+}
+
+function showGTrTab(tab) {
+  gtrCurrentTab = tab;
+  document.getElementById('gtr-catalog-tab').style.display = tab === 'catalog' ? '' : 'none';
+  document.getElementById('gtr-requests-tab').style.display = tab === 'requests' ? '' : 'none';
+  document.getElementById('gtr-tab-catalog').style.background = tab === 'catalog' ? '#0A2540' : 'transparent';
+  document.getElementById('gtr-tab-catalog').style.color = tab === 'catalog' ? '#fff' : '#666';
+  document.getElementById('gtr-tab-requests').style.background = tab === 'requests' ? '#0A2540' : 'transparent';
+  document.getElementById('gtr-tab-requests').style.color = tab === 'requests' ? '#fff' : '#666';
+}
+
+function populateGTrCatDropdowns() {
+  const opts = '<option value="">No Category</option>' + gtrCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  const filterOpts = '<option value="">All Categories</option>' + gtrCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('gtr-prog-cat').innerHTML = opts;
+  document.getElementById('gtr-filter-cat').innerHTML = filterOpts;
+}
+
+function renderGTrPrograms() {
+  const cat = document.getElementById('gtr-filter-cat').value;
+  const type = document.getElementById('gtr-filter-type').value;
+  const active = document.getElementById('gtr-filter-active').value;
+
+  const filtered = gtrPrograms.filter(p => {
+    if (cat && p.category_id !== cat) return false;
+    if (type && p.program_type !== type) return false;
+    if (active !== '' && String(p.is_active) !== active) return false;
+    return true;
+  });
+
+  const el = document.getElementById('gtr-programs-list');
+  if (!filtered.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">No programs yet — add one to get started</div>';
+    return;
+  }
+
+  el.innerHTML = `<table class="data-table"><thead><tr>
+    <th>Title</th><th>Type</th><th>Category</th><th>Provider</th><th>Featured</th><th>Status</th><th></th>
+  </tr></thead><tbody>` + filtered.map(p => `<tr style="${!p.is_active ? 'opacity:0.5;' : ''}">
+    <td><strong>${p.title}</strong>${p.is_featured ? ' ⭐' : ''}<br><span style="font-size:11px;color:#888;">${p.duration || ''}</span></td>
+    <td>${p.program_type === 'workshop' ? '🔧 Workshop' : '📚 Training'}</td>
+    <td>${p.category_name || '—'}</td>
+    <td>${p.provider_name || '—'}</td>
+    <td>${p.is_featured ? '<span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">⭐ Featured</span>' : '—'}</td>
+    <td><span style="background:${p.is_active ? '#D1FAE5' : '#F3F4F6'};color:${p.is_active ? '#065F46' : '#6B7280'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">${p.is_active ? 'Active' : 'Archived'}</span></td>
+    <td style="display:flex;gap:6px;">
+      <button class="btn btn-ghost btn-sm" onclick='editGTrProgram(${JSON.stringify(p)})'>Edit</button>
+      <button class="btn btn-ghost btn-sm" onclick="archiveGTrProgram('${p.id}','${p.is_active}')" style="color:${p.is_active ? '#E8472A' : '#22C55E'};">${p.is_active ? 'Archive' : 'Restore'}</button>
+    </td>
+  </tr>`).join('') + '</tbody></table>';
+}
+
+function openGTrProgramModal(reset=true) {
+  if (reset) {
+    document.getElementById('gtr-prog-id').value = '';
+    document.getElementById('gtr-modal-title').textContent = '📚 Add Training Program';
+    document.getElementById('gtr-prog-title').value = '';
+    document.getElementById('gtr-prog-type').value = 'training';
+    document.getElementById('gtr-prog-cat').value = '';
+    document.getElementById('gtr-prog-level').value = 'any';
+    document.getElementById('gtr-prog-provider').value = '';
+    document.getElementById('gtr-prog-duration').value = '';
+    document.getElementById('gtr-prog-roles').value = '';
+    document.getElementById('gtr-prog-desc').value = '';
+    document.getElementById('gtr-prog-cname').value = '';
+    document.getElementById('gtr-prog-cphone').value = '';
+    document.getElementById('gtr-prog-cemail').value = '';
+    document.getElementById('gtr-prog-pricing').value = '';
+    document.getElementById('gtr-prog-featured').checked = false;
+    document.getElementById('gtr-featured-section').style.display = 'none';
+    document.getElementById('gtr-prog-active').checked = true;
+    document.getElementById('gtr-img-preview').style.display = 'none';
+    gtrCurrentImage = null;
+  }
+  document.getElementById('gtr-program-modal').style.display = 'flex';
+}
+function closeGTrProgramModal() { document.getElementById('gtr-program-modal').style.display = 'none'; }
+
+function editGTrProgram(p) {
+  document.getElementById('gtr-prog-id').value = p.id;
+  document.getElementById('gtr-modal-title').textContent = '✏️ Edit Program';
+  document.getElementById('gtr-prog-title').value = p.title || '';
+  document.getElementById('gtr-prog-type').value = p.program_type || 'training';
+  document.getElementById('gtr-prog-cat').value = p.category_id || '';
+  document.getElementById('gtr-prog-level').value = p.level || 'any';
+  document.getElementById('gtr-prog-provider').value = p.provider_name || '';
+  document.getElementById('gtr-prog-duration').value = p.duration || '';
+  document.getElementById('gtr-prog-roles').value = p.target_roles || '';
+  document.getElementById('gtr-prog-desc').value = p.description || '';
+  document.getElementById('gtr-prog-cname').value = p.contact_name || '';
+  document.getElementById('gtr-prog-cphone').value = p.contact_phone || '';
+  document.getElementById('gtr-prog-cemail').value = p.contact_email || '';
+  document.getElementById('gtr-prog-pricing').value = p.pricing_details || '';
+  document.getElementById('gtr-prog-featured').checked = !!p.is_featured;
+  document.getElementById('gtr-featured-section').style.display = p.is_featured ? '' : 'none';
+  document.getElementById('gtr-prog-active').checked = !!p.is_active;
+  gtrCurrentImage = p.featured_image || null;
+  if (p.featured_image) {
+    document.getElementById('gtr-img-preview-img').src = p.featured_image;
+    document.getElementById('gtr-img-preview').style.display = '';
+  } else {
+    document.getElementById('gtr-img-preview').style.display = 'none';
+  }
+  openGTrProgramModal(false);
+}
+
+function toggleGTrFeatured() {
+  const checked = document.getElementById('gtr-prog-featured').checked;
+  document.getElementById('gtr-featured-section').style.display = checked ? '' : 'none';
+}
+
+function handleGTrImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { showGToast('Image must be under 2MB', 'error'); input.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    gtrCurrentImage = e.target.result;
+    document.getElementById('gtr-img-preview-img').src = gtrCurrentImage;
+    document.getElementById('gtr-img-preview').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveGTrProgram() {
+  const id = document.getElementById('gtr-prog-id').value;
+  const title = document.getElementById('gtr-prog-title').value.trim();
+  if (!title) { showGToast('Title is required', 'error'); return; }
+  const btn = document.getElementById('gtr-prog-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const payload = {
+    title,
+    program_type: document.getElementById('gtr-prog-type').value,
+    category_id: document.getElementById('gtr-prog-cat').value || null,
+    level: document.getElementById('gtr-prog-level').value,
+    provider_name: document.getElementById('gtr-prog-provider').value.trim() || null,
+    duration: document.getElementById('gtr-prog-duration').value.trim() || null,
+    target_roles: document.getElementById('gtr-prog-roles').value.trim() || null,
+    description: document.getElementById('gtr-prog-desc').value.trim() || null,
+    contact_name: document.getElementById('gtr-prog-cname').value.trim() || null,
+    contact_phone: document.getElementById('gtr-prog-cphone').value.trim() || null,
+    contact_email: document.getElementById('gtr-prog-cemail').value.trim() || null,
+    pricing_details: document.getElementById('gtr-prog-pricing').value.trim() || null,
+    is_featured: document.getElementById('gtr-prog-featured').checked,
+    featured_image: document.getElementById('gtr-prog-featured').checked ? (gtrCurrentImage || null) : null,
+    is_active: document.getElementById('gtr-prog-active').checked,
+  };
+
+  const res = id
+    ? await apicall('PUT', `/training/programs/${id}`, payload)
+    : await apicall('POST', '/training/programs', payload);
+
+  btn.disabled = false; btn.textContent = 'Save Program';
+
+  if (res?.program) {
+    closeGTrProgramModal();
+    showGToast(id ? 'Program updated ✓' : 'Program added ✓', 'success');
+    const progRes = await apicall('GET', '/training/programs');
+    gtrPrograms = progRes?.programs || [];
+    renderGTrPrograms();
+  } else {
+    showGToast(res?.error || 'Error saving program', 'error');
+  }
+}
+
+async function archiveGTrProgram(id, isActive) {
+  const action = isActive == '1' || isActive === true ? 'archive' : 'restore';
+  const res = isActive == '1' || isActive === true
+    ? await apicall('DELETE', `/training/programs/${id}`)
+    : await apicall('PUT', `/training/programs/${id}`, { is_active: true });
+  if (res?.success || res?.program) {
+    showGToast(`Program ${action}d ✓`, 'success');
+    const progRes = await apicall('GET', '/training/programs');
+    gtrPrograms = progRes?.programs || [];
+    renderGTrPrograms();
+  }
+}
+
+function openGTrAddCat() { document.getElementById('gtr-cat-modal').style.display = 'flex'; document.getElementById('gtr-new-cat-name').value = ''; }
+function closeGTrAddCat() { document.getElementById('gtr-cat-modal').style.display = 'none'; }
+
+async function saveGTrCategory() {
+  const name = document.getElementById('gtr-new-cat-name').value.trim();
+  if (!name) { showGToast('Enter a category name', 'error'); return; }
+  const res = await apicall('POST', '/training/categories', { name });
+  if (res?.category) {
+    gtrCategories.push(res.category);
+    populateGTrCatDropdowns();
+    document.getElementById('gtr-prog-cat').value = res.category.id;
+    closeGTrAddCat();
+    showGToast('Category added ✓', 'success');
+  } else {
+    showGToast(res?.error || 'Error adding category', 'error');
+  }
+}
+
+function gtrFilter(btn, status) {
+  gtrStatusFilter = status;
+  document.querySelectorAll('#gtr-requests-tab .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGTrRequests();
+}
+
+function renderGTrRequests() {
+  const filtered = gtrStatusFilter ? gtrRequests.filter(r => r.status === gtrStatusFilter) : gtrRequests;
+  const el = document.getElementById('gtr-requests-list');
+  if (!filtered.length) {
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:#888;">No requests found</div>';
+    return;
+  }
+  const statusMap = { pending:'⏳ Pending', approved:'✅ Approved', rejected:'❌ Rejected' };
+  const statusColor = { pending:'#92400E', approved:'#065F46', rejected:'#991B1B' };
+  const statusBg = { pending:'#FEF3C7', approved:'#D1FAE5', rejected:'#FEE2E2' };
+  el.innerHTML = `<table class="data-table"><thead><tr>
+    <th>Company</th><th>Date</th><th>Programs</th><th>Employees</th><th>Status</th><th></th>
+  </tr></thead><tbody>` + filtered.map(r => `<tr>
+    <td><strong>${r.company_name || '—'}</strong></td>
+    <td>${r.created_at?.slice(0,10)||'—'}</td>
+    <td>${r.programs_count} program${r.programs_count!==1?'s':''}</td>
+    <td>${r.employees_count}</td>
+    <td><span style="background:${statusBg[r.status]};color:${statusColor[r.status]};padding:3px 10px;border-radius:10px;font-size:12px;font-weight:700;">${statusMap[r.status]||r.status}</span></td>
+    <td><button class="btn btn-ghost btn-sm" onclick="viewGTrRequest('${r.id}')">View →</button></td>
+  </tr>`).join('') + '</tbody></table>';
+}
+
+function showGTrReqList() {
+  document.getElementById('gtr-req-list-view').style.display = '';
+  document.getElementById('gtr-req-detail-view').style.display = 'none';
+  loadGTraining();
+}
+
+async function viewGTrRequest(id) {
+  const res = await apicall('GET', `/training/requests/${id}`);
+  if (!res?.request) { showGToast('Could not load request', 'error'); return; }
+  const r = res.request;
+  const items = res.items || [];
+  const statusMap = { pending:'⏳ Pending', approved:'✅ Approved', rejected:'❌ Rejected' };
+  const statusColor = { pending:'#92400E', approved:'#065F46', rejected:'#991B1B' };
+  const statusBg = { pending:'#FEF3C7', approved:'#D1FAE5', rejected:'#FEE2E2' };
+
+  document.getElementById('gtr-req-detail-content').innerHTML = `
+    <div class="section-card">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Training Request — ${r.company_name || ''}</div>
+          <div class="section-sub">Submitted ${r.created_at?.slice(0,10)||''} · ${r.employees_count} employee${r.employees_count!==1?'s':''}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="background:${statusBg[r.status]};color:${statusColor[r.status]};padding:6px 16px;border-radius:20px;font-weight:700;">${statusMap[r.status]||r.status}</span>
+          ${r.status === 'pending' ? `
+            <button class="btn btn-primary" onclick="approveGTrRequest('${r.id}')">✅ Approve</button>
+            <button class="btn btn-danger" onclick="openGTrReject('${r.id}')">❌ Reject</button>` : ''}
+        </div>
+      </div>
+      <div style="padding:24px;">
+        ${r.notes ? `<div style="background:#FFF8F0;border-left:3px solid #E8472A;padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:20px;font-size:14px;"><b>Company notes:</b> ${r.notes}</div>` : ''}
+
+        <div style="margin-bottom:12px;">
+          <label class="form-label">Notes to Company (optional)</label>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <textarea class="form-input" id="gtr-notes-${r.id}" rows="2" style="flex:1;" placeholder="Any message to the company...">${r.ghaya_notes || ''}</textarea>
+            <button class="btn btn-ghost btn-sm" onclick="saveGTrNotes('${r.id}')">Save</button>
+          </div>
+        </div>
+
+        <div style="font-weight:700;margin-bottom:16px;font-size:15px;">Requested Programs (${items.length})</div>
+        ${items.map(item => `
+          <div style="border:1px solid #e8e0d8;border-radius:12px;padding:20px;margin-bottom:16px;background:#fff;">
+            <div style="font-weight:700;font-size:16px;margin-bottom:6px;">${item.title}</div>
+            <div style="font-size:12px;color:#666;margin-bottom:10px;">${item.program_type === 'workshop' ? '🔧 Workshop' : '📚 Training'}${item.provider_name ? ' · 🏢 ' + item.provider_name : ''}${item.duration ? ' · ⏱ ' + item.duration : ''}</div>
+            ${item.description ? `<div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:12px;">${item.description}</div>` : ''}
+            <div style="border-top:1px solid #e8e0d8;padding-top:12px;font-size:13px;">
+              <div style="font-weight:700;color:#0A2540;margin-bottom:6px;">💰 Pricing & Contact (will be revealed on approval)</div>
+              ${item.pricing_details ? `<div style="margin-bottom:4px;"><b>Pricing:</b> ${item.pricing_details}</div>` : '<div style="color:#999;">No pricing added yet</div>'}
+              ${item.contact_name ? `<div><b>Contact:</b> ${item.contact_name}${item.contact_phone ? ' · ' + item.contact_phone : ''}${item.contact_email ? ' · ' + item.contact_email : ''}</div>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  document.getElementById('gtr-req-list-view').style.display = 'none';
+  document.getElementById('gtr-req-detail-view').style.display = '';
+}
+
+async function approveGTrRequest(id) {
+  const res = await apicall('PUT', `/training/requests/${id}`, { status: 'approved' });
+  if (res?.request) {
+    showGToast('Request approved ✓ — company can now see pricing & contacts', 'success');
+    viewGTrRequest(id);
+    loadGTraining();
+  } else {
+    showGToast(res?.error || 'Error', 'error');
+  }
+}
+
+async function saveGTrNotes(id) {
+  const notes = document.getElementById(`gtr-notes-${id}`)?.value.trim() || null;
+  const res = await apicall('PUT', `/training/requests/${id}`, { ghaya_notes: notes });
+  if (res?.request) showGToast('Notes saved ✓', 'success');
+}
+
+function openGTrReject(id) {
+  gtrRejectId = id;
+  document.getElementById('gtr-reject-reason').value = '';
+  document.getElementById('gtr-reject-modal').style.display = 'flex';
+}
+function closeGTrReject() { document.getElementById('gtr-reject-modal').style.display = 'none'; gtrRejectId = null; }
+
+async function confirmGTrReject() {
+  if (!gtrRejectId) return;
+  const reason = document.getElementById('gtr-reject-reason').value.trim() || null;
+  const res = await apicall('PUT', `/training/requests/${gtrRejectId}`, { status: 'rejected', rejection_reason: reason });
+  if (res?.request) {
+    closeGTrReject();
+    showGToast('Request rejected', '');
+    viewGTrRequest(gtrRejectId);
+    loadGTraining();
+  }
 }
 
 function setLang(lang, save = true) {
