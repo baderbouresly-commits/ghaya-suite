@@ -1232,9 +1232,9 @@ let gtrPrograms = [], gtrCategories = [], gtrRequests = [], gtrCurrentImage = nu
 
 async function loadGTraining() {
   const [progRes, catRes, reqRes] = await Promise.all([
-    apicall('GET', '/training/programs'),
-    apicall('GET', '/training/categories'),
-    apicall('GET', '/training/requests'),
+    api('GET', '/training/programs'),
+    api('GET', '/training/categories'),
+    api('GET', '/training/requests'),
   ]);
   gtrPrograms = progRes?.programs || [];
   gtrCategories = catRes?.categories || [];
@@ -1365,7 +1365,7 @@ function toggleGTrFeatured() {
 function handleGTrImage(input) {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 2 * 1024 * 1024) { showGToast('Image must be under 2MB', 'error'); input.value = ''; return; }
+  if (file.size > 2 * 1024 * 1024) { showToast('Image must be under 2MB', 'error'); input.value = ''; return; }
   const reader = new FileReader();
   reader.onload = e => {
     gtrCurrentImage = e.target.result;
@@ -1378,7 +1378,7 @@ function handleGTrImage(input) {
 async function saveGTrProgram() {
   const id = document.getElementById('gtr-prog-id').value;
   const title = document.getElementById('gtr-prog-title').value.trim();
-  if (!title) { showGToast('Title is required', 'error'); return; }
+  if (!title) { showToast('Title is required', 'error'); return; }
   const btn = document.getElementById('gtr-prog-save-btn');
   btn.disabled = true; btn.textContent = 'Saving…';
 
@@ -1401,30 +1401,30 @@ async function saveGTrProgram() {
   };
 
   const res = id
-    ? await apicall('PUT', `/training/programs/${id}`, payload)
-    : await apicall('POST', '/training/programs', payload);
+    ? await api('PUT', `/training/programs/${id}`, payload)
+    : await api('POST', '/training/programs', payload);
 
   btn.disabled = false; btn.textContent = 'Save Program';
 
   if (res?.program) {
     closeGTrProgramModal();
-    showGToast(id ? 'Program updated ✓' : 'Program added ✓', 'success');
-    const progRes = await apicall('GET', '/training/programs');
+    showToast(id ? 'Program updated ✓' : 'Program added ✓', 'success');
+    const progRes = await api('GET', '/training/programs');
     gtrPrograms = progRes?.programs || [];
     renderGTrPrograms();
   } else {
-    showGToast(res?.error || 'Error saving program', 'error');
+    showToast(res?.error || 'Error saving program', 'error');
   }
 }
 
 async function archiveGTrProgram(id, isActive) {
   const action = isActive == '1' || isActive === true ? 'archive' : 'restore';
   const res = isActive == '1' || isActive === true
-    ? await apicall('DELETE', `/training/programs/${id}`)
-    : await apicall('PUT', `/training/programs/${id}`, { is_active: true });
+    ? await api('DELETE', `/training/programs/${id}`)
+    : await api('PUT', `/training/programs/${id}`, { is_active: true });
   if (res?.success || res?.program) {
-    showGToast(`Program ${action}d ✓`, 'success');
-    const progRes = await apicall('GET', '/training/programs');
+    showToast(`Program ${action}d ✓`, 'success');
+    const progRes = await api('GET', '/training/programs');
     gtrPrograms = progRes?.programs || [];
     renderGTrPrograms();
   }
@@ -1435,16 +1435,16 @@ function closeGTrAddCat() { document.getElementById('gtr-cat-modal').style.displ
 
 async function saveGTrCategory() {
   const name = document.getElementById('gtr-new-cat-name').value.trim();
-  if (!name) { showGToast('Enter a category name', 'error'); return; }
-  const res = await apicall('POST', '/training/categories', { name });
+  if (!name) { showToast('Enter a category name', 'error'); return; }
+  const res = await api('POST', '/training/categories', { name });
   if (res?.category) {
     gtrCategories.push(res.category);
     populateGTrCatDropdowns();
     document.getElementById('gtr-prog-cat').value = res.category.id;
     closeGTrAddCat();
-    showGToast('Category added ✓', 'success');
+    showToast('Category added ✓', 'success');
   } else {
-    showGToast(res?.error || 'Error adding category', 'error');
+    showToast(res?.error || 'Error adding category', 'error');
   }
 }
 
@@ -1484,8 +1484,8 @@ function showGTrReqList() {
 }
 
 async function viewGTrRequest(id) {
-  const res = await apicall('GET', `/training/requests/${id}`);
-  if (!res?.request) { showGToast('Could not load request', 'error'); return; }
+  const res = await api('GET', `/training/requests/${id}`);
+  if (!res?.request) { showToast('Could not load request', 'error'); return; }
   const r = res.request;
   const items = res.items || [];
   const statusMap = { pending:'⏳ Pending', approved:'✅ Approved', rejected:'❌ Rejected' };
@@ -1537,20 +1537,20 @@ async function viewGTrRequest(id) {
 }
 
 async function approveGTrRequest(id) {
-  const res = await apicall('PUT', `/training/requests/${id}`, { status: 'approved' });
+  const res = await api('PUT', `/training/requests/${id}`, { status: 'approved' });
   if (res?.request) {
-    showGToast('Request approved ✓ — company can now see pricing & contacts', 'success');
+    showToast('Request approved ✓ — company can now see pricing & contacts', 'success');
     viewGTrRequest(id);
     loadGTraining();
   } else {
-    showGToast(res?.error || 'Error', 'error');
+    showToast(res?.error || 'Error', 'error');
   }
 }
 
 async function saveGTrNotes(id) {
   const notes = document.getElementById(`gtr-notes-${id}`)?.value.trim() || null;
-  const res = await apicall('PUT', `/training/requests/${id}`, { ghaya_notes: notes });
-  if (res?.request) showGToast('Notes saved ✓', 'success');
+  const res = await api('PUT', `/training/requests/${id}`, { ghaya_notes: notes });
+  if (res?.request) showToast('Notes saved ✓', 'success');
 }
 
 function openGTrReject(id) {
@@ -1563,10 +1563,10 @@ function closeGTrReject() { document.getElementById('gtr-reject-modal').style.di
 async function confirmGTrReject() {
   if (!gtrRejectId) return;
   const reason = document.getElementById('gtr-reject-reason').value.trim() || null;
-  const res = await apicall('PUT', `/training/requests/${gtrRejectId}`, { status: 'rejected', rejection_reason: reason });
+  const res = await api('PUT', `/training/requests/${gtrRejectId}`, { status: 'rejected', rejection_reason: reason });
   if (res?.request) {
     closeGTrReject();
-    showGToast('Request rejected', '');
+    showToast('Request rejected', '');
     viewGTrRequest(gtrRejectId);
     loadGTraining();
   }
