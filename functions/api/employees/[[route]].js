@@ -17,13 +17,27 @@ export async function onRequest({ request, env, params }) {
     return error('Forbidden', 403);
   }
 
-  // Employees can only see their own record
+  // Employees can only see their own record, or update their own photo
   if (user.role === 'employee') {
-    if (method !== 'GET') return error('Forbidden', 403);
     const emp = await db.prepare(
       'SELECT * FROM employees WHERE user_id = ? AND company_id = ?'
     ).bind(user.sub, user.company_id).first();
-    return emp ? json({ employee: emp }) : error('Not found', 404);
+    if (!emp) return error('Not found', 404);
+
+    if (method === 'GET') return json({ employee: emp });
+
+    // Allow employee to update their own photo only
+    if (method === 'PUT') {
+      let body;
+      try { body = await request.json(); } catch { return error('Invalid JSON'); }
+      const { photo } = body;
+      await db.prepare("UPDATE employees SET photo = ?, updated_at = datetime('now') WHERE id = ?")
+        .bind(photo || null, emp.id).run();
+      const updated = await db.prepare('SELECT * FROM employees WHERE id = ?').bind(emp.id).first();
+      return json({ employee: updated });
+    }
+
+    return error('Forbidden', 403);
   }
 
   // company scope
@@ -81,7 +95,7 @@ export async function onRequest({ request, env, params }) {
       employment_type, hire_date, probation_end_date,
       basic_salary, housing_allowance, transport_allowance, other_allowances,
       annual_leave_days, pifss_enrolled, pifss_start_date,
-      employee_number, notes
+      employee_number, notes, photo
     } = body;
 
     if (!first_name_en || !hire_date) return error('first_name_en and hire_date are required');
@@ -101,8 +115,8 @@ export async function onRequest({ request, env, params }) {
         department_id, job_title_id, direct_manager_id,
         employment_type, hire_date, probation_end_date,
         basic_salary, housing_allowance, transport_allowance, other_allowances,
-        annual_leave_days, pifss_enrolled, pifss_start_date, notes, status
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'active')
+        annual_leave_days, pifss_enrolled, pifss_start_date, notes, photo, status
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'active')
     `).bind(
       id, companyId, employee_number || null,
       first_name_en, last_name_en || '', first_name_ar || null, last_name_ar || null,
@@ -111,7 +125,7 @@ export async function onRequest({ request, env, params }) {
       department_id || null, job_title_id || null, direct_manager_id || null,
       employment_type || 'full_time', hire_date, probation_end_date || null,
       basic_salary || 0, housing_allowance || 0, transport_allowance || 0, other_allowances || 0,
-      actualLeave, pifss_enrolled ? 1 : 0, pifss_start_date || null, notes || null
+      actualLeave, pifss_enrolled ? 1 : 0, pifss_start_date || null, notes || null, photo || null
     ).run();
 
     // Create login user if work_email provided
@@ -149,7 +163,7 @@ export async function onRequest({ request, env, params }) {
       'work_email','personal_email','department_id','job_title_id',
       'direct_manager_id','employment_type','probation_end_date',
       'basic_salary','housing_allowance','transport_allowance','other_allowances',
-      'annual_leave_days','pifss_enrolled','pifss_start_date','notes','status'
+      'annual_leave_days','pifss_enrolled','pifss_start_date','notes','status','photo'
     ];
     const updates = Object.entries(body).filter(([k]) => allowed.includes(k));
     if (!updates.length) return error('No valid fields to update');
