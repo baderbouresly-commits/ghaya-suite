@@ -16,6 +16,7 @@ export async function onRequestGet({ request, env }) {
 
     const emp = await db.prepare('SELECT * FROM employees WHERE id = ?').bind(empId).first();
 
+    // Leave balances this year
     const year = new Date().getFullYear();
     const { results: balances } = await db.prepare(`
       SELECT lb.entitled_days, lb.used_days, lb.pending_days,
@@ -24,6 +25,7 @@ export async function onRequestGet({ request, env }) {
       WHERE lb.employee_id = ? AND lb.year = ?
     `).bind(empId, year).all();
 
+    // Recent leave requests
     const { results: recentLeaves } = await db.prepare(`
       SELECT lr.start_date, lr.end_date, lr.days_count, lr.status,
              lt.name_en as type_name
@@ -31,14 +33,20 @@ export async function onRequestGet({ request, env }) {
       WHERE lr.employee_id = ? ORDER BY lr.created_at DESC LIMIT 5
     `).bind(empId).all();
 
+    // Latest payslip
     const payslip = await db.prepare(`
-      SELECT pe.net_salary, pe.gross_salary, pe.payslip_published_at,
-             pr.period_month, pr.period_year
+      SELECT pe.net_salary, pe.gross_salary, pe.basic_salary,
+             pe.housing_allowance, pe.transport_allowance, pe.other_allowances,
+             pe.overtime_pay, pe.pifss_employee, pe.pifss_employer,
+             pe.payslip_published_at, pr.period_month, pr.period_year
       FROM payroll_entries pe JOIN payroll_runs pr ON pr.id = pe.payroll_run_id
       WHERE pe.employee_id = ? AND pe.payslip_published = 1
       ORDER BY pr.period_year DESC, pr.period_month DESC LIMIT 1
     `).bind(empId).first();
 
+    const company = await db.prepare('SELECT name_en, name_ar FROM companies WHERE id = ?').bind(companyId).first();
+
+    // Expiring documents (next 30 days)
     const { results: expiringDocs } = await db.prepare(`
       SELECT ed.expiry_date, dt.name_en as doc_type
       FROM employee_documents ed JOIN document_types dt ON dt.id = ed.document_type_id
@@ -48,6 +56,7 @@ export async function onRequestGet({ request, env }) {
       ORDER BY ed.expiry_date ASC
     `).bind(empId).all();
 
+    // Company settings for visibility
     const settings = await db.prepare('SELECT * FROM company_settings WHERE company_id = ?').bind(companyId).first();
 
     return json({
@@ -58,8 +67,9 @@ export async function onRequestGet({ request, env }) {
         name_ar: emp.first_name_ar ? `${emp.first_name_ar} ${emp.last_name_ar}` : null,
         hire_date: emp.hire_date,
         status: emp.status,
-        basic_salary: emp.basic_salary,
+        photo: emp.photo || null,
       },
+      company: { name_en: company?.name_en || '', name_ar: company?.name_ar || '' },
       leave_balances: settings?.show_leave_balance_to_employee ? balances : [],
       recent_leaves: recentLeaves,
       latest_payslip: settings?.show_payslips_to_employee ? payslip : null,
@@ -95,10 +105,12 @@ export async function onRequestGet({ request, env }) {
       ORDER BY lr.created_at ASC LIMIT 10
     `).bind(companyId).all();
 
+    // Latest payroll run
     const payrollRun = await db.prepare(
       "SELECT * FROM payroll_runs WHERE company_id = ? ORDER BY period_year DESC, period_month DESC LIMIT 1"
     ).bind(companyId).first();
 
+    // Documents expiring in 30 days
     const { results: expiringDocs } = await db.prepare(`
       SELECT ed.expiry_date, dt.name_en as doc_type,
              e.first_name_en || ' ' || e.last_name_en as employee_name
@@ -111,6 +123,7 @@ export async function onRequestGet({ request, env }) {
       ORDER BY ed.expiry_date ASC LIMIT 10
     `).bind(companyId).all();
 
+    // Probations ending soon
     const { results: probationEnding } = await db.prepare(`
       SELECT first_name_en || ' ' || last_name_en as name, probation_end_date
       FROM employees WHERE company_id = ? AND status = 'probation'
@@ -140,11 +153,10 @@ export async function onRequestGet({ request, env }) {
 
   // ── GHAYA SUPER ADMIN DASHBOARD ─────────────
   if (user.role === 'ghaya_admin') {
-    const [companies, users, managed, activeSubs] = await Promise.all([
+    const [companies, users, managed] = await Promise.all([
       db.prepare("SELECT COUNT(*) as total FROM companies").first(),
       db.prepare("SELECT COUNT(*) as total FROM employees WHERE status = 'active'").first(),
       db.prepare("SELECT COUNT(*) as total FROM companies WHERE managed_by_ghaya = 1").first(),
-      db.prepare("SELECT COUNT(*) as total FROM companies WHERE subscription_active = 1").first(),
     ]);
 
     const { results: recentCompanies } = await db.prepare(
@@ -162,12 +174,13 @@ export async function onRequestGet({ request, env }) {
 
     return json({
       role: 'ghaya_admin',
-      total_companies: companies?.total || 0,
-      total_employees: users?.total || 0,
-      managed_companies: managed?.total || 0,
-      active_subscriptions: activeSubs?.total || 0,
+      stats: {
+        total_companies: companies?.total || 0,
+        total_employees: users?.total || 0,
+        managed_companies: managed?.total || 0,
+      },
       recent_companies: recentCompanies,
-      pending_leaves: pendingLeaves || [],
+      pending_leaves: pendingLeaves.results || [],
     });
   }
 
