@@ -222,7 +222,8 @@ export async function onRequest({ request, env, params }) {
     // GET /requests — list
     if (method === 'GET' && !requestId) {
       let q = `SELECT tr.*, c.name_en as company_name,
-        (SELECT COUNT(*) FROM training_request_items tri WHERE tri.request_id = tr.id) as programs_count
+        (SELECT COUNT(*) FROM training_request_items tri WHERE tri.request_id = tr.id) as programs_count,
+        (SELECT GROUP_CONCAT(tri2.program_id) FROM training_request_items tri2 WHERE tri2.request_id = tr.id) as program_ids_csv
         FROM training_requests tr
         LEFT JOIN companies c ON c.id = tr.company_id
         WHERE 1=1`;
