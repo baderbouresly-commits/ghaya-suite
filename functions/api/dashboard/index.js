@@ -44,7 +44,7 @@ export async function onRequestGet({ request, env }) {
       ORDER BY pr.period_year DESC, pr.period_month DESC LIMIT 1
     `).bind(empId).first();
 
-    const company = await db.prepare('SELECT name_en, name_ar FROM companies WHERE id = ?').bind(companyId).first();
+    const company = await db.prepare('SELECT name_en, name_ar, logo FROM companies WHERE id = ?').bind(companyId).first();
 
     // Expiring documents (next 30 days)
     const { results: expiringDocs } = await db.prepare(`
@@ -69,7 +69,7 @@ export async function onRequestGet({ request, env }) {
         status: emp.status,
         photo: emp.photo || null,
       },
-      company: { name_en: company?.name_en || '', name_ar: company?.name_ar || '' },
+      company: { name_en: company?.name_en || '', name_ar: company?.name_ar || '', logo: company?.logo || null },
       leave_balances: settings?.show_leave_balance_to_employee ? balances : [],
       recent_leaves: recentLeaves,
       latest_payslip: settings?.show_payslips_to_employee ? payslip : null,
