@@ -949,6 +949,20 @@ select.form-input{cursor:pointer}
     <div class="modal-header"><div class="modal-title" id="modal-emp-title">Add Employee</div><button class="modal-close" onclick="closeModal('modal-employee')">✕</button></div>
     <div class="modal-body">
       <input type="hidden" id="emp-id"/>
+      <input type="hidden" id="emp-photo-data"/>
+      <!-- Photo Upload -->
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #f0ebe4;">
+        <div id="emp-photo-preview" style="width:72px;height:72px;border-radius:50%;background:#e8e0d8;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#888;overflow:hidden;flex-shrink:0;cursor:pointer;border:2px dashed #ccc;" onclick="document.getElementById('emp-photo-input').click()">
+          📷
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;">Profile Photo</div>
+          <div style="font-size:12px;color:#888;margin-bottom:8px;">Click the circle to upload · Max 700KB</div>
+          <button type="button" onclick="document.getElementById('emp-photo-input').click()" style="padding:5px 12px;border-radius:6px;border:1px solid #e8e0d8;background:#fff;font-size:12px;font-weight:700;cursor:pointer;">Upload Photo</button>
+          <button type="button" id="emp-photo-remove" onclick="removeEmpPhoto()" style="display:none;padding:5px 12px;border-radius:6px;border:1px solid #E8472A;background:#fff;color:#E8472A;font-size:12px;font-weight:700;cursor:pointer;margin-left:6px;">Remove</button>
+          <input type="file" id="emp-photo-input" accept="image/*" style="display:none;" onchange="handleEmpPhoto(event)"/>
+        </div>
+      </div>
       <div class="form-grid">
         <div class="form-row"><label class="form-label">First Name (EN)</label><input class="form-input" id="emp-first-en" placeholder="Ahmed"/></div>
         <div class="form-row"><label class="form-label">Last Name (EN)</label><input class="form-input" id="emp-last-en" placeholder="Al-Rashidi"/></div>
@@ -1350,7 +1364,7 @@ function filterEmployees(){
 function renderEmployeesTable(list){
   const el=document.getElementById('employees-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees found</div><div class="empty-sub">Add your first employee using the button above</div></div>';return;}
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Title / Dept</th><th>Nationality</th><th>Basic Salary</th><th>Hire Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((e,i)=>`<tr><td style="color:#888;font-size:12px">${i+1}</td><td><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></td><td><div>${getJobTitle(e.job_title_en)}</div><div style="font-size:11px;color:#888">${getDeptName(e.department)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="font-size:12px;color:#888">${e.hire_date||'—'}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button><button class="btn btn-purple btn-sm" onclick="viewEOS('${e.id}')">EOS</button><button class="btn btn-sm" style="background:#f0f4ff;color:#1a4da0;border:1px solid #c0d0f0;" onclick="openResetPwd('${e.id}','${e.first_name_en} ${e.last_name_en}')">🔑 Reset</button><button class="btn btn-sm" style="background:#fff8e1;color:#b07800;border:1px solid #f0d080;" onclick="openDocs('${e.id}','${e.first_name_en} ${e.last_name_en}')">📂 Docs</button></td></tr>`).join('')}</tbody></table></div>`;
+  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Title / Dept</th><th>Nationality</th><th>Basic Salary</th><th>Hire Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((e,i)=>{const initials=`${e.first_name_en?.[0]||''}${e.last_name_en?.[0]||''}`.toUpperCase();const avatarHtml=e.photo?`<img src="${e.photo}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #e8e0d8;"/>`:`<div style="width:34px;height:34px;border-radius:50%;background:#E8472A;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;">${initials}</div>`;return`<tr><td style="color:#888;font-size:12px">${i+1}</td><td><div style="display:flex;align-items:center;gap:10px;">${avatarHtml}<div><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></div></div></td><td><div>${getJobTitle(e.job_title_en)}</div><div style="font-size:11px;color:#888">${getDeptName(e.department)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="font-size:12px;color:#888">${e.hire_date||'—'}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button><button class="btn btn-purple btn-sm" onclick="viewEOS('${e.id}')">EOS</button><button class="btn btn-sm" style="background:#f0f4ff;color:#1a4da0;border:1px solid #c0d0f0;" onclick="openResetPwd('${e.id}','${e.first_name_en} ${e.last_name_en}')">🔑 Reset</button><button class="btn btn-sm" style="background:#fff8e1;color:#b07800;border:1px solid #f0d080;" onclick="openDocs('${e.id}','${e.first_name_en} ${e.last_name_en}')">📂 Docs</button></td></tr>`).join('')}</tbody></table></div>`;
 }
 function viewEOS(id){currentEOSId=id;document.getElementById('modal-eos').classList.add('open');loadEOS(id,'termination');}
 async function loadEOS(id,type){
@@ -1769,20 +1783,48 @@ async function saveOTEntry(){
 }
 
 /* ── EMPLOYEE MODAL ── */
-function openAddEmployee(){
-  editingEmpId=null;
-  document.getElementById('modal-emp-title').textContent='Add Employee';
-  document.getElementById('save-emp-btn').textContent='Add Employee';
-  ['emp-id','emp-first-en','emp-last-en','emp-first-ar','emp-last-ar','emp-civil-id','emp-salary','emp-email','emp-phone','emp-password'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('emp-start').value='';
-  document.getElementById('emp-nationality').value='Kuwaiti';
-  document.getElementById('emp-contract').value='full_time';
-  populateEmpDropdowns();
-  document.getElementById('modal-employee').classList.add('open');
-}
 function populateEmpDropdowns(){
   document.getElementById('emp-dept-id').innerHTML='<option value="">— Select —</option>'+deptsData.map(d=>`<option value="${d.id}">${d.name_en}</option>`).join('');
   document.getElementById('emp-job-title-id').innerHTML='<option value="">— Select —</option>'+jobTitlesData.map(j=>`<option value="${j.id}">${j.title_en}</option>`).join('');
+}
+function handleEmpPhoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 700 * 1024) { showToast('Image too large — max 700KB', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const b64 = e.target.result;
+    document.getElementById('emp-photo-data').value = b64;
+    const preview = document.getElementById('emp-photo-preview');
+    preview.innerHTML = `<img src="${b64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;
+    preview.style.border = 'none';
+    document.getElementById('emp-photo-remove').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+function removeEmpPhoto() {
+  document.getElementById('emp-photo-data').value = '';
+  document.getElementById('emp-photo-preview').innerHTML = '📷';
+  document.getElementById('emp-photo-preview').style.border = '2px dashed #ccc';
+  document.getElementById('emp-photo-remove').style.display = 'none';
+  document.getElementById('emp-photo-input').value = '';
+}
+function openAddEmployee() {
+  editingEmpId=null;
+  document.getElementById('modal-emp-title').textContent='Add Employee';
+  document.getElementById('save-emp-btn').textContent='Add Employee';
+  document.getElementById('emp-id').value='';
+  removeEmpPhoto();
+  document.getElementById('emp-first-en').value='';document.getElementById('emp-last-en').value='';
+  document.getElementById('emp-first-ar').value='';document.getElementById('emp-last-ar').value='';
+  document.getElementById('emp-civil-id').value='';document.getElementById('emp-nationality').value='Kuwaiti';
+  document.getElementById('emp-salary').value='';document.getElementById('emp-start').value='';
+  document.getElementById('emp-email').value='';document.getElementById('emp-phone').value='';
+  document.getElementById('emp-contract').value='full_time';document.getElementById('emp-password').value='';
+  document.getElementById('emp-is-kuwaiti').checked=false;document.getElementById('emp-pifss-enrolled').checked=false;
+  document.getElementById('emp-housing').value='';document.getElementById('emp-transport').value='';document.getElementById('emp-other-allowance').value='';
+  populateEmpDropdowns();
+  document.getElementById('modal-employee').classList.add('open');
 }
 async function editEmployee(id){
   editingEmpId=id;
@@ -1802,12 +1844,23 @@ async function editEmployee(id){
   document.getElementById('emp-housing').value=emp.housing_allowance||'';
   document.getElementById('emp-transport').value=emp.transport_allowance||'';
   document.getElementById('emp-other-allowance').value=emp.other_allowances||'';
+  // Restore photo
+  if (emp.photo) {
+    document.getElementById('emp-photo-data').value = emp.photo;
+    const preview = document.getElementById('emp-photo-preview');
+    preview.innerHTML = `<img src="${emp.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;
+    preview.style.border = 'none';
+    document.getElementById('emp-photo-remove').style.display = '';
+  } else {
+    removeEmpPhoto();
+  }
   populateEmpDropdowns();
   document.getElementById('emp-dept-id').value=emp.department||emp.department_id||'';
   document.getElementById('emp-job-title-id').value=emp.job_title_en||emp.job_title_id||'';
   document.getElementById('modal-employee').classList.add('open');
 }
 async function saveEmployee(){
+  const photo = document.getElementById('emp-photo-data').value || null;
   const body={
     first_name_en:document.getElementById('emp-first-en').value.trim(),last_name_en:document.getElementById('emp-last-en').value.trim(),
     first_name_ar:document.getElementById('emp-first-ar').value.trim(),last_name_ar:document.getElementById('emp-last-ar').value.trim(),
@@ -1821,6 +1874,7 @@ async function saveEmployee(){
     housing_allowance:parseFloat(document.getElementById('emp-housing').value)||0,
     transport_allowance:parseFloat(document.getElementById('emp-transport').value)||0,
     other_allowances:parseFloat(document.getElementById('emp-other-allowance').value)||0,
+    photo,
   };
   const pwd=document.getElementById('emp-password').value;if(pwd)body.password=pwd;
   if(!body.first_name_en||!body.last_name_en){showToast('First and last name required','error');return;}
