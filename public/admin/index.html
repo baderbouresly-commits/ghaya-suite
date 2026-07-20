@@ -2612,9 +2612,9 @@ function openTrCart() {
       </div>
       <button onclick="addToTrCart(${JSON.stringify(p).replace(/"/g,'&quot;')})" style="background:none;border:none;color:#E8472A;cursor:pointer;font-size:18px;">✕</button>
     </div>`).join('');
-  document.getElementById('tr-cart-modal').style.display = 'flex';
+  document.getElementById('tr-cart-modal').classList.add('open');
 }
-function closeTrCart() { document.getElementById('tr-cart-modal').style.display = 'none'; }
+function closeTrCart() { document.getElementById('tr-cart-modal').classList.remove('open'); }
 
 async function submitTrRequest() {
   if (!trCart.length) { showToast('Select at least one program', 'error'); return; }
