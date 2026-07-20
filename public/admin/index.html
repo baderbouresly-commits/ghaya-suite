@@ -174,7 +174,10 @@ select.form-input{cursor:pointer}
         <div class="logo-sub">YOUR TRUSTED HR SUPPORT</div>
       </div>
     </div>
-    <div class="company-badge" id="company-name">Loading...</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+      <div id="sidebar-company-logo" style="display:none;width:28px;height:28px;border-radius:6px;overflow:hidden;flex-shrink:0;"><img id="sidebar-company-logo-img" src="" style="width:100%;height:100%;object-fit:cover;"/></div>
+      <div class="company-badge" id="company-name" style="margin-top:0;flex:1;">Loading...</div>
+    </div>
   </div>
   <nav class="nav">
     <div class="nav-section">OVERVIEW</div>
@@ -455,6 +458,24 @@ select.form-input{cursor:pointer}
     </div>
     <!-- SETTINGS -->
     <div id="page-settings" style="display:none">
+      <!-- Company Logo -->
+      <div class="section-card" style="margin-bottom:24px;">
+        <div class="section-header">
+          <div><div class="section-title">Company Logo</div><div class="section-sub">Shown in the sidebar, employee portal, and to Ghaya</div></div>
+        </div>
+        <div style="padding:20px 24px;display:flex;align-items:center;gap:20px;">
+          <div id="company-logo-preview" style="width:80px;height:80px;border-radius:12px;background:#f0ebe4;display:flex;align-items:center;justify-content:center;font-size:30px;overflow:hidden;flex-shrink:0;border:2px dashed #ccc;cursor:pointer;" onclick="document.getElementById('company-logo-input').click()">🏢</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px;">Upload your company logo</div>
+            <div style="font-size:12px;color:#888;margin-bottom:10px;">PNG, JPG · Max 700KB · Click the box to upload</div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('company-logo-input').click()">Upload Logo</button>
+              <button class="btn btn-danger btn-sm" id="company-logo-remove" style="display:none;" onclick="removeCompanyLogo()">Remove</button>
+            </div>
+            <input type="file" id="company-logo-input" accept="image/*" style="display:none;" onchange="handleCompanyLogo(event)"/>
+          </div>
+        </div>
+      </div>
       <!-- Geofencing -->
       <div class="section-card" style="margin-bottom:24px;">
         <div class="section-header">
@@ -1278,6 +1299,10 @@ async function init(){
       const co=await apicall('GET','/companies/'+me.user.company_id);
       if(co&&co.company){
         document.getElementById('company-name').textContent=currentLang==='ar'?(co.company.name_ar||co.company.name_en):co.company.name_en;
+        if(co.company.logo){
+          document.getElementById('sidebar-company-logo-img').src=co.company.logo;
+          document.getElementById('sidebar-company-logo').style.display='';
+        }
       }else{
         document.getElementById('company-name').textContent='My Company';
       }
@@ -1580,11 +1605,47 @@ async function deleteJobTitle(id){
   if(res&&res.success){jobTitlesData=jobTitlesData.filter(j=>j.id!==id);renderJTList();showToast('Deleted','success');}
   else showToast('Error deleting','error');
 }
+function setCompanyLogoUI(src) {
+  const preview = document.getElementById('company-logo-preview');
+  preview.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;"/>`;
+  preview.style.border = 'none';
+  document.getElementById('company-logo-remove').style.display = '';
+  // Show in sidebar
+  const sidebarLogo = document.getElementById('sidebar-company-logo');
+  document.getElementById('sidebar-company-logo-img').src = src;
+  sidebarLogo.style.display = '';
+}
+function handleCompanyLogo(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 700 * 1024) { showToast('Logo too large — max 700KB', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const b64 = e.target.result;
+    setCompanyLogoUI(b64);
+    const res = await apicall('PUT', '/companies/' + currentUser.company_id, { logo: b64 });
+    if (res?.company) showToast('Company logo saved ✓', 'success');
+    else showToast('Error saving logo', 'error');
+  };
+  reader.readAsDataURL(file);
+}
+async function removeCompanyLogo() {
+  const preview = document.getElementById('company-logo-preview');
+  preview.innerHTML = '🏢';
+  preview.style.border = '2px dashed #ccc';
+  document.getElementById('company-logo-remove').style.display = 'none';
+  document.getElementById('sidebar-company-logo').style.display = 'none';
+  document.getElementById('company-logo-input').value = '';
+  await apicall('PUT', '/companies/' + currentUser.company_id, { logo: '' });
+  showToast('Logo removed', 'success');
+}
 async function loadAllSettings(){
   if(!currentUser?.company_id)return;
   const co=await apicall('GET','/companies/'+currentUser.company_id);
   if(!co?.company)return;
   const c=co.company;
+  // Restore logo
+  if (c.logo) setCompanyLogoUI(c.logo);
   if(c.work_start_time)document.getElementById('work-start').value=c.work_start_time;
   if(c.work_end_time)document.getElementById('work-end').value=c.work_end_time;
   document.getElementById('late-threshold').value=c.late_threshold_minutes??15;
