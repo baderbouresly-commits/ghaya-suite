@@ -2487,7 +2487,7 @@ async function submitRecRequest() {
 }
 
 /* ── TRAINING ── */
-let trPrograms = [], trCategories = [], trCart = [], trRequests = [];
+let trPrograms = [], trCategories = [], trCart = [], trRequests = [], trPendingProgramIds = new Set();
 
 async function loadTraining() {
   const [progRes, catRes, reqRes] = await Promise.all([
@@ -2498,6 +2498,14 @@ async function loadTraining() {
   trPrograms = progRes?.programs || [];
   trCategories = catRes?.categories || [];
   trRequests = reqRes?.requests || [];
+
+  // Build set of program IDs already in a pending request
+  trPendingProgramIds = new Set();
+  trRequests.forEach(r => {
+    if (r.status === 'pending' && r.program_ids_csv) {
+      r.program_ids_csv.split(',').forEach(id => trPendingProgramIds.add(id));
+    }
+  });
 
   // Populate category dropdown
   const catSel = document.getElementById('tr-filter-cat');
@@ -2538,8 +2546,18 @@ function renderTrBillboard() {
 
   const btn = document.getElementById('tr-billboard-btn');
   const inCart = trCart.find(i => i.id === featured.id);
-  btn.textContent = inCart ? '✓ Added' : '+ Add to Request';
-  btn.onclick = () => addToTrCart(featured);
+  const isPending = trPendingProgramIds.has(featured.id);
+  if (isPending) {
+    btn.textContent = '⏳ Pending Review';
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.onclick = null;
+  } else {
+    btn.textContent = inCart ? '✓ Added' : '+ Add to Request';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.onclick = () => addToTrCart(featured);
+  }
 }
 
 function renderTrPrograms() {
@@ -2565,8 +2583,23 @@ function renderTrPrograms() {
 
   grid.innerHTML = filtered.map(p => {
     const inCart = trCart.find(i => i.id === p.id);
+    const isPending = trPendingProgramIds.has(p.id);
     const typeLabel = p.program_type === 'workshop' ? '🔧 Workshop' : '📚 Training';
     const levelBadge = p.level !== 'any' ? `<span style="background:#EEF2FF;color:#6366F1;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">${p.level}</span>` : '';
+    let btnStyle, btnText, btnClick;
+    if (isPending) {
+      btnStyle = 'background:#FEF3C7;color:#92400E;cursor:default;opacity:.8;';
+      btnText = '⏳ Pending Review';
+      btnClick = '';
+    } else if (inCart) {
+      btnStyle = 'background:#D1FAE5;color:#065F46;';
+      btnText = '✓ Added to Request';
+      btnClick = `onclick="addToTrCart(${JSON.stringify(p).replace(/"/g,'&quot;')})"`;
+    } else {
+      btnStyle = 'background:#E8472A;color:#fff;';
+      btnText = '+ Add to Request';
+      btnClick = `onclick="addToTrCart(${JSON.stringify(p).replace(/"/g,'&quot;')})"`;
+    }
     return `<div style="border:1px solid #e8e0d8;border-radius:12px;padding:20px;background:#fff;display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div style="font-weight:700;font-size:15px;line-height:1.3;">${p.title}</div>
@@ -2578,10 +2611,8 @@ function renderTrPrograms() {
       </div>
       ${p.provider_name ? `<div style="font-size:12px;color:#666;">🏢 ${p.provider_name}${p.duration ? ' · ⏱ ' + p.duration : ''}</div>` : ''}
       ${p.description ? `<div style="font-size:13px;color:#555;line-height:1.5;flex:1;">${p.description.length > 120 ? p.description.slice(0,120)+'…' : p.description}</div>` : ''}
-      <button onclick="addToTrCart(${JSON.stringify(p).replace(/"/g,'&quot;')})"
-        style="margin-top:auto;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:13px;transition:all .2s;
-        ${inCart ? 'background:#D1FAE5;color:#065F46;' : 'background:#E8472A;color:#fff;'}">
-        ${inCart ? '✓ Added to Request' : '+ Add to Request'}
+      <button ${btnClick} style="margin-top:auto;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:13px;transition:all .2s;${btnStyle}">
+        ${btnText}
       </button>
     </div>`;
   }).join('');
@@ -2636,8 +2667,18 @@ async function submitTrRequest() {
     showToast('Request submitted ✓ — Ghaya will review and reply with pricing', 'success');
     const reqRes = await apicall('GET', '/training/requests');
     trRequests = reqRes?.requests || [];
+    // Rebuild pending program IDs
+    trPendingProgramIds = new Set();
+    trRequests.forEach(r => {
+      if (r.status === 'pending' && r.program_ids_csv) {
+        r.program_ids_csv.split(',').forEach(id => trPendingProgramIds.add(id));
+      }
+    });
     renderTrPrograms();
+    renderTrBillboard();
     renderTrRequests();
+    // Scroll to requests section
+    document.getElementById('tr-requests-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } else {
     showToast(res?.error || 'Error submitting request', 'error');
   }
