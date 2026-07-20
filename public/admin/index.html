@@ -467,12 +467,14 @@ select.form-input{cursor:pointer}
           <div id="company-logo-preview" style="width:80px;height:80px;border-radius:12px;background:#f0ebe4;display:flex;align-items:center;justify-content:center;font-size:30px;overflow:hidden;flex-shrink:0;border:2px dashed #ccc;cursor:pointer;" onclick="document.getElementById('company-logo-input').click()">🏢</div>
           <div>
             <div style="font-size:13px;font-weight:700;margin-bottom:4px;">Upload your company logo</div>
-            <div style="font-size:12px;color:#888;margin-bottom:10px;">PNG, JPG · Max 700KB · Click the box to upload</div>
-            <div style="display:flex;gap:8px;">
-              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('company-logo-input').click()">Upload Logo</button>
+            <div style="font-size:12px;color:#888;margin-bottom:10px;">PNG, JPG · Max 700KB · Click the circle to choose a file</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('company-logo-input').click()">Choose File</button>
+              <button class="btn btn-primary btn-sm" id="company-logo-save" style="display:none;" onclick="saveCompanyLogo()">💾 Save Logo</button>
               <button class="btn btn-danger btn-sm" id="company-logo-remove" style="display:none;" onclick="removeCompanyLogo()">Remove</button>
             </div>
             <input type="file" id="company-logo-input" accept="image/*" style="display:none;" onchange="handleCompanyLogo(event)"/>
+            <div id="company-logo-status" style="font-size:12px;margin-top:8px;color:#888;"></div>
           </div>
         </div>
       </div>
@@ -1615,29 +1617,60 @@ function setCompanyLogoUI(src) {
   document.getElementById('sidebar-company-logo-img').src = src;
   sidebarLogo.style.display = '';
 }
+let pendingLogoB64 = null;
 function handleCompanyLogo(event) {
   const file = event.target.files[0];
   if (!file) return;
-  if (file.size > 700 * 1024) { showToast('Logo too large — max 700KB', 'error'); return; }
+  if (file.size > 700 * 1024) { showToast('Image too large — max 700KB', 'error'); return; }
   const reader = new FileReader();
-  reader.onload = async (e) => {
-    const b64 = e.target.result;
-    setCompanyLogoUI(b64);
-    const res = await apicall('PUT', '/companies/' + currentUser.company_id, { logo: b64 });
-    if (res?.company) showToast('Company logo saved ✓', 'success');
-    else showToast('Error saving logo', 'error');
+  reader.onload = (e) => {
+    pendingLogoB64 = e.target.result;
+    // Show preview but don't save yet
+    const preview = document.getElementById('company-logo-preview');
+    preview.innerHTML = `<img src="${pendingLogoB64}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;"/>`;
+    preview.style.border = 'none';
+    document.getElementById('company-logo-save').style.display = '';
+    document.getElementById('company-logo-remove').style.display = 'none';
+    document.getElementById('company-logo-status').textContent = '⚠️ Not saved yet — click Save Logo';
+    document.getElementById('company-logo-status').style.color = '#c46a00';
   };
   reader.readAsDataURL(file);
+}
+async function saveCompanyLogo() {
+  if (!pendingLogoB64) return;
+  const btn = document.getElementById('company-logo-save');
+  const status = document.getElementById('company-logo-status');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  status.textContent = 'Uploading…'; status.style.color = '#888';
+  const res = await apicall('PUT', '/companies/' + currentUser.company_id, { logo: pendingLogoB64 });
+  btn.disabled = false; btn.textContent = '💾 Save Logo';
+  if (res?.company) {
+    setCompanyLogoUI(pendingLogoB64);
+    pendingLogoB64 = null;
+    btn.style.display = 'none';
+    document.getElementById('company-logo-remove').style.display = '';
+    status.textContent = '✅ Logo saved successfully';
+    status.style.color = '#1a7a42';
+    showToast('Company logo saved ✓', 'success');
+  } else {
+    status.textContent = '❌ Save failed — ' + (res?.error || 'unknown error');
+    status.style.color = '#c42a00';
+    alert('Failed to save logo: ' + (res?.error || 'Check that you ran the DB migration and the image is under 700KB'));
+  }
 }
 async function removeCompanyLogo() {
   const preview = document.getElementById('company-logo-preview');
   preview.innerHTML = '🏢';
   preview.style.border = '2px dashed #ccc';
   document.getElementById('company-logo-remove').style.display = 'none';
+  document.getElementById('company-logo-save').style.display = 'none';
   document.getElementById('sidebar-company-logo').style.display = 'none';
+  document.getElementById('company-logo-status').textContent = '';
   document.getElementById('company-logo-input').value = '';
-  await apicall('PUT', '/companies/' + currentUser.company_id, { logo: '' });
-  showToast('Logo removed', 'success');
+  pendingLogoB64 = null;
+  const res = await apicall('PUT', '/companies/' + currentUser.company_id, { logo: '' });
+  if (res?.company) showToast('Logo removed ✓', 'success');
+  else showToast('Error removing logo', 'error');
 }
 async function loadAllSettings(){
   if(!currentUser?.company_id)return;
