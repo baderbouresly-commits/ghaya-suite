@@ -5,7 +5,7 @@ const COMPANY_SELECT = `SELECT id, name_en, name_ar, cr_number, industry, size_t
   subscription_tier, subscription_active, managed_by_ghaya, created_at,
   work_start_time, work_end_time, late_threshold_minutes, work_days,
   geofence_enabled, workplace_lat, workplace_lng, geofence_radius_meters,
-  permission_hours_monthly FROM companies`;
+  permission_hours_monthly, logo FROM companies`;
 
 export async function onRequest({ request, env, params }) {
   if (request.method === 'OPTIONS') return new Response(null, {
@@ -110,6 +110,7 @@ export async function onRequest({ request, env, params }) {
       workplace_lng            = COALESCE(?, workplace_lng),
       geofence_radius_meters   = COALESCE(?, geofence_radius_meters),
       permission_hours_monthly = COALESCE(?, permission_hours_monthly),
+      logo                     = CASE WHEN ? IS NOT NULL THEN ? ELSE logo END,
       updated_at               = datetime('now')
       WHERE id=?`)
       .bind(
@@ -123,6 +124,7 @@ export async function onRequest({ request, env, params }) {
         nf(body.workplace_lat), nf(body.workplace_lng),
         ni(body.geofence_radius_meters),
         nf(body.permission_hours_monthly),
+        n(body.logo), n(body.logo),
         companyId
       ).run();
 
