@@ -221,8 +221,15 @@
       <button class="lang-btn" id="lbtn-en" onclick="setLang('en')">EN</button>
       <button class="lang-btn" id="lbtn-ar" onclick="setLang('ar')">ع</button>
     </div>
-    <div class="nav-user">
+    <div class="nav-user" style="position:relative;cursor:pointer;" onclick="document.getElementById('photo-input').click()" title="Click to change photo">
       <div class="avatar" id="avatar">?</div>
+      <div id="avatar-photo" style="display:none;width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;position:absolute;top:0;left:0;">
+        <img id="avatar-img" src="" style="width:100%;height:100%;object-fit:cover;"/>
+      </div>
+      <div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;background:#E8472A;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #0A2540;">
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="white" stroke-width="2.5" fill="none"/></svg>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="uploadSelfPhoto(event)"/>
       <span class="nav-name" id="nav-name"></span>
     </div>
     <button class="btn-logout" onclick="logout()" id="logout-btn">Logout</button>
@@ -407,6 +414,29 @@
     });
   }
 
+  function setAvatarPhoto(src) {
+    const wrap = document.getElementById('avatar-photo');
+    const img = document.getElementById('avatar-img');
+    const initials = document.getElementById('avatar');
+    img.src = src;
+    wrap.style.display = 'block';
+    initials.style.opacity = '0';
+  }
+
+  async function uploadSelfPhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (file.size > 700 * 1024) { alert('Image too large — please use an image under 700KB'); return; }
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const base64 = e.target.result;
+      setAvatarPhoto(base64);
+      const res = await apiFetch('/api/employees', { method: 'PUT', body: JSON.stringify({ photo: base64 }) });
+      if (!res?.employee) { alert('Failed to save photo'); }
+    };
+    reader.readAsDataURL(file);
+  }
+
   function logout() {
     localStorage.removeItem('ghaya_token');
     localStorage.removeItem('ghaya_user');
@@ -434,6 +464,10 @@
     const initials = (user.name || 'U').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
     document.getElementById('avatar').textContent = initials;
     document.getElementById('nav-name').textContent = user.name || user.email;
+    // Show photo if available
+    if (data.employee?.photo) {
+      setAvatarPhoto(data.employee.photo);
+    }
 
     const now = new Date();
     document.getElementById('greeting-hello').textContent = t.hello(user.name || user.email);
