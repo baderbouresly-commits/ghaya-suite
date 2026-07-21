@@ -7,14 +7,19 @@ export async function onRequestPost({ request, env }) {
 
   const { full_name, email, whatsapp, nationality, location, visa_status,
           current_title, years_experience, field, open_to,
-          cv_link, expected_salary, notes } = body;
+          cv_link, cv_file, cv_filename, expected_salary, notes } = body;
 
   // Required field validation
-  const required = { full_name, email, whatsapp, nationality, location, visa_status, current_title, years_experience, field, cv_link };
+  const required = { full_name, email, whatsapp, nationality, location, visa_status, current_title, years_experience, field };
   for (const [key, val] of Object.entries(required)) {
     if (!val || !String(val).trim()) {
       return error(`Missing required field: ${key}`, 400);
     }
+  }
+
+  // Must have at least a file upload or a link
+  if (!cv_file && !cv_link) {
+    return error('Please provide a CV file or a CV link', 400);
   }
 
   // Basic email check
@@ -35,13 +40,14 @@ export async function onRequestPost({ request, env }) {
       UPDATE cv_submissions SET
         full_name = ?, whatsapp = ?, nationality = ?, location = ?,
         visa_status = ?, current_title = ?, years_experience = ?, field = ?,
-        open_to = ?, cv_link = ?, expected_salary = ?, notes = ?,
-        updated_at = datetime('now')
+        open_to = ?, cv_link = ?, cv_file = ?, cv_filename = ?,
+        expected_salary = ?, notes = ?, updated_at = datetime('now')
       WHERE email = ?
     `).bind(
       full_name.trim(), whatsapp.trim(), nationality.trim(), location.trim(),
       visa_status.trim(), current_title.trim(), years_experience.trim(), field.trim(),
-      open_to || '', cv_link.trim(), expected_salary || '', notes || '',
+      open_to || '', cv_link || '', cv_file || '', cv_filename || '',
+      expected_salary || '', notes || '',
       email.toLowerCase().trim()
     ).run();
 
@@ -53,8 +59,8 @@ export async function onRequestPost({ request, env }) {
     INSERT INTO cv_submissions
       (full_name, email, whatsapp, nationality, location, visa_status,
        current_title, years_experience, field, open_to,
-       cv_link, expected_salary, notes, status, submitted_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'))
+       cv_link, cv_file, cv_filename, expected_salary, notes, status, submitted_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'))
   `).bind(
     full_name.trim(),
     email.toLowerCase().trim(),
@@ -66,7 +72,9 @@ export async function onRequestPost({ request, env }) {
     years_experience.trim(),
     field.trim(),
     open_to || '',
-    cv_link.trim(),
+    cv_link || '',
+    cv_file || '',
+    cv_filename || '',
     expected_salary || '',
     notes || ''
   ).run();
