@@ -177,7 +177,7 @@
       const data = await res.json();
       if (data?.user?.role) {
         const role = data.user.role;
-        if (role === 'ghaya') window.location.href = '/ghaya/';
+        if (role === 'ghaya' || role === 'ghaya_admin') window.location.href = '/ghaya/';
         else if (role === 'employee') window.location.href = '/employee/';
         else window.location.href = '/admin/';
       }
@@ -214,7 +214,7 @@
       if (data.token) {
         localStorage.setItem('ghaya_token', data.token);
         const role = data.user?.role;
-        if (role === 'ghaya') {
+        if (role === 'ghaya' || role === 'ghaya_admin') {
           window.location.href = '/ghaya/';
         } else if (role === 'employee') {
           window.location.href = '/employee/';
