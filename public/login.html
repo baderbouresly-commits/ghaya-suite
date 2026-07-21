@@ -168,9 +168,21 @@
 </div>
 
 <script>
-  if (localStorage.getItem('ghaya_token')) {
-    window.location.href = '/admin/';
-  }
+  // If already logged in, decode role from token and redirect correctly
+  (async function() {
+    const t = localStorage.getItem('ghaya_token');
+    if (!t) return;
+    try {
+      const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + t } });
+      const data = await res.json();
+      if (data?.user?.role) {
+        const role = data.user.role;
+        if (role === 'ghaya') window.location.href = '/ghaya/';
+        else if (role === 'employee') window.location.href = '/employee/';
+        else window.location.href = '/admin/';
+      }
+    } catch(e) { localStorage.removeItem('ghaya_token'); }
+  })();
 
   function toggleLang(btn) {
     const ar = document.body.classList.toggle('ar');
@@ -201,7 +213,14 @@
       const data = await res.json();
       if (data.token) {
         localStorage.setItem('ghaya_token', data.token);
-        window.location.href = '/admin/';
+        const role = data.user?.role;
+        if (role === 'ghaya') {
+          window.location.href = '/ghaya/';
+        } else if (role === 'employee') {
+          window.location.href = '/employee/';
+        } else {
+          window.location.href = '/admin/';
+        }
       } else {
         throw new Error(data.error || 'Invalid email or password');
       }
