@@ -1334,7 +1334,7 @@ let employeesData=[],leavesData=[],currentLeaveFilter='pending',editingEmpId=nul
 let deptsData=[],jobTitlesData=[];
 let currentEOSId=null,editingAttId=null;
 let attMonthlyData=[],leaveBalancesData=[];
-if(!token){window.location.href='/';}
+if(!token){window.location.href='/login';}
 
 async function apicall(method,path,body){
   try{
@@ -3082,7 +3082,7 @@ function showTrCatalog() {
 
 function setLang(lang,save=true){currentLang=lang;if(save)localStorage.setItem('ghaya_lang',lang);document.documentElement.lang=lang;document.body.classList.toggle('ar',lang==='ar');document.getElementById('btn-en').classList.toggle('active',lang==='en');document.getElementById('btn-ar').classList.toggle('active',lang==='ar');document.querySelectorAll('[data-en]').forEach(el=>{el.textContent=el.dataset[lang]||el.dataset.en;});}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;setTimeout(()=>t.classList.remove('show'),3000);}
-function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem('ghaya_user');localStorage.removeItem('ghaya_page');window.location.href='/';}
+function logout(){localStorage.removeItem('ghaya_token');localStorage.removeItem('ghaya_user');localStorage.removeItem('ghaya_page');window.location.href='/login';}
 document.querySelectorAll('.info-icon').forEach(icon=>{
   icon.addEventListener('mouseenter',function(){const tip=document.createElement('div');tip.id='gtip';tip.style.cssText='position:fixed;background:#1a1a2e;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;line-height:1.5;width:210px;z-index:9999;pointer-events:none';tip.textContent=this.dataset.tip;document.body.appendChild(tip);const r=this.getBoundingClientRect();tip.style.left=Math.max(10,r.right-215)+'px';tip.style.top=(r.bottom+8)+'px';});
   icon.addEventListener('mouseleave',()=>{const t=document.getElementById('gtip');if(t)t.remove();});
