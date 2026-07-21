@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — Ghaya</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Almarai:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--navy:#0A2540;--red:#E8472A;--teal:#00BFA6;--cream:#FAF6F1;--charcoal:#1A1A1A;--g200:#e5e7eb;--g400:#9ca3af;--g600:#4b5563}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:var(--cream);min-height:100vh;display:flex;flex-direction:column}
+    body.ar{font-family:'Almarai',sans-serif;direction:rtl}
+    body.ar .en{display:none!important}
+    body:not(.ar) .ar{display:none!important}
+
+    /* NAV */
+    nav{display:flex;align-items:center;justify-content:space-between;padding:0 6%;height:64px;background:var(--navy)}
+    .n-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .n-icon{width:32px;height:32px;display:flex;align-items:center;justify-content:center}
+    .n-txt{font-size:17px;font-weight:700;color:#fff}
+    .btn-lang{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.8);cursor:pointer;padding:6px 14px;border-radius:6px;font-size:13px;font-family:inherit}
+    .btn-lang:hover{background:rgba(255,255,255,.15)}
+
+    /* MAIN */
+    main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+    .card{background:#fff;border-radius:20px;padding:44px 40px;width:100%;max-width:420px;box-shadow:0 4px 40px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04)}
+
+    .logo-wrap{text-align:center;margin-bottom:32px}
+    .card-title{font-size:22px;font-weight:800;color:var(--navy);margin-bottom:6px}
+    .card-sub{font-size:14px;color:var(--g600);line-height:1.6}
+
+    .portal-tabs{display:flex;gap:8px;margin-bottom:28px;background:#f5f0eb;border-radius:10px;padding:4px}
+    .tab{flex:1;padding:9px;border-radius:7px;font-size:13px;font-weight:600;color:var(--g600);cursor:pointer;text-align:center;border:none;background:none;font-family:inherit;transition:all .2s}
+    .tab.active{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+
+    .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:16px}
+    .fg label{font-size:13px;font-weight:600;color:var(--navy)}
+    .fg input{padding:11px 14px;border:1.5px solid var(--g200);border-radius:9px;font-size:14px;color:var(--charcoal);outline:none;font-family:inherit;transition:border-color .2s;width:100%}
+    .fg input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,191,166,.1)}
+    .fg input::placeholder{color:var(--g400)}
+
+    .btn-submit{width:100%;padding:13px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;margin-top:8px}
+    .btn-submit:hover{background:#1a3a5c;transform:translateY(-1px)}
+    .btn-submit:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+    .err{display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:11px 14px;font-size:13px;color:#dc2626;margin-bottom:14px}
+    .err.show{display:block}
+
+    .foot-note{font-size:12px;color:var(--g400);text-align:center;margin-top:20px}
+    .foot-note a{color:var(--teal);text-decoration:none}
+
+    footer{text-align:center;padding:20px;font-size:12px;color:var(--g400)}
+    footer a{color:var(--g400);text-decoration:none}
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="n-logo">
+    <div class="n-icon">
+      <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 70,42 A 28,28 0 1 0 70,70" stroke="rgba(255,255,255,0.92)" stroke-width="14" stroke-linecap="round" fill="none"/>
+        <circle cx="61" cy="13" r="9" fill="#00BFA6"/>
+      </svg>
+    </div>
+    <span class="n-txt">Ghaya</span>
+  </a>
+  <button class="btn-lang" onclick="toggleLang(this)">العربية</button>
+</nav>
+
+<main>
+  <div class="card">
+    <div class="logo-wrap">
+      <div class="card-title en">Welcome back</div>
+      <div class="card-title ar">مرحباً بعودتك</div>
+      <div class="card-sub en">Sign in to your Ghaya portal</div>
+      <div class="card-sub ar">سجّل الدخول إلى بوابتك</div>
+    </div>
+
+    <div class="portal-tabs">
+      <button class="tab active en" onclick="setPortal('admin',this)">Admin</button>
+      <button class="tab active ar" onclick="setPortal('admin',this)">المسؤول</button>
+      <button class="tab en" onclick="setPortal('employee',this)">Employee</button>
+      <button class="tab ar" onclick="setPortal('employee',this)">الموظف</button>
+    </div>
+
+    <div class="err" id="err-msg"></div>
+
+    <form onsubmit="doLogin(event)">
+      <div class="fg">
+        <label class="en">Email</label>
+        <label class="ar">البريد الإلكتروني</label>
+        <input type="email" id="email" required autocomplete="email" placeholder="you@company.com"/>
+      </div>
+      <div class="fg">
+        <label class="en">Password</label>
+        <label class="ar">كلمة المرور</label>
+        <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••"/>
+      </div>
+      <button type="submit" class="btn-submit" id="loginBtn">
+        <span class="en">Sign In →</span>
+        <span class="ar">← تسجيل الدخول</span>
+      </button>
+    </form>
+
+    <p class="foot-note en">Having trouble? <a href="mailto:info@ghaya.hr">Contact support</a></p>
+    <p class="foot-note ar">تواجه مشكلة؟ <a href="mailto:info@ghaya.hr">تواصل مع الدعم</a></p>
+  </div>
+</main>
+
+<footer>
+  <a href="/">← Back to Ghaya.hr</a>
+  <span style="margin:0 10px">·</span>
+  <span>© 2026 Ghaya</span>
+</footer>
+
+<script>
+  let portalTarget = '/admin/';
+
+  function setPortal(type, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    // activate both EN and AR versions of the same tab
+    btn.parentElement.querySelectorAll('.tab').forEach(t => {
+      if (t.getAttribute('onclick') === btn.getAttribute('onclick')) t.classList.add('active');
+    });
+    portalTarget = type === 'employee' ? '/employee/' : '/admin/';
+  }
+
+  function toggleLang(btn) {
+    const ar = document.body.classList.toggle('ar');
+    document.documentElement.lang = ar ? 'ar' : 'en';
+    document.documentElement.dir = ar ? 'rtl' : 'ltr';
+    btn.textContent = ar ? 'English' : 'العربية';
+  }
+
+  // If already logged in, skip straight to admin
+  if (localStorage.getItem('ghaya_token')) {
+    window.location.href = '/admin/';
+  }
+
+  async function doLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('loginBtn');
+    const errEl = document.getElementById('err-msg');
+    errEl.classList.remove('show');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="en">Signing in…</span><span class="ar">جارٍ التسجيل…</span>';
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          email: document.getElementById('email').value.trim(),
+          password: document.getElementById('password').value
+        })
+      });
+      const data = await res.json();
+      if (data.token) {
+        localStorage.setItem('ghaya_token', data.token);
+        window.location.href = portalTarget;
+      } else {
+        throw new Error(data.error || 'Invalid email or password');
+      }
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.innerHTML = '<span class="en">Sign In →</span><span class="ar">← تسجيل الدخول</span>';
+    }
+  }
+</script>
+</body>
+</html>
