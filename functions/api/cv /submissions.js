@@ -7,7 +7,7 @@ export async function onRequestGet({ request, env }) {
 
   // Only Ghaya super-admins / company_admin users can view the talent pool
   // (restrict further to role==='ghaya' once that role exists)
-  if (!['company_admin', 'ghaya'].includes(auth.user.role)) {
+  if (!['company_admin', 'ghaya', 'ghaya_admin'].includes(auth.user.role)) {
     return error('Forbidden', 403);
   }
 
