@@ -7,89 +7,132 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Almarai:wght@400;700;800&display=swap" rel="stylesheet"/>
   <style>
-    :root{--navy:#0A2540;--red:#E8472A;--teal:#00BFA6;--cream:#FAF6F1;--charcoal:#1A1A1A;--g200:#e5e7eb;--g400:#9ca3af;--g600:#4b5563}
+    :root{--navy:#0A2540;--red:#E8472A;--red-l:#ff6247;--teal:#00BFA6;--cream:#FAF6F1;--charcoal:#1A1A1A;--g200:#e5e7eb;--g400:#9ca3af;--g600:#4b5563}
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Inter',sans-serif;background:var(--cream);min-height:100vh;display:flex;flex-direction:column}
+    html,body{height:100%}
+    body{font-family:'Inter',sans-serif;display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
     body.ar{font-family:'Almarai',sans-serif;direction:rtl}
     body.ar .en{display:none!important}
     body:not(.ar) .ar{display:none!important}
 
-    /* NAV */
-    nav{display:flex;align-items:center;justify-content:space-between;padding:0 6%;height:64px;background:var(--navy)}
-    .n-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-    .n-icon{width:32px;height:32px;display:flex;align-items:center;justify-content:center}
-    .n-txt{font-size:17px;font-weight:700;color:#fff}
-    .btn-lang{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.8);cursor:pointer;padding:6px 14px;border-radius:6px;font-size:13px;font-family:inherit}
-    .btn-lang:hover{background:rgba(255,255,255,.15)}
+    /* LEFT PANEL */
+    .left{background:linear-gradient(145deg,#071c30 0%,#0A2540 50%,#0d2f50 100%);display:flex;flex-direction:column;justify-content:space-between;padding:48px;position:relative;overflow:hidden}
+    .left-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:52px 52px;pointer-events:none}
+    .left-glow{position:absolute;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(232,71,42,.14) 0%,transparent 65%);top:50%;left:30%;transform:translate(-50%,-50%);pointer-events:none}
 
-    /* MAIN */
-    main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px}
-    .card{background:#fff;border-radius:20px;padding:44px 40px;width:100%;max-width:420px;box-shadow:0 4px 40px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04)}
+    .brand{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+    .brand-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center}
+    .brand-name{font-size:20px;font-weight:700;color:#fff}
 
-    .logo-wrap{text-align:center;margin-bottom:32px}
-    .card-title{font-size:22px;font-weight:800;color:var(--navy);margin-bottom:6px}
-    .card-sub{font-size:14px;color:var(--g600);line-height:1.6}
+    .left-body{position:relative;z-index:1}
+    .left-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(232,71,42,.14);border:1px solid rgba(232,71,42,.28);color:#ff8f79;font-size:12px;font-weight:600;padding:5px 14px;border-radius:20px;margin-bottom:28px}
+    .left-dot{width:6px;height:6px;background:var(--red);border-radius:50%;animation:blink 2s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    .left-h{font-size:clamp(28px,2.8vw,40px);font-weight:800;color:#fff;line-height:1.18;margin-bottom:16px}
+    .left-h span{background:linear-gradient(135deg,#E8472A,#ff8f79);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .left-p{font-size:15px;color:rgba(255,255,255,.52);line-height:1.72;max-width:340px}
 
-    .portal-tabs{display:flex;gap:8px;margin-bottom:28px;background:#f5f0eb;border-radius:10px;padding:4px}
-    .tab{flex:1;padding:9px;border-radius:7px;font-size:13px;font-weight:600;color:var(--g600);cursor:pointer;text-align:center;border:none;background:none;font-family:inherit;transition:all .2s}
-    .tab.active{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+    .left-stats{display:flex;gap:32px;margin-top:44px;padding-top:36px;border-top:1px solid rgba(255,255,255,.08)}
+    .stat-n{font-size:24px;font-weight:800;color:#fff}
+    .stat-l{font-size:12px;color:rgba(255,255,255,.4);margin-top:2px}
 
-    .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:16px}
+    .left-foot{font-size:12px;color:rgba(255,255,255,.28);position:relative;z-index:1}
+
+    /* RIGHT PANEL */
+    .right{background:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 56px;position:relative}
+    .lang-btn{position:absolute;top:28px;right:28px;background:rgba(10,37,64,.07);border:1px solid rgba(10,37,64,.12);color:var(--navy);cursor:pointer;padding:7px 16px;border-radius:7px;font-size:13px;font-weight:600;font-family:inherit;transition:all .2s}
+    body.ar .lang-btn{right:auto;left:28px}
+    .lang-btn:hover{background:rgba(10,37,64,.12)}
+
+    .form-wrap{width:100%;max-width:380px}
+    .form-head{margin-bottom:36px}
+    .form-ttl{font-size:26px;font-weight:800;color:var(--navy);margin-bottom:6px}
+    .form-sub{font-size:14.5px;color:var(--g600);line-height:1.6}
+
+    .fg{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
     .fg label{font-size:13px;font-weight:600;color:var(--navy)}
-    .fg input{padding:11px 14px;border:1.5px solid var(--g200);border-radius:9px;font-size:14px;color:var(--charcoal);outline:none;font-family:inherit;transition:border-color .2s;width:100%}
-    .fg input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,191,166,.1)}
+    .fg input{padding:13px 15px;border:1.5px solid var(--g200);border-radius:10px;font-size:14.5px;color:var(--charcoal);outline:none;font-family:inherit;transition:all .2s;background:#fff;width:100%}
+    .fg input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,191,166,.12)}
     .fg input::placeholder{color:var(--g400)}
 
-    .btn-submit{width:100%;padding:13px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;margin-top:8px}
-    .btn-submit:hover{background:#1a3a5c;transform:translateY(-1px)}
-    .btn-submit:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    .btn-submit{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .25s;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px}
+    .btn-submit:hover{background:#1a3a5c;transform:translateY(-1px);box-shadow:0 10px 28px rgba(10,37,64,.25)}
+    .btn-submit:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+    .btn-arrow{font-size:18px;transition:transform .2s}
+    .btn-submit:hover .btn-arrow{transform:translateX(3px)}
+    body.ar .btn-submit:hover .btn-arrow{transform:translateX(-3px)}
 
-    .err{display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:11px 14px;font-size:13px;color:#dc2626;margin-bottom:14px}
-    .err.show{display:block}
+    .err{display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:9px;padding:12px 15px;font-size:13px;color:#dc2626;margin-bottom:16px;align-items:center;gap:8px}
+    .err.show{display:flex}
 
-    .foot-note{font-size:12px;color:var(--g400);text-align:center;margin-top:20px}
-    .foot-note a{color:var(--teal);text-decoration:none}
+    .divider{display:flex;align-items:center;gap:12px;margin:20px 0}
+    .divider-line{flex:1;height:1px;background:var(--g200)}
+    .divider-txt{font-size:12px;color:var(--g400);white-space:nowrap}
 
-    footer{text-align:center;padding:20px;font-size:12px;color:var(--g400)}
-    footer a{color:var(--g400);text-decoration:none}
+    .back-link{text-align:center;margin-top:20px}
+    .back-link a{font-size:13px;color:var(--g400);text-decoration:none;transition:color .2s}
+    .back-link a:hover{color:var(--navy)}
+
+    /* RESPONSIVE */
+    @media(max-width:860px){
+      body{grid-template-columns:1fr}
+      .left{display:none}
+      .right{padding:40px 28px}
+    }
   </style>
 </head>
 <body>
 
-<nav>
-  <a href="/" class="n-logo">
-    <div class="n-icon">
-      <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+<!-- LEFT -->
+<div class="left">
+  <div class="left-grid"></div>
+  <div class="left-glow"></div>
+
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
         <path d="M 70,42 A 28,28 0 1 0 70,70" stroke="rgba(255,255,255,0.92)" stroke-width="14" stroke-linecap="round" fill="none"/>
         <circle cx="61" cy="13" r="9" fill="#00BFA6"/>
       </svg>
     </div>
-    <span class="n-txt">Ghaya</span>
-  </a>
-  <button class="btn-lang" onclick="toggleLang(this)">العربية</button>
-</nav>
+    <span class="brand-name">Ghaya</span>
+  </div>
 
-<main>
-  <div class="card">
-    <div class="logo-wrap">
-      <div class="card-title en">Welcome back</div>
-      <div class="card-title ar">مرحباً بعودتك</div>
-      <div class="card-sub en">Sign in to your Ghaya portal</div>
-      <div class="card-sub ar">سجّل الدخول إلى بوابتك</div>
+  <div class="left-body">
+    <div class="left-tag"><div class="left-dot"></div><span class="en">Your Trusted HR Support</span><span class="ar">دعمك الموثوق لـ HR</span></div>
+    <h1 class="left-h">
+      <span class="en">Manage your<br/>workforce<br/><span>effortlessly.</span></span>
+      <span class="ar">أدِر قوتك<br/>العاملة<br/><span>بكل سهولة.</span></span>
+    </h1>
+    <p class="left-p en">Leave, payroll, attendance, and documents — all in one modern platform built for Kuwait.</p>
+    <p class="left-p ar">الإجازات والرواتب والحضور والمستندات — كل ذلك في منصة حديثة واحدة مصممة للكويت.</p>
+    <div class="left-stats">
+      <div><div class="stat-n">6+</div><div class="stat-l en">HR Modules</div><div class="stat-l ar">وحدات</div></div>
+      <div><div class="stat-n">50+</div><div class="stat-l en">Companies</div><div class="stat-l ar">شركة</div></div>
+      <div><div class="stat-n">100%</div><div class="stat-l en">Cloud</div><div class="stat-l ar">سحابي</div></div>
+    </div>
+  </div>
+
+  <div class="left-foot">© 2026 Ghaya · <a href="/" style="color:rgba(255,255,255,.28);text-decoration:none">ghaya.hr</a></div>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+  <button class="lang-btn" onclick="toggleLang(this)">العربية</button>
+
+  <div class="form-wrap">
+    <div class="form-head">
+      <div class="form-ttl en">Welcome back 👋</div>
+      <div class="form-ttl ar">مرحباً بعودتك 👋</div>
+      <div class="form-sub en">Sign in to your Ghaya dashboard</div>
+      <div class="form-sub ar">سجّل الدخول إلى لوحة تحكم Ghaya</div>
     </div>
 
-    <div class="portal-tabs">
-      <button class="tab active en" onclick="setPortal('admin',this)">Admin</button>
-      <button class="tab active ar" onclick="setPortal('admin',this)">المسؤول</button>
-      <button class="tab en" onclick="setPortal('employee',this)">Employee</button>
-      <button class="tab ar" onclick="setPortal('employee',this)">الموظف</button>
-    </div>
-
-    <div class="err" id="err-msg"></div>
+    <div class="err" id="err-msg"><span>⚠️</span><span id="err-txt"></span></div>
 
     <form onsubmit="doLogin(event)">
       <div class="fg">
-        <label class="en">Email</label>
+        <label class="en">Email address</label>
         <label class="ar">البريد الإلكتروني</label>
         <input type="email" id="email" required autocomplete="email" placeholder="you@company.com"/>
       </div>
@@ -99,32 +142,34 @@
         <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••"/>
       </div>
       <button type="submit" class="btn-submit" id="loginBtn">
-        <span class="en">Sign In →</span>
-        <span class="ar">← تسجيل الدخول</span>
+        <span class="en">Sign In</span>
+        <span class="ar">تسجيل الدخول</span>
+        <span class="btn-arrow en">→</span>
+        <span class="btn-arrow ar">←</span>
       </button>
     </form>
 
-    <p class="foot-note en">Having trouble? <a href="mailto:info@ghaya.hr">Contact support</a></p>
-    <p class="foot-note ar">تواجه مشكلة؟ <a href="mailto:info@ghaya.hr">تواصل مع الدعم</a></p>
-  </div>
-</main>
+    <div class="divider">
+      <div class="divider-line"></div>
+      <span class="divider-txt en">Need help?</span>
+      <span class="divider-txt ar">تحتاج مساعدة؟</span>
+      <div class="divider-line"></div>
+    </div>
 
-<footer>
-  <a href="/">← Back to Ghaya.hr</a>
-  <span style="margin:0 10px">·</span>
-  <span>© 2026 Ghaya</span>
-</footer>
+    <div class="back-link">
+      <a href="mailto:info@ghaya.hr" class="en">Contact support → info@ghaya.hr</a>
+      <a href="mailto:info@ghaya.hr" class="ar">تواصل مع الدعم → info@ghaya.hr</a>
+    </div>
+    <div class="back-link" style="margin-top:10px">
+      <a href="/" class="en">← Back to homepage</a>
+      <a href="/" class="ar">العودة للرئيسية ←</a>
+    </div>
+  </div>
+</div>
 
 <script>
-  let portalTarget = '/admin/';
-
-  function setPortal(type, btn) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    // activate both EN and AR versions of the same tab
-    btn.parentElement.querySelectorAll('.tab').forEach(t => {
-      if (t.getAttribute('onclick') === btn.getAttribute('onclick')) t.classList.add('active');
-    });
-    portalTarget = type === 'employee' ? '/employee/' : '/admin/';
+  if (localStorage.getItem('ghaya_token')) {
+    window.location.href = '/admin/';
   }
 
   function toggleLang(btn) {
@@ -134,18 +179,15 @@
     btn.textContent = ar ? 'English' : 'العربية';
   }
 
-  // If already logged in, skip straight to admin
-  if (localStorage.getItem('ghaya_token')) {
-    window.location.href = '/admin/';
-  }
-
   async function doLogin(e) {
     e.preventDefault();
     const btn = document.getElementById('loginBtn');
     const errEl = document.getElementById('err-msg');
+    const errTxt = document.getElementById('err-txt');
     errEl.classList.remove('show');
     btn.disabled = true;
-    btn.innerHTML = '<span class="en">Signing in…</span><span class="ar">جارٍ التسجيل…</span>';
+    btn.querySelector('.en').textContent = 'Signing in…';
+    btn.querySelector('.ar').textContent = 'جارٍ التسجيل…';
 
     try {
       const res = await fetch('/api/auth/login', {
@@ -159,15 +201,16 @@
       const data = await res.json();
       if (data.token) {
         localStorage.setItem('ghaya_token', data.token);
-        window.location.href = portalTarget;
+        window.location.href = '/admin/';
       } else {
         throw new Error(data.error || 'Invalid email or password');
       }
     } catch (err) {
-      errEl.textContent = err.message;
+      errTxt.textContent = err.message;
       errEl.classList.add('show');
       btn.disabled = false;
-      btn.innerHTML = '<span class="en">Sign In →</span><span class="ar">← تسجيل الدخول</span>';
+      btn.querySelector('.en').textContent = 'Sign In';
+      btn.querySelector('.ar').textContent = 'تسجيل الدخول';
     }
   }
 </script>
