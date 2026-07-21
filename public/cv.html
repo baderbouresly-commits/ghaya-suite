@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CV Portal — Submit Your CV | Ghaya</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--navy:#0A2540;--red:#E8472A;--red-l:#ff6247;--teal:#00BFA6;--cream:#FAF6F1;--charcoal:#1A1A1A;--white:#fff;--g100:#f3f4f6;--g200:#e5e7eb;--g400:#9ca3af;--g600:#4b5563}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',sans-serif;color:var(--charcoal);background:var(--cream);overflow-x:hidden}
+    body.ar{font-family:'Almarai',sans-serif;direction:rtl}
+    body.ar .en{display:none!important}
+    body:not(.ar) .ar{display:none!important}
+
+    /* NAV */
+    nav{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;padding:0 6%;height:68px;background:rgba(10,37,64,.96);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.07)}
+    .n-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .n-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .n-txt{font-size:17px;font-weight:700;color:#fff}
+    .n-actions{display:flex;align-items:center;gap:10px}
+    .btn-lang{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.8);cursor:pointer;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;transition:all .2s;font-family:inherit}
+    .btn-lang:hover{background:rgba(255,255,255,.15);color:#fff}
+    .btn-back{color:rgba(255,255,255,.7);text-decoration:none;font-size:14px;font-weight:500;padding:8px 16px;border:1px solid rgba(255,255,255,.2);border-radius:8px;transition:all .2s}
+    .btn-back:hover{background:rgba(255,255,255,.08);color:#fff}
+
+    /* HERO */
+    .hero{padding:130px 6% 80px;background:linear-gradient(135deg,#071c30 0%,#0A2540 50%,#0d2f50 100%);position:relative;overflow:hidden;text-align:center}
+    .h-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:56px 56px;pointer-events:none}
+    .h-glow{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,191,166,.1) 0%,transparent 65%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+    .hero-in{max-width:720px;margin:0 auto;position:relative;z-index:1}
+    .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,191,166,.12);border:1px solid rgba(0,191,166,.28);color:#00BFA6;font-size:12.5px;font-weight:600;padding:6px 16px;border-radius:20px;margin-bottom:24px}
+    .hero h1{font-size:clamp(32px,4vw,52px);font-weight:800;color:#fff;line-height:1.15;margin-bottom:18px}
+    .grad-teal{background:linear-gradient(135deg,#00BFA6,#00dfc4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero p{font-size:17px;color:rgba(255,255,255,.62);line-height:1.78;margin-bottom:0;max-width:580px;margin:0 auto}
+
+    /* TRUST STRIP */
+    .trust{background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);padding:24px 6%}
+    .trust-in{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap}
+    .t-item{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,.6);font-size:13.5px;font-weight:500}
+    .t-ico{font-size:18px}
+
+    /* HOW IT WORKS */
+    .how{padding:80px 6%;background:var(--cream)}
+    .how-in{max-width:960px;margin:0 auto;text-align:center}
+    .tag{display:inline-block;background:rgba(0,191,166,.1);color:var(--teal);font-size:11.5px;font-weight:700;padding:5px 14px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+    .sec-ttl{font-size:clamp(24px,2.8vw,34px);font-weight:800;color:var(--navy);margin-bottom:10px;line-height:1.25}
+    .sec-sub{font-size:16px;color:var(--g600);line-height:1.72;max-width:520px;margin:0 auto 52px}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;position:relative}
+    .steps::before{content:'';position:absolute;top:28px;left:calc(16.5% + 28px);right:calc(16.5% + 28px);height:1px;background:linear-gradient(90deg,rgba(0,191,166,.5),rgba(0,191,166,.1))}
+    body.ar .steps::before{background:linear-gradient(270deg,rgba(0,191,166,.5),rgba(0,191,166,.1))}
+    .step{text-align:center}
+    .step-n{width:56px;height:56px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;margin:0 auto 16px;position:relative;z-index:1;box-shadow:0 0 0 8px rgba(0,191,166,.1)}
+    .step-ttl{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:8px}
+    .step-desc{font-size:14px;color:var(--g600);line-height:1.68}
+
+    /* FORM SECTION */
+    .form-sec{padding:80px 6%;background:#fff}
+    .form-wrap{max-width:780px;margin:0 auto}
+    .form-hd{text-align:center;margin-bottom:40px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .fg{display:flex;flex-direction:column;gap:6px}
+    .fg.full{grid-column:span 2}
+    .fg label{font-size:13px;font-weight:600;color:var(--navy)}
+    .fg label .req{color:var(--red);margin-left:2px}
+    .fg input,.fg select,.fg textarea{padding:11px 14px;border:1.5px solid var(--g200);border-radius:9px;font-size:14px;color:var(--charcoal);outline:none;transition:border-color .2s;font-family:inherit;background:#fff;width:100%}
+    .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,191,166,.1)}
+    .fg input::placeholder,.fg textarea::placeholder{color:var(--g400)}
+    .fg textarea{resize:vertical;min-height:80px}
+    .fg select option{color:var(--charcoal)}
+
+    /* checkboxes */
+    .check-group{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+    .check-item{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13.5px;color:var(--g600);font-weight:500}
+    .check-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--teal);cursor:pointer}
+
+    .divider{grid-column:span 2;border:none;border-top:1px solid var(--g200);margin:6px 0}
+
+    .section-label{grid-column:span 2;font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-top:8px}
+
+    .submit-btn{width:100%;padding:15px;background:var(--teal);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .25s;font-family:inherit;margin-top:8px}
+    .submit-btn:hover{background:#00a892;transform:translateY(-1px);box-shadow:0 10px 28px rgba(0,191,166,.3)}
+    .submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+    .form-note{font-size:12.5px;color:var(--g400);text-align:center;margin-top:14px;line-height:1.6}
+
+    /* SUCCESS */
+    .success-box{display:none;text-align:center;padding:52px 32px;background:#fff;border-radius:20px;border:1.5px solid rgba(0,191,166,.3)}
+    .success-ico{font-size:56px;margin-bottom:20px}
+    .success-ttl{font-size:24px;font-weight:800;color:var(--navy);margin-bottom:12px}
+    .success-sub{font-size:15px;color:var(--g600);line-height:1.7;max-width:460px;margin:0 auto}
+
+    /* FOOTER */
+    .foot{background:#060f1a;padding:32px 6%;text-align:center}
+    .foot a{color:rgba(255,255,255,.4);text-decoration:none;font-size:13px}
+    .foot a:hover{color:#fff}
+    .foot-copy{font-size:13px;color:rgba(255,255,255,.3);margin-top:10px}
+
+    /* REVEAL */
+    .rev{opacity:0;transform:translateY(24px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1)}
+    .rev.show{opacity:1;transform:translateY(0)}
+    .d1{transition-delay:.08s}.d2{transition-delay:.16s}.d3{transition-delay:.24s}
+
+    /* RESPONSIVE */
+    @media(max-width:720px){
+      .steps{grid-template-columns:1fr}.steps::before{display:none}
+      .form-grid{grid-template-columns:1fr}
+      .fg.full,.divider,.section-label{grid-column:span 1}
+      .trust-in{gap:20px}
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="n-logo">
+    <div class="n-icon">
+      <svg width="34" height="34" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M 70,42 A 28,28 0 1 0 70,70" stroke="rgba(255,255,255,0.92)" stroke-width="14" stroke-linecap="round" fill="none"/>
+        <circle cx="61" cy="13" r="9" fill="#00BFA6"/>
+      </svg>
+    </div>
+    <span class="n-txt">Ghaya</span>
+  </a>
+  <div class="n-actions">
+    <button class="btn-lang" onclick="toggleLang(this)">العربية</button>
+    <a href="/" class="btn-back en">← Back to Home</a>
+    <a href="/" class="btn-back ar">الرئيسية ←</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="h-grid"></div>
+  <div class="h-glow"></div>
+  <div class="hero-in">
+    <div class="badge rev"><span class="en">🌍 Gulf Talent Pool</span><span class="ar">🌍 مجموعة مواهب الخليج</span></div>
+    <h1 class="rev d1">
+      <span class="en">One CV.<br/><span class="grad-teal">Multiple Opportunities.</span></span>
+      <span class="ar">سيرة ذاتية واحدة.<br/><span class="grad-teal">فرص لا حدود لها.</span></span>
+    </h1>
+    <p class="rev d2">
+      <span class="en">Submit your CV once and get discovered by companies actively hiring through Ghaya. When a company searches for your profile, we reach out to you directly — no job boards, no hassle.</span>
+      <span class="ar">أرسل سيرتك الذاتية مرة واحدة وتُكتشف من قِبل الشركات التي تعمل على التوظيف عبر Ghaya. عندما تبحث شركة عن ملفك، نتواصل معك مباشرةً — بدون مواقع توظيف، بدون تعقيدات.</span>
+    </p>
+  </div>
+</section>
+
+<!-- TRUST STRIP -->
+<div class="trust">
+  <div class="trust-in">
+    <div class="t-item rev"><span class="t-ico">✅</span><span class="en">Free to submit</span><span class="ar">مجاني تماماً</span></div>
+    <div class="t-item rev d1"><span class="t-ico">🔒</span><span class="en">Private — only Ghaya clients see your CV</span><span class="ar">خاص — فقط عملاء Ghaya يرون سيرتك</span></div>
+    <div class="t-item rev d2"><span class="t-ico">🏢</span><span class="en">50+ companies on the platform</span><span class="ar">أكثر من 50 شركة على المنصة</span></div>
+    <div class="t-item rev d3"><span class="t-ico">🇰🇼</span><span class="en">Kuwait & Gulf focused</span><span class="ar">الكويت والخليج</span></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+  <div class="how-in">
+    <div class="tag en rev">How it works</div><div class="tag ar rev">كيف يعمل</div>
+    <h2 class="sec-ttl rev d1"><span class="en">Submit once. Get matched.</span><span class="ar">أرسل مرة واحدة. احصل على التطابق.</span></h2>
+    <p class="sec-sub rev d2">
+      <span class="en">Companies that subscribe to Ghaya's HR Pro plan get access to our talent pool when they activate the recruitment feature.</span>
+      <span class="ar">الشركات المشتركة في خطة HR برو لدى Ghaya تحصل على وصول لمجموعة المواهب عند تفعيل ميزة التوظيف.</span>
+    </p>
+    <div class="steps">
+      <div class="step rev d1">
+        <div class="step-n">1</div>
+        <div class="step-ttl en">Fill Your Profile</div><div class="step-ttl ar">أكمل ملفك</div>
+        <div class="step-desc en">Submit your CV with your experience, skills, and work permit status. Takes less than 3 minutes.</div>
+        <div class="step-desc ar">أرسل سيرتك الذاتية مع خبرتك ومهاراتك وحالة تأشيرتك. يستغرق أقل من 3 دقائق.</div>
+      </div>
+      <div class="step rev d2">
+        <div class="step-n">2</div>
+        <div class="step-ttl en">Companies Search</div><div class="step-ttl ar">الشركات تبحث</div>
+        <div class="step-desc en">When a Ghaya client posts a role, they search our talent pool by field, experience, and location to find the right match.</div>
+        <div class="step-desc ar">عندما ينشر عميل Ghaya وظيفة، يبحث في مجموعة المواهب حسب المجال والخبرة والموقع للعثور على التطابق المناسب.</div>
+      </div>
+      <div class="step rev d3">
+        <div class="step-n">3</div>
+        <div class="step-ttl en">We Reach Out</div><div class="step-ttl ar">نتواصل معك</div>
+        <div class="step-desc en">If your profile matches an open role, Ghaya contacts you directly via WhatsApp to present the opportunity.</div>
+        <div class="step-desc ar">إذا تطابق ملفك مع وظيفة مفتوحة، يتواصل معك Ghaya مباشرةً عبر واتساب لعرض الفرصة.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FORM -->
+<section class="form-sec" id="submit">
+  <div class="form-wrap">
+    <div class="form-hd rev">
+      <div class="tag en" style="display:inline-block">Submit Your CV</div><div class="tag ar" style="display:inline-block">أرسل سيرتك الذاتية</div>
+      <h2 class="sec-ttl" style="margin-top:10px"><span class="en">Join the Gulf Talent Pool</span><span class="ar">انضم إلى مجموعة مواهب الخليج</span></h2>
+      <p class="sec-sub" style="margin-bottom:0"><span class="en">Fill in your details below. We'll reach out when there's a match.</span><span class="ar">أدخل بياناتك أدناه. سنتواصل معك عند وجود تطابق.</span></p>
+    </div>
+
+    <form id="cvForm" class="form-grid rev d1" onsubmit="submitCV(event)" style="margin-top:36px">
+
+      <!-- Personal -->
+      <div class="section-label en">Personal Information</div>
+      <div class="section-label ar">المعلومات الشخصية</div>
+
+      <div class="fg">
+        <label class="en">Full Name <span class="req">*</span></label>
+        <label class="ar">الاسم الكامل <span class="req">*</span></label>
+        <input type="text" name="full_name" required placeholder="Ahmed Al-Rashidi"/>
+      </div>
+      <div class="fg">
+        <label class="en">Nationality <span class="req">*</span></label>
+        <label class="ar">الجنسية <span class="req">*</span></label>
+        <input type="text" name="nationality" required placeholder="Kuwaiti, Egyptian, Indian…"/>
+      </div>
+      <div class="fg">
+        <label class="en">Email <span class="req">*</span></label>
+        <label class="ar">البريد الإلكتروني <span class="req">*</span></label>
+        <input type="email" name="email" required placeholder="ahmed@email.com"/>
+      </div>
+      <div class="fg">
+        <label class="en">WhatsApp Number <span class="req">*</span></label>
+        <label class="ar">رقم واتساب <span class="req">*</span></label>
+        <input type="tel" name="whatsapp" required placeholder="+965 XXXX XXXX"/>
+      </div>
+      <div class="fg">
+        <label class="en">Current Location <span class="req">*</span></label>
+        <label class="ar">الموقع الحالي <span class="req">*</span></label>
+        <select name="location" required>
+          <option value="" class="en">Select country</option>
+          <option value="" class="ar">اختر الدولة</option>
+          <option value="Kuwait">🇰🇼 Kuwait</option>
+          <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+          <option value="UAE">🇦🇪 UAE</option>
+          <option value="Bahrain">🇧🇭 Bahrain</option>
+          <option value="Qatar">🇶🇦 Qatar</option>
+          <option value="Oman">🇴🇲 Oman</option>
+          <option value="Outside Gulf" class="en">Outside the Gulf</option>
+          <option value="Outside Gulf" class="ar">خارج الخليج</option>
+        </select>
+      </div>
+
+      <!-- Visa Status -->
+      <div class="fg">
+        <label class="en">Work Permit / Visa Status <span class="req">*</span></label>
+        <label class="ar">تصريح العمل / الإقامة <span class="req">*</span></label>
+        <select name="visa_status" required>
+          <option value="" class="en">Select your status</option>
+          <option value="" class="ar">اختر حالتك</option>
+          <optgroup label="🇰🇼 Kuwait" class="en">
+            <option value="GCC National">GCC National (no visa required)</option>
+            <option value="Kuwait - Transferable (Art. 18)">Transferable Work Visa (Article 18)</option>
+            <option value="Kuwait - Non-transferable">Non-transferable Work Visa</option>
+            <option value="Kuwait - Visit Visa">Visit / Tourist Visa</option>
+          </optgroup>
+          <optgroup label="🇰🇼 الكويت" class="ar">
+            <option value="GCC National">مواطن خليجي (لا يحتاج تأشيرة)</option>
+            <option value="Kuwait - Transferable (Art. 18)">تأشيرة عمل قابلة للنقل (مادة 18)</option>
+            <option value="Kuwait - Non-transferable">تأشيرة عمل غير قابلة للنقل</option>
+            <option value="Kuwait - Visit Visa">تأشيرة زيارة / سياحية</option>
+          </optgroup>
+          <optgroup label="Other Gulf" class="en">
+            <option value="Other Gulf - Valid Residency">Valid Residency in Another Gulf Country</option>
+          </optgroup>
+          <optgroup label="دول خليجية أخرى" class="ar">
+            <option value="Other Gulf - Valid Residency">إقامة سارية في دولة خليجية أخرى</option>
+          </optgroup>
+          <optgroup label="Outside Region" class="en">
+            <option value="No Gulf Visa - Outside Region">No Gulf Residency (outside the region)</option>
+          </optgroup>
+          <optgroup label="خارج المنطقة" class="ar">
+            <option value="No Gulf Visa - Outside Region">لا إقامة خليجية (خارج المنطقة)</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <hr class="divider"/>
+
+      <!-- Professional -->
+      <div class="section-label en">Professional Background</div>
+      <div class="section-label ar">الخلفية المهنية</div>
+
+      <div class="fg">
+        <label class="en">Current / Latest Job Title <span class="req">*</span></label>
+        <label class="ar">المسمى الوظيفي الحالي / الأخير <span class="req">*</span></label>
+        <input type="text" name="current_title" required placeholder="HR Manager, Sales Executive…"/>
+      </div>
+      <div class="fg">
+        <label class="en">Years of Experience <span class="req">*</span></label>
+        <label class="ar">سنوات الخبرة <span class="req">*</span></label>
+        <select name="years_experience" required>
+          <option value="" class="en">Select</option>
+          <option value="" class="ar">اختر</option>
+          <option value="Less than 1 year">Less than 1 year / أقل من سنة</option>
+          <option value="1-3 years">1 – 3 years</option>
+          <option value="3-5 years">3 – 5 years</option>
+          <option value="5-10 years">5 – 10 years</option>
+          <option value="10+ years">10+ years</option>
+        </select>
+      </div>
+      <div class="fg full">
+        <label class="en">Field / Specialty <span class="req">*</span></label>
+        <label class="ar">المجال / التخصص <span class="req">*</span></label>
+        <select name="field" required>
+          <option value="" class="en">Select your field</option>
+          <option value="" class="ar">اختر مجالك</option>
+          <option value="Human Resources">Human Resources / موارد بشرية</option>
+          <option value="Finance & Accounting">Finance & Accounting / مالية ومحاسبة</option>
+          <option value="Sales & Business Development">Sales & Business Development / مبيعات وتطوير أعمال</option>
+          <option value="Marketing & Communications">Marketing & Communications / تسويق واتصالات</option>
+          <option value="Technology & IT">Technology & IT / تقنية المعلومات</option>
+          <option value="Operations & Logistics">Operations & Logistics / عمليات ولوجستيات</option>
+          <option value="Legal & Compliance">Legal & Compliance / قانوني وامتثال</option>
+          <option value="Administration">Administration / إدارة</option>
+          <option value="Engineering">Engineering / هندسة</option>
+          <option value="Healthcare">Healthcare / رعاية صحية</option>
+          <option value="Customer Service">Customer Service / خدمة عملاء</option>
+          <option value="Education & Training">Education & Training / تعليم وتدريب</option>
+          <option value="Other">Other / أخرى</option>
+        </select>
+      </div>
+
+      <div class="fg full">
+        <label class="en">Open To</label>
+        <label class="ar">متاح لـ</label>
+        <div class="check-group">
+          <label class="check-item"><input type="checkbox" name="open_to" value="Full-time"/><span class="en">Full-time</span><span class="ar">دوام كامل</span></label>
+          <label class="check-item"><input type="checkbox" name="open_to" value="Part-time"/><span class="en">Part-time</span><span class="ar">دوام جزئي</span></label>
+          <label class="check-item"><input type="checkbox" name="open_to" value="Contract"/><span class="en">Contract / Freelance</span><span class="ar">عقد / مستقل</span></label>
+          <label class="check-item"><input type="checkbox" name="open_to" value="Remote"/><span class="en">Remote</span><span class="ar">عن بُعد</span></label>
+        </div>
+      </div>
+
+      <hr class="divider"/>
+
+      <!-- CV Links -->
+      <div class="section-label en">Your CV</div>
+      <div class="section-label ar">سيرتك الذاتية</div>
+
+      <div class="fg full">
+        <label class="en">CV Link (Google Drive, Dropbox, or LinkedIn) <span class="req">*</span></label>
+        <label class="ar">رابط السيرة الذاتية (Google Drive أو Dropbox أو LinkedIn) <span class="req">*</span></label>
+        <input type="url" name="cv_link" required placeholder="https://drive.google.com/…  or  linkedin.com/in/…"/>
+        <span style="font-size:12px;color:var(--g400);margin-top:4px" class="en">Make sure the link is set to "Anyone with the link can view"</span>
+        <span style="font-size:12px;color:var(--g400);margin-top:4px" class="ar">تأكد من ضبط الرابط على "أي شخص لديه الرابط يمكنه العرض"</span>
+      </div>
+
+      <div class="fg full">
+        <label class="en">Expected Salary (optional)</label>
+        <label class="ar">الراتب المتوقع (اختياري)</label>
+        <input type="text" name="expected_salary" placeholder="e.g. 800 – 1,200 KWD / month"/>
+      </div>
+
+      <div class="fg full">
+        <label class="en">Anything else you'd like us to know? (optional)</label>
+        <label class="ar">هل هناك أي شيء آخر تريد إخبارنا به؟ (اختياري)</label>
+        <textarea name="notes" placeholder="Languages spoken, availability date, preferred industries…"></textarea>
+      </div>
+
+      <div class="fg full">
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <span class="en">Submit My CV →</span>
+          <span class="ar">← أرسل سيرتي الذاتية</span>
+        </button>
+        <p class="form-note en">By submitting, you agree that Ghaya may share your profile with verified client companies actively using the platform for recruitment.</p>
+        <p class="form-note ar">بالإرسال، توافق على أن Ghaya قد تشارك ملفك مع شركات العملاء الموثوقة التي تستخدم المنصة بشكل نشط للتوظيف.</p>
+      </div>
+    </form>
+
+    <!-- Success -->
+    <div class="success-box rev" id="successBox">
+      <div class="success-ico">🎉</div>
+      <div class="success-ttl en">You're in the pool!</div>
+      <div class="success-ttl ar">تمت إضافتك!</div>
+      <p class="success-sub en">Your CV has been submitted to the Ghaya talent pool. We'll reach out via WhatsApp when there's an opportunity that matches your profile. In the meantime, sit back — we've got you.</p>
+      <p class="success-sub ar">تمت إضافة سيرتك الذاتية إلى مجموعة المواهب في Ghaya. سنتواصل معك عبر واتساب عند وجود فرصة تناسب ملفك. في هذه الأثناء، نحن نعمل من أجلك.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <a href="/" class="en">← Back to Ghaya.hr</a>
+  <a href="/" class="ar">← العودة إلى Ghaya.hr</a>
+  <div class="foot-copy">© 2026 Ghaya. All rights reserved.</div>
+</footer>
+
+<script>
+  function toggleLang(btn) {
+    const ar = document.body.classList.toggle('ar');
+    document.documentElement.lang = ar ? 'ar' : 'en';
+    document.documentElement.dir = ar ? 'rtl' : 'ltr';
+    btn.textContent = ar ? 'English' : 'العربية';
+  }
+
+  const obs = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('show');
+  }), {threshold: .1});
+  document.querySelectorAll('.rev').forEach(el => obs.observe(el));
+
+  async function submitCV(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="en">Submitting…</span><span class="ar">جارٍ الإرسال…</span>';
+
+    const form = e.target;
+    const data = {};
+    new FormData(form).forEach((v, k) => {
+      if (data[k]) {
+        data[k] = Array.isArray(data[k]) ? [...data[k], v] : [data[k], v];
+      } else {
+        data[k] = v;
+      }
+    });
+    // Collect checkboxes properly
+    const checked = [...form.querySelectorAll('input[name="open_to"]:checked')].map(c => c.value);
+    data.open_to = checked.join(', ');
+
+    try {
+      const res = await fetch('/api/cv/submit', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      if (json.success) {
+        form.style.display = 'none';
+        const box = document.getElementById('successBox');
+        box.style.display = 'block';
+        setTimeout(() => box.classList.add('show'), 50);
+      } else {
+        throw new Error(json.error || 'Submit failed');
+      }
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="en">Submit My CV →</span><span class="ar">← أرسل سيرتي الذاتية</span>';
+      alert('Something went wrong: ' + err.message);
+    }
+  }
+</script>
+</body>
+</html>
