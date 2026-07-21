@@ -192,6 +192,10 @@ select.form-input{cursor:pointer}
       <span class="nav-icon">🎓</span><span data-en="Training" data-ar="التدريب">Training</span>
       <span id="tr-badge" style="margin-left:auto;background:#E8472A;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:800;display:none">0</span>
     </div>
+    <div class="nav-item" onclick="showPage('cvsubmissions')" id="nav-cvsubmissions">
+      <span class="nav-icon">📄</span><span data-en="CV Submissions" data-ar="السير الذاتية">CV Submissions</span>
+      <span id="cv-badge" style="margin-left:auto;background:#00BFA6;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:800;display:none">0</span>
+    </div>
 
     <div class="nav-section" style="margin-top:8px">INBOX</div>
     <div class="nav-item" onclick="showPage('feedback')" id="nav-feedback">
@@ -610,6 +614,59 @@ select.form-input{cursor:pointer}
       </div>
     </div>
 
+    <!-- CV SUBMISSIONS PAGE -->
+    <div id="page-cvsubmissions" style="display:none">
+      <div class="section-card">
+        <div class="section-header">
+          <div>
+            <div class="section-title">📄 CV Submissions — Kuwait Talent Pool</div>
+            <div class="section-sub">All CVs submitted through the public portal</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input id="cv-search" class="form-input" style="width:180px;padding:8px 12px;" placeholder="Search name / email…" oninput="filterCVs()"/>
+            <select id="cv-filter-field" class="form-input" style="width:150px;padding:8px 12px;" onchange="filterCVs()">
+              <option value="">All Fields</option>
+              <option value="accounting">Accounting</option>
+              <option value="admin">Admin / Office</option>
+              <option value="construction">Construction</option>
+              <option value="customer_service">Customer Service</option>
+              <option value="engineering">Engineering</option>
+              <option value="finance">Finance</option>
+              <option value="hr">HR</option>
+              <option value="it">IT / Tech</option>
+              <option value="legal">Legal</option>
+              <option value="logistics">Logistics</option>
+              <option value="management">Management</option>
+              <option value="marketing">Marketing</option>
+              <option value="medical">Medical / Healthcare</option>
+              <option value="operations">Operations</option>
+              <option value="procurement">Procurement</option>
+              <option value="sales">Sales</option>
+              <option value="other">Other</option>
+            </select>
+            <select id="cv-filter-status" class="form-input" style="width:130px;padding:8px 12px;" onchange="filterCVs()">
+              <option value="">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="hired">Hired</option>
+              <option value="withdrawn">Withdrawn</option>
+            </select>
+          </div>
+        </div>
+        <div id="cv-stats" style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;"></div>
+        <div id="cv-list"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+
+      <!-- CV Detail Modal -->
+      <div class="modal-overlay" id="cv-modal-overlay" onclick="closeCVModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;"></div>
+      <div id="cv-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#FAF6F1;border-radius:16px;padding:0;max-width:680px;width:90%;max-height:88vh;overflow-y:auto;z-index:1001;box-shadow:0 24px 80px rgba(0,0,0,.22);">
+        <div style="position:sticky;top:0;background:#0A2540;padding:20px 24px;border-radius:16px 16px 0 0;display:flex;justify-content:space-between;align-items:center;">
+          <div style="color:#fff;font-size:17px;font-weight:700;" id="cv-modal-name">Candidate Details</div>
+          <button onclick="closeCVModal()" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;">✕</button>
+        </div>
+        <div style="padding:24px;" id="cv-modal-body">Loading…</div>
+      </div>
+    </div>
+
     <!-- FEEDBACK PAGE -->
     <div id="page-feedback" style="display:none">
       <div class="section-card">
@@ -860,7 +917,7 @@ async function init() {
 
 // ── Pages ──
 function showPage(page) {
-  ['dashboard','companies','users','recruitment','training','feedback'].forEach(p => {
+  ['dashboard','companies','users','recruitment','training','cvsubmissions','feedback'].forEach(p => {
     document.getElementById('page-' + p).style.display = p === page ? '' : 'none';
     const nav = document.getElementById('nav-' + p);
     if (nav) nav.classList.toggle('active', p === page);
@@ -871,6 +928,7 @@ function showPage(page) {
     users: { en: 'Users', ar: 'المستخدمون' },
     recruitment: { en: 'Recruitment', ar: 'التوظيف' },
     training: { en: 'Training & Workshops', ar: 'التدريب' },
+    cvsubmissions: { en: 'CV Submissions', ar: 'السير الذاتية' },
     feedback: { en: 'Feedback', ar: 'الملاحظات' }
   };
   document.getElementById('page-title').textContent = titles[page]?.[currentLang] || titles[page]?.en;
@@ -879,6 +937,7 @@ function showPage(page) {
   if (page === 'users') loadUsers();
   if (page === 'recruitment') loadGRecruitment();
   if (page === 'training') loadGTraining();
+  if (page === 'cvsubmissions') loadCVSubmissions();
   if (page === 'feedback') loadFeedback('all');
 }
 
@@ -1828,6 +1887,152 @@ async function removeCandidate(reqId, candidateId) {
   const res = await api('DELETE', `/recruitment/${reqId}/candidates/${candidateId}`);
   if (res?.success) { showToast('Removed', 'success'); viewGRecDetail(reqId); }
   else showToast('Error', 'error');
+}
+
+/* ── CV SUBMISSIONS ── */
+let cvAllData = [];
+
+async function loadCVSubmissions() {
+  document.getElementById('cv-list').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const data = await api('GET', '/cv/submissions');
+  if (!data) return;
+  cvAllData = data.submissions || [];
+  renderCVStats();
+  renderCVList(cvAllData);
+}
+
+function renderCVStats() {
+  const total = cvAllData.length;
+  const active = cvAllData.filter(c => c.status === 'active').length;
+  const hired = cvAllData.filter(c => c.status === 'hired').length;
+  document.getElementById('cv-stats').innerHTML = `
+    <div style="background:#fff;border:1px solid #e8e0d8;border-radius:10px;padding:12px 20px;min-width:110px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;color:#0A2540">${total}</div>
+      <div style="font-size:11px;color:#888;margin-top:2px">Total CVs</div>
+    </div>
+    <div style="background:#fff;border:1px solid #e8e0d8;border-radius:10px;padding:12px 20px;min-width:110px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;color:#00BFA6">${active}</div>
+      <div style="font-size:11px;color:#888;margin-top:2px">Active</div>
+    </div>
+    <div style="background:#fff;border:1px solid #e8e0d8;border-radius:10px;padding:12px 20px;min-width:110px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;color:#E8472A">${hired}</div>
+      <div style="font-size:11px;color:#888;margin-top:2px">Hired</div>
+    </div>`;
+}
+
+function filterCVs() {
+  const q = document.getElementById('cv-search').value.toLowerCase();
+  const field = document.getElementById('cv-filter-field').value;
+  const status = document.getElementById('cv-filter-status').value;
+  const filtered = cvAllData.filter(c =>
+    (!q || (c.full_name||'').toLowerCase().includes(q) || (c.email||'').toLowerCase().includes(q)) &&
+    (!field || c.field === field) &&
+    (!status || c.status === status)
+  );
+  renderCVList(filtered);
+}
+
+function renderCVList(list) {
+  if (!list.length) {
+    document.getElementById('cv-list').innerHTML = '<div style="text-align:center;padding:40px;color:#888;">No submissions found.</div>';
+    return;
+  }
+  const statusBadge = s => ({
+    active: '<span style="background:#dcfce7;color:#16a34a;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;">Active</span>',
+    hired: '<span style="background:#dbeafe;color:#1d4ed8;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;">Hired</span>',
+    withdrawn: '<span style="background:#f1f5f9;color:#64748b;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;">Withdrawn</span>',
+  }[s] || '<span style="background:#f1f5f9;color:#64748b;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;">—</span>');
+
+  document.getElementById('cv-list').innerHTML = `
+    <table style="width:100%;border-collapse:collapse;">
+      <thead><tr style="border-bottom:2px solid #e8e0d8;text-align:left;">
+        <th style="padding:10px 12px;font-size:12px;color:#888;font-weight:600;">Name</th>
+        <th style="padding:10px 12px;font-size:12px;color:#888;font-weight:600;">Field</th>
+        <th style="padding:10px 12px;font-size:12px;color:#888;font-weight:600;">Nationality</th>
+        <th style="padding:10px 12px;font-size:12px;color:#888;font-weight:600;">Visa</th>
+        <th style="padding:10px 12px;font-size:12px;color:#888;font-weight:600;">Experience</th>
+        <th style="padding:10px 12px;font-size:12px;color:#888;font-weight:600;">Status</th>
+        <th style="padding:10px 12px;font-size:12px;color:#888;font-weight:600;">Date</th>
+        <th style="padding:10px 12px;font-size:12px;color:#888;font-weight:600;"></th>
+      </tr></thead>
+      <tbody>
+        ${list.map(c => `<tr style="border-bottom:1px solid #f0ebe4;cursor:pointer;" onclick="openCVModal(${c.id})">
+          <td style="padding:12px 12px;"><strong>${c.full_name||'—'}</strong><br><span style="font-size:11px;color:#888;">${c.email||''}</span></td>
+          <td style="padding:12px 12px;font-size:13px;">${(c.field||'').replace(/_/g,' ')}</td>
+          <td style="padding:12px 12px;font-size:13px;">${c.nationality||'—'}</td>
+          <td style="padding:12px 12px;font-size:12px;color:#555;">${(c.visa_status||'—').replace(/_/g,' ')}</td>
+          <td style="padding:12px 12px;font-size:13px;">${c.years_experience ? c.years_experience+'y' : '—'}</td>
+          <td style="padding:12px 12px;">${statusBadge(c.status)}</td>
+          <td style="padding:12px 12px;font-size:12px;color:#888;">${(c.submitted_at||'').slice(0,10)}</td>
+          <td style="padding:12px 12px;"><button onclick="event.stopPropagation();openCVModal(${c.id})" style="background:#0A2540;color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;cursor:pointer;">View</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function openCVModal(id) {
+  document.getElementById('cv-modal-overlay').style.display = '';
+  document.getElementById('cv-modal').style.display = '';
+  document.getElementById('cv-modal-body').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const data = await api('GET', '/cv/submissions/' + id);
+  if (!data || !data.submission) {
+    document.getElementById('cv-modal-body').innerHTML = '<p style="color:red;">Failed to load.</p>';
+    return;
+  }
+  const c = data.submission;
+  document.getElementById('cv-modal-name').textContent = c.full_name || 'Candidate';
+  const statusOpts = ['active','hired','withdrawn'].map(s =>
+    `<option value="${s}" ${c.status===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`
+  ).join('');
+  document.getElementById('cv-modal-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+      <div><div style="font-size:11px;color:#888;margin-bottom:3px;">Email</div><div style="font-size:14px;">${c.email||'—'}</div></div>
+      <div><div style="font-size:11px;color:#888;margin-bottom:3px;">WhatsApp</div><div style="font-size:14px;">${c.whatsapp||'—'}</div></div>
+      <div><div style="font-size:11px;color:#888;margin-bottom:3px;">Nationality</div><div style="font-size:14px;">${c.nationality||'—'}</div></div>
+      <div><div style="font-size:11px;color:#888;margin-bottom:3px;">Location</div><div style="font-size:14px;">${c.location||'—'}</div></div>
+      <div><div style="font-size:11px;color:#888;margin-bottom:3px;">Field</div><div style="font-size:14px;">${(c.field||'—').replace(/_/g,' ')}</div></div>
+      <div><div style="font-size:11px;color:#888;margin-bottom:3px;">Current Title</div><div style="font-size:14px;">${c.current_title||'—'}</div></div>
+      <div><div style="font-size:11px;color:#888;margin-bottom:3px;">Experience</div><div style="font-size:14px;">${c.years_experience ? c.years_experience+' years' : '—'}</div></div>
+      <div><div style="font-size:11px;color:#888;margin-bottom:3px;">Expected Salary</div><div style="font-size:14px;">${c.expected_salary ? 'KD '+c.expected_salary : '—'}</div></div>
+      <div><div style="font-size:11px;color:#888;margin-bottom:3px;">Visa Status</div><div style="font-size:14px;">${(c.visa_status||'—').replace(/_/g,' ')}</div></div>
+      <div><div style="font-size:11px;color:#888;margin-bottom:3px;">Open To</div><div style="font-size:14px;">${(c.open_to||'—').replace(/_/g,' ')}</div></div>
+    </div>
+    ${c.notes ? `<div style="background:#fff;border:1px solid #e8e0d8;border-radius:10px;padding:14px;margin-bottom:16px;"><div style="font-size:11px;color:#888;margin-bottom:6px;">Notes</div><div style="font-size:13px;line-height:1.6;">${c.notes}</div></div>` : ''}
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:16px;border-top:1px solid #e8e0d8;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <label style="font-size:13px;font-weight:600;color:#0A2540;">Status:</label>
+        <select id="cv-status-select" class="form-input" style="padding:7px 12px;width:140px;" onchange="updateCVStatus(${c.id}, this.value)">${statusOpts}</select>
+      </div>
+      ${c.cv_file ? `<button onclick="downloadCV('${c.cv_filename||'cv.pdf'}', '${c.cv_file}')" style="background:#00BFA6;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;">⬇ Download CV</button>` : '<span style="font-size:13px;color:#aaa;">No CV file attached</span>'}
+      ${c.whatsapp ? `<a href="https://wa.me/${c.whatsapp.replace(/\D/g,'')}" target="_blank" style="background:#25D366;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;text-decoration:none;">💬 WhatsApp</a>` : ''}
+      ${c.email ? `<a href="mailto:${c.email}" style="background:#0A2540;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;text-decoration:none;">✉ Email</a>` : ''}
+    </div>`;
+}
+
+function closeCVModal() {
+  document.getElementById('cv-modal-overlay').style.display = 'none';
+  document.getElementById('cv-modal').style.display = 'none';
+}
+
+function downloadCV(filename, b64) {
+  const mime = filename.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream';
+  const byteStr = atob(b64);
+  const arr = new Uint8Array(byteStr.length);
+  for (let i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i);
+  const url = URL.createObjectURL(new Blob([arr], {type: mime}));
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function updateCVStatus(id, status) {
+  const res = await api('PATCH', '/cv/submissions/' + id, { status });
+  if (res?.success) {
+    showToast('Status updated ✓', 'success');
+    const idx = cvAllData.findIndex(c => c.id === id);
+    if (idx !== -1) { cvAllData[idx].status = status; renderCVStats(); }
+  } else {
+    showToast('Failed to update', 'error');
+  }
 }
 
 init();
