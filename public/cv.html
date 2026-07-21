@@ -340,11 +340,25 @@
       <div class="section-label ar">سيرتك الذاتية</div>
 
       <div class="fg full">
-        <label class="en">CV Link (Google Drive, Dropbox, or LinkedIn) <span class="req">*</span></label>
-        <label class="ar">رابط السيرة الذاتية (Google Drive أو Dropbox أو LinkedIn) <span class="req">*</span></label>
-        <input type="url" name="cv_link" required placeholder="https://drive.google.com/…  or  linkedin.com/in/…"/>
-        <span style="font-size:12px;color:var(--g400);margin-top:4px" class="en">Make sure the link is set to "Anyone with the link can view"</span>
-        <span style="font-size:12px;color:var(--g400);margin-top:4px" class="ar">تأكد من ضبط الرابط على "أي شخص لديه الرابط يمكنه العرض"</span>
+        <label class="en">Upload Your CV <span class="req">*</span></label>
+        <label class="ar">ارفع سيرتك الذاتية <span class="req">*</span></label>
+        <div id="dropZone" style="border:2px dashed var(--g200);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cream)" onclick="document.getElementById('cvFile').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+          <div style="font-size:32px;margin-bottom:8px">📄</div>
+          <div id="dropText" style="font-size:14px;font-weight:600;color:var(--navy)" class="en">Click to upload or drag & drop</div>
+          <div id="dropText" style="font-size:14px;font-weight:600;color:var(--navy)" class="ar">انقر للرفع أو اسحب وأفلت</div>
+          <div style="font-size:12px;color:var(--g400);margin-top:4px" class="en">PDF only · Max 500KB</div>
+          <div style="font-size:12px;color:var(--g400);margin-top:4px" class="ar">PDF فقط · الحد الأقصى 500KB</div>
+          <div id="fileName" style="display:none;margin-top:10px;font-size:13px;font-weight:600;color:var(--teal)"></div>
+        </div>
+        <input type="file" id="cvFile" accept=".pdf" style="display:none" onchange="handleFile(this)"/>
+      </div>
+
+      <div class="fg full">
+        <label class="en">Or paste a CV link (Google Drive / LinkedIn) — optional</label>
+        <label class="ar">أو أدخل رابط السيرة الذاتية (Google Drive / LinkedIn) — اختياري</label>
+        <input type="url" name="cv_link" placeholder="https://drive.google.com/…"/>
+        <span style="font-size:12px;color:var(--g400);margin-top:4px" class="en">If sharing a link, set it to "Anyone with the link can view"</span>
+        <span style="font-size:12px;color:var(--g400);margin-top:4px" class="ar">إذا شاركت رابطاً، اضبطه على "أي شخص لديه الرابط يمكنه العرض"</span>
       </div>
 
       <div class="fg full">
@@ -399,6 +413,55 @@
   }), {threshold: .1});
   document.querySelectorAll('.rev').forEach(el => obs.observe(el));
 
+  let cvFileBase64 = null;
+  let cvFileName = null;
+
+  function handleFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    processFile(file);
+  }
+
+  function dragOver(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').style.borderColor = 'var(--teal)';
+    document.getElementById('dropZone').style.background = 'rgba(0,191,166,.05)';
+  }
+
+  function dragLeave(e) {
+    document.getElementById('dropZone').style.borderColor = 'var(--g200)';
+    document.getElementById('dropZone').style.background = 'var(--cream)';
+  }
+
+  function dropFile(e) {
+    e.preventDefault();
+    dragLeave(e);
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  }
+
+  function processFile(file) {
+    if (file.type !== 'application/pdf') {
+      alert('Please upload a PDF file only.');
+      return;
+    }
+    if (file.size > 500 * 1024) {
+      alert('File is too large. Maximum size is 500KB.\nTip: compress your PDF at smallpdf.com');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      cvFileBase64 = e.target.result;
+      cvFileName = file.name;
+      const nameEl = document.getElementById('fileName');
+      nameEl.textContent = '✅ ' + file.name;
+      nameEl.style.display = 'block';
+      document.getElementById('dropZone').style.borderColor = 'var(--teal)';
+      document.getElementById('dropZone').style.borderStyle = 'solid';
+    };
+    reader.readAsDataURL(file);
+  }
+
   async function submitCV(e) {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
@@ -417,6 +480,20 @@
     // Collect checkboxes properly
     const checked = [...form.querySelectorAll('input[name="open_to"]:checked')].map(c => c.value);
     data.open_to = checked.join(', ');
+
+    // Require at least a file upload OR a link
+    if (!cvFileBase64 && !data.cv_link) {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="en">Submit My CV →</span><span class="ar">← أرسل سيرتي الذاتية</span>';
+      alert('Please upload your CV or paste a link to it.');
+      return;
+    }
+
+    // Attach file if uploaded
+    if (cvFileBase64) {
+      data.cv_file = cvFileBase64;
+      data.cv_filename = cvFileName;
+    }
 
     try {
       const res = await fetch('/api/cv/submit', {
