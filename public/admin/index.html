@@ -221,9 +221,6 @@ select.form-input{cursor:pointer}
     <div class="nav-item" onclick="showPage('training')" id="nav-training">
       <span class="nav-icon">🎓</span><span data-en="Training" data-ar="التدريب">Training</span>
     </div>
-    <div class="nav-item" onclick="showPage('cvsubmissions')" id="nav-cvsubmissions">
-      <span class="nav-icon">📄</span><span data-en="CV Submissions" data-ar="السير الذاتية">CV Submissions</span><span class="nav-badge" id="cv-badge" style="display:none">0</span>
-    </div>
     <div class="nav-section" style="margin-top:8px">SETTINGS</div>
     <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
       <span class="nav-icon">⚙️</span><span data-en="Settings" data-ar="الإعدادات">Settings</span>
@@ -932,63 +929,6 @@ select.form-input{cursor:pointer}
       </div>
     </div>
 
-    <!-- CV SUBMISSIONS -->
-    <div id="page-cvsubmissions" style="display:none">
-      <div class="stats-grid" id="cv-stats" style="grid-template-columns:repeat(4,1fr)">
-        <div class="stat-card"><div class="stat-icon">📄</div><div class="stat-label">Total Submissions</div><div class="stat-value" id="cv-s-total">—</div></div>
-        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">Active</div><div class="stat-value" id="cv-s-active">—</div></div>
-        <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-label">Hired</div><div class="stat-value" id="cv-s-hired">—</div></div>
-        <div class="stat-card"><div class="stat-icon">🇰🇼</div><div class="stat-label">In Kuwait</div><div class="stat-value" id="cv-s-kw">—</div></div>
-      </div>
-      <div class="section-card">
-        <div class="section-header">
-          <div><div class="section-title">📄 CV Submissions — Gulf Talent Pool</div><div class="section-sub">Job seekers who submitted via ghaya.hr/cv</div></div>
-          <div class="section-actions">
-            <input class="search-bar" id="cv-search" placeholder="Search name, field, visa…" oninput="filterCVs()" style="width:220px"/>
-            <select id="cv-filter-field" onchange="filterCVs()" style="padding:8px 12px;border:1px solid #e8e0d8;border-radius:8px;font-family:inherit;font-size:13px;background:#fff">
-              <option value="">All Fields</option>
-              <option value="Human Resources">HR</option>
-              <option value="Finance & Accounting">Finance</option>
-              <option value="Sales & Business Development">Sales</option>
-              <option value="Marketing & Communications">Marketing</option>
-              <option value="Technology & IT">Tech</option>
-              <option value="Operations & Logistics">Operations</option>
-              <option value="Administration">Admin</option>
-              <option value="Engineering">Engineering</option>
-            </select>
-            <select id="cv-filter-visa" onchange="filterCVs()" style="padding:8px 12px;border:1px solid #e8e0d8;border-radius:8px;font-family:inherit;font-size:13px;background:#fff">
-              <option value="">All Visa Types</option>
-              <option value="Kuwait - Transferable">Transferable (Art.18)</option>
-              <option value="GCC National">GCC National</option>
-              <option value="Kuwait - Non-transferable">Non-transferable</option>
-              <option value="No Gulf Visa">Outside Gulf</option>
-            </select>
-          </div>
-        </div>
-        <div id="cv-list"><div class="loading"><div class="spinner"></div></div></div>
-      </div>
-
-      <!-- CV Detail Modal -->
-      <div class="modal-overlay" id="cv-modal" style="display:none">
-        <div class="modal" style="max-width:620px">
-          <div class="modal-header">
-            <div class="modal-title" id="cv-modal-title">CV Details</div>
-            <button class="modal-close" onclick="closeCVModal()">✕</button>
-          </div>
-          <div class="modal-body" id="cv-modal-body" style="max-height:75vh;overflow-y:auto"></div>
-          <div class="modal-footer" style="padding:16px 24px;border-top:1px solid #f0ebe4;display:flex;gap:10px;justify-content:flex-end">
-            <button class="btn btn-ghost" id="cv-dl-btn" style="display:none" onclick="downloadCV()">📥 Download CV</button>
-            <button class="btn btn-primary" onclick="contactCandidate()">💬 WhatsApp</button>
-            <select id="cv-status-select" onchange="updateCVStatus()" style="padding:8px 12px;border:1px solid #e8e0d8;border-radius:8px;font-family:inherit;font-size:13px">
-              <option value="active">Active</option>
-              <option value="hired">✅ Hired</option>
-              <option value="withdrawn">Withdrawn</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- FEEDBACK -->
     <div id="page-feedback" style="display:none">
       <div class="section-card">
@@ -1388,13 +1328,13 @@ async function loadDeptsAndTitles(){
 
 function showPage(page){
   localStorage.setItem('ghaya_page',page);
-  ['dashboard','employees','attendance','leaves','permissions','overtime','payroll','reports','announcements','recruitment','training','cvsubmissions','settings','feedback'].forEach(p=>{
+  ['dashboard','employees','attendance','leaves','permissions','overtime','payroll','reports','announcements','recruitment','training','settings','feedback'].forEach(p=>{
     const el=document.getElementById('page-'+p);
     if(el)el.style.display=p===page?'':'none';
     const nav=document.getElementById('nav-'+p);
     if(nav)nav.classList.toggle('active',p===page);
   });
-  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},overtime:{en:'Overtime',ar:'العمل الإضافي'},payroll:{en:'Payroll',ar:'الرواتب'},reports:{en:'Reports & Export',ar:'التقارير'},announcements:{en:'Announcements',ar:'الإعلانات'},recruitment:{en:'Recruitment',ar:'التوظيف'},training:{en:'Training & Workshops',ar:'التدريب'},cvsubmissions:{en:'CV Submissions',ar:'السير الذاتية'},settings:{en:'Settings',ar:'الإعدادات'},feedback:{en:'Send Feedback',ar:'إرسال ملاحظات'}};
+  const titles={dashboard:{en:'Dashboard',ar:'لوحة التحكم'},employees:{en:'Employees',ar:'الموظفون'},attendance:{en:'Attendance',ar:'الحضور'},leaves:{en:'Leave Requests',ar:'طلبات الإجازة'},permissions:{en:'Permission Hours',ar:'ساعات الاستئذان'},overtime:{en:'Overtime',ar:'العمل الإضافي'},payroll:{en:'Payroll',ar:'الرواتب'},reports:{en:'Reports & Export',ar:'التقارير'},announcements:{en:'Announcements',ar:'الإعلانات'},recruitment:{en:'Recruitment',ar:'التوظيف'},training:{en:'Training & Workshops',ar:'التدريب'},settings:{en:'Settings',ar:'الإعدادات'},feedback:{en:'Send Feedback',ar:'إرسال ملاحظات'}};
   document.getElementById('page-title').textContent=titles[page]?.[currentLang]||titles[page]?.en;
   if(page==='dashboard')loadDashboard();
   if(page==='employees')loadEmployees();
@@ -1407,7 +1347,6 @@ function showPage(page){
   if(page==='announcements')loadAnnouncements();
   if(page==='recruitment')loadRecruitment();
   if(page==='training')loadTraining();
-  if(page==='cvsubmissions')loadCVSubmissions();
   if(page==='settings'){renderSettings();loadAllSettings();loadKLLSettings();}
   if(page==='feedback')loadMyFeedback();
 }
@@ -2115,113 +2054,6 @@ async function submitFeedback(){
     showToast(res?.error||'Error sending feedback','error');
   }
 }
-/* ── CV SUBMISSIONS ── */
-let cvAllData=[];
-let cvCurrentId=null;
-async function loadCVSubmissions(){
-  const el=document.getElementById('cv-list');
-  if(!el)return;
-  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET','/cv/submissions');
-  cvAllData=data?.submissions||[];
-  // update stat cards
-  const total=cvAllData.length;
-  const active=cvAllData.filter(c=>c.status==='active').length;
-  const hired=cvAllData.filter(c=>c.status==='hired').length;
-  const inKW=cvAllData.filter(c=>c.location&&c.location.toLowerCase().includes('kuwait')).length;
-  document.getElementById('cv-s-total').textContent=total;
-  document.getElementById('cv-s-active').textContent=active;
-  document.getElementById('cv-s-hired').textContent=hired;
-  document.getElementById('cv-s-kw').textContent=inKW;
-  const badge=document.getElementById('cv-badge');
-  if(total>0){badge.style.display='';badge.textContent=total;}else{badge.style.display='none';}
-  filterCVs();
-}
-function filterCVs(){
-  const q=(document.getElementById('cv-search')?.value||'').toLowerCase();
-  const fField=document.getElementById('cv-filter-field')?.value||'';
-  const fVisa=document.getElementById('cv-filter-visa')?.value||'';
-  let filtered=cvAllData.filter(c=>{
-    const matchQ=!q||(c.full_name||'').toLowerCase().includes(q)||(c.field||'').toLowerCase().includes(q)||(c.visa_status||'').toLowerCase().includes(q)||(c.nationality||'').toLowerCase().includes(q)||(c.location||'').toLowerCase().includes(q)||(c.current_title||'').toLowerCase().includes(q);
-    const matchField=!fField||(c.field||'')==fField;
-    const matchVisa=!fVisa||(c.visa_status||'').includes(fVisa);
-    return matchQ&&matchField&&matchVisa;
-  });
-  renderCVList(filtered);
-}
-const visaColors={'GCC National':'badge-green','Kuwait - Transferable':'badge-blue','Kuwait - Non-transferable':'badge-orange','No Gulf Visa':'badge-gray'};
-function renderCVList(list){
-  const el=document.getElementById('cv-list');
-  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📄</div><div class="empty-text">No submissions found</div><div class="empty-sub">CV submissions from ghaya.hr/cv will appear here</div></div>';return;}
-  el.innerHTML=`<div class="table-wrap"><table>
-    <thead><tr><th>Name</th><th>Field</th><th>Experience</th><th>Location</th><th>Visa Status</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
-    <tbody>${list.map(c=>`<tr style="cursor:pointer" onclick="openCVModal(${c.id})">
-      <td><div style="font-weight:700">${c.full_name||'—'}</div><div style="font-size:11px;color:#888">${c.nationality||''}</div></td>
-      <td>${c.field||'—'}</td>
-      <td style="text-align:center">${c.years_experience||'—'} yrs</td>
-      <td>${c.location||'—'}</td>
-      <td><span class="badge ${visaColors[c.visa_status]||'badge-gray'}" style="font-size:11px">${c.visa_status||'—'}</span></td>
-      <td style="font-size:12px;color:#888">${(c.submitted_at||'').slice(0,10)}</td>
-      <td><span class="badge ${c.status==='hired'?'badge-green':c.status==='withdrawn'?'badge-gray':'badge-blue'}">${c.status==='hired'?'✅ Hired':c.status==='withdrawn'?'Withdrawn':'Active'}</span></td>
-      <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openCVModal(${c.id})">View</button></td>
-    </tr>`).join('')}
-    </tbody></table></div>`;
-}
-function openCVModal(id){
-  const c=cvAllData.find(x=>x.id===id);
-  if(!c)return;
-  cvCurrentId=id;
-  document.getElementById('cv-modal-title').textContent=c.full_name||'CV Details';
-  document.getElementById('cv-status-select').value=c.status||'active';
-  const dlBtn=document.getElementById('cv-dl-btn');
-  if(c.cv_file){dlBtn.style.display='';dlBtn.dataset.file=c.cv_file;dlBtn.dataset.filename=c.cv_filename||'cv.pdf';}else{dlBtn.style.display='none';}
-  const body=document.getElementById('cv-modal-body');
-  const row=(label,val)=>val?`<tr><td style="font-size:12px;color:#888;padding:6px 12px 6px 0;white-space:nowrap;width:140px">${label}</td><td style="font-size:13px;font-weight:600;padding:6px 0">${val}</td></tr>`:'';
-  body.innerHTML=`
-    <table style="width:100%;border-collapse:collapse;padding:8px">
-      ${row('Full Name',c.full_name)}
-      ${row('Email',`<a href="mailto:${c.email}" style="color:#00BFA6">${c.email}</a>`)}
-      ${row('WhatsApp',`<a href="https://wa.me/${(c.whatsapp||'').replace(/\D/g,'')}" target="_blank" style="color:#00BFA6">${c.whatsapp}</a>`)}
-      ${row('Nationality',c.nationality)}
-      ${row('Location',c.location)}
-      ${row('Visa / Work Permit',c.visa_status)}
-      ${row('Current Title',c.current_title)}
-      ${row('Field',c.field)}
-      ${row('Experience',c.years_experience?(c.years_experience+' years'):'')}
-      ${row('Open To',c.open_to)}
-      ${row('Expected Salary',c.expected_salary?('KWD '+c.expected_salary):'')}
-      ${c.cv_link?`<tr><td style="font-size:12px;color:#888;padding:6px 12px 6px 0">CV Link</td><td style="padding:6px 0"><a href="${c.cv_link}" target="_blank" style="color:#00BFA6">${c.cv_link}</a></td></tr>`:''}
-      ${c.notes?`<tr><td style="font-size:12px;color:#888;padding:6px 12px 6px 0;vertical-align:top">Notes</td><td style="font-size:13px;padding:6px 0;white-space:pre-wrap">${c.notes}</td></tr>`:''}
-      ${row('Submitted',c.submitted_at?.slice(0,16)||'')}
-      ${c.updated_at?row('Last Updated',c.updated_at.slice(0,16)):'' }
-    </table>`;
-  document.getElementById('cv-modal').style.display='flex';
-}
-function closeCVModal(){document.getElementById('cv-modal').style.display='none';cvCurrentId=null;}
-function downloadCV(){
-  const btn=document.getElementById('cv-dl-btn');
-  const b64=btn.dataset.file;const name=btn.dataset.filename||'cv.pdf';
-  if(!b64)return;
-  const link=document.createElement('a');link.href=b64;link.download=name;link.click();
-}
-function contactCandidate(){
-  const c=cvAllData.find(x=>x.id===cvCurrentId);
-  if(!c||!c.whatsapp)return;
-  const num=(c.whatsapp||'').replace(/\D/g,'');
-  window.open('https://wa.me/'+num,'_blank');
-}
-async function updateCVStatus(){
-  if(!cvCurrentId)return;
-  const status=document.getElementById('cv-status-select').value;
-  const res=await apicall('PATCH','/cv/submissions/'+cvCurrentId,{status});
-  if(res?.success){
-    const idx=cvAllData.findIndex(x=>x.id===cvCurrentId);
-    if(idx>=0)cvAllData[idx].status=status;
-    filterCVs();
-    showToast('Status updated');
-  }else{showToast('Failed to update status','error');}
-}
-
 async function loadMyFeedback(){
   const el=document.getElementById('fb-history');
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
