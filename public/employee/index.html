@@ -407,7 +407,7 @@
   // ── Auth ─────────────────────────────────────
   const token = localStorage.getItem('ghaya_token');
   const user = JSON.parse(localStorage.getItem('ghaya_user') || 'null');
-  if (!token || !user) { window.location.href = '/'; }
+  if (!token || !user) { window.location.href = '/login'; }
 
   // Link this browser to the user's OneSignal profile
   if (user?.id) {
@@ -443,7 +443,7 @@
   function logout() {
     localStorage.removeItem('ghaya_token');
     localStorage.removeItem('ghaya_user');
-    window.location.href = '/';
+    window.location.href = '/login';
   }
 
   async function apiFetch(path, opts = {}) {
