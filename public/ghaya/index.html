@@ -2014,14 +2014,22 @@ function closeCVModal() {
   document.getElementById('cv-modal').style.display = 'none';
 }
 
-function downloadCV(filename, b64) {
-  const mime = filename.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream';
-  const byteStr = atob(b64);
-  const arr = new Uint8Array(byteStr.length);
-  for (let i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i);
-  const url = URL.createObjectURL(new Blob([arr], {type: mime}));
-  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
+async function downloadCV(id, filename) {
+  const data = await api('GET', '/cv/submissions/' + id);
+  if (!data?.submission) { showToast('Could not load CV', 'error'); return; }
+  const cv = data.submission;
+  if (cv.cv_file) {
+    const a = document.createElement('a');
+    a.href = cv.cv_file;
+    a.download = cv.cv_filename || filename || 'cv.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } else if (cv.cv_link) {
+    window.open(cv.cv_link, '_blank');
+  } else {
+    showToast('No CV file attached to this submission', 'error');
+  }
 }
 
 async function updateCVStatus(id, status) {
