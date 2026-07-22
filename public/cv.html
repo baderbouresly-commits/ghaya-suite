@@ -485,7 +485,7 @@
     }
 
     try {
-      const res = await fetch('/api/cv/submit', {
+      const res = await fetch('/api/cv/submissions', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
