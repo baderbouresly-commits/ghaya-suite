@@ -4,7 +4,7 @@ import { json, error, requireAuth } from '../_lib/auth.js';
 
 export async function onRequestGet({ request, env }) {
   const auth = await requireAuth(request, env);
-  if (!auth.ok) return error(auth.message, 401);
+  if (auth.error) return error(auth.error, auth.status || 401);
 
   if (!['company_admin', 'ghaya', 'ghaya_admin'].includes(auth.user.role)) {
     return error('Forbidden', 403);
