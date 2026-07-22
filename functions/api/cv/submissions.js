@@ -16,8 +16,7 @@ export async function onRequestGet({ request, env }) {
   const location = url.searchParams.get('location') || '';
   const status   = url.searchParams.get('status')   || '';
 
-  let query = 'SELECT id,full_name,email,whatsapp,nationality,location,visa_status,current_title,years_experience,field,open_to,cv_link,cv_filename,expected_salary,notes,status,submitted_at,updated_at FROM cv_submissions WHERE 1=1';
-  const binds = [];
+let query = 'SELECT id,full_name,email,whatsapp,nationality,location,visa_status,current_title,years_experience,field,open_to,cv_link,cv_file,cv_filename,expected_salary,notes,status,submitted_at,updated_at FROM cv_submissions WHERE 1=1';  const binds = [];
 
   if (field)    { query += ' AND field = ?';          binds.push(field); }
   if (visa)     { query += ' AND visa_status LIKE ?'; binds.push('%'+visa+'%'); }
