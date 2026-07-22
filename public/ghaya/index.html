@@ -2014,14 +2014,30 @@ function closeCVModal() {
   document.getElementById('cv-modal').style.display = 'none';
 }
 
-async function downloadCV(id, filename) {
+async function downloadCV(cvOrId, filename) {
+  const id = typeof cvOrId === 'object' ? cvOrId.id : cvOrId;
+  const fname = typeof cvOrId === 'object' ? (cvOrId.cv_filename || filename) : filename;
+
+  // If we already have cv_file on the object, use it directly
+  if (typeof cvOrId === 'object' && cvOrId.cv_file) {
+    const a = document.createElement('a');
+    a.href = cvOrId.cv_file;
+    a.download = fname || 'cv.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    return;
+  }
+
+  // Otherwise fetch the full record from API
   const data = await api('GET', '/cv/submissions/' + id);
-  if (!data?.submission) { showToast('Could not load CV', 'error'); return; }
+  if (!data?.submission) { showToast('No CV attached to this submission', 'error'); return; }
   const cv = data.submission;
+
   if (cv.cv_file) {
     const a = document.createElement('a');
     a.href = cv.cv_file;
-    a.download = cv.cv_filename || filename || 'cv.pdf';
+    a.download = cv.cv_filename || fname || 'cv.pdf';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
