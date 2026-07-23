@@ -10,20 +10,18 @@ const id = parseInt((params.id || '').replace(/[^0-9]/g, ''), 10);  if (!id) ret
 
   if (request.method === 'GET') {
     const url = new URL(request.url);
-    if (url.searchParams.get('download') === '1') {
-      const row = await env.DB.prepare('SELECT cv_file, cv_filename FROM cv_submissions WHERE id = ?').bind(id).first();
-      if (!row || !row.cv_file) return new Response('No file found', { status: 404 });
-      const base64 = row.cv_file.includes(',') ? row.cv_file.split(',')[1] : row.cv_file;
-      const binary = atob(base64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      return new Response(bytes, {
-        headers: {
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename="${row.cv_filename || 'cv.pdf'}"`,
-        }
-      });
+if (url.searchParams.get('download') === '1') {
+  const row = await env.DB.prepare('SELECT cv_file, cv_filename FROM cv_submissions WHERE id = ?').bind(id).first();
+  if (!row || !row.cv_file) return new Response('No file found', { status: 404 });
+  const obj = await env.R2.get(row.cv_file);
+  if (!obj) return new Response('File not found in storage', { status: 404 });
+  return new Response(obj.body, {
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${row.cv_filename || 'cv.pdf'}"`,
     }
+  });
+}
     const row = await env.DB.prepare('SELECT * FROM cv_submissions WHERE id = ?').bind(id).first();
     if (!row) return error('Not found', 404);
     return json({ submission: row });
