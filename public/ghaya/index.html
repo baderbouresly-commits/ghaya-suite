@@ -2014,9 +2014,28 @@ function closeCVModal() {
   document.getElementById('cv-modal').style.display = 'none';
 }
 
-async function downloadCV(cvOrId, filename) {
+async function downloadCV(cvOrId) {
   const id = typeof cvOrId === 'object' ? cvOrId.id : cvOrId;
-  const fname = typeof cvOrId === 'object' ? (cvOrId.cv_filename || filename) : filename;
+  const fname = (typeof cvOrId === 'object' && cvOrId.cv_filename) ? cvOrId.cv_filename : 'cv.pdf';
+  showToast('Preparing download…', '');
+  try {
+    const res = await fetch('/api/cv/submissions/' + id + '/file', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) { showToast('No CV file attached', 'error'); return; }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    showToast('Download failed: ' + e.message, 'error');
+  }
+}
 
   // If we already have cv_file on the object, use it directly
   if (typeof cvOrId === 'object' && cvOrId.cv_file) {
