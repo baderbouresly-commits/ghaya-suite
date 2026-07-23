@@ -2007,7 +2007,10 @@ async function openCVModal(id) {
         <select id="cv-status-select" class="form-input" style="padding:7px 12px;width:140px;" onchange="updateCVStatus(${c.id}, this.value)">${statusOpts}</select>
       </div>
 ${c.cv_file ? `<button onclick="downloadCV(${c.id})" style="background:#00BFA6;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;">⬇ Download CV</button>` : ''}      ${c.whatsapp ? `<a href="https://wa.me/${c.whatsapp.replace(/\D/g,'')}" target="_blank" style="background:#25D366;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;text-decoration:none;">💬 WhatsApp</a>` : ''}
-
+${c.email ? `<a href="mailto:${c.email}" style="background:#0A2540;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;text-decoration:none;">✉ Email</a>` : ''}
+    </div>`;
+}
+  
 function closeCVModal() {
   document.getElementById('cv-modal-overlay').style.display = 'none';
   document.getElementById('cv-modal').style.display = 'none';
