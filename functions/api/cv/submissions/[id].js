@@ -10,6 +10,21 @@ export async function onRequest({ request, env, params }) {
   if (!id) return error('Invalid ID', 400);
 
   if (request.method === 'GET') {
+    const url = new URL(request.url);
+    if (url.searchParams.get('download') === '1') {
+      const row = await env.DB.prepare('SELECT cv_file, cv_filename FROM cv_submissions WHERE id = ?').bind(id).first();
+      if (!row || !row.cv_file) return new Response('No file found', { status: 404 });
+      const base64 = row.cv_file.includes(',') ? row.cv_file.split(',')[1] : row.cv_file;
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new Response(bytes, {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${row.cv_filename || 'cv.pdf'}"`,
+        }
+      });
+    }
     const row = await env.DB.prepare('SELECT * FROM cv_submissions WHERE id = ?').bind(id).first();
     if (!row) return error('Not found', 404);
     return json({ submission: row });
