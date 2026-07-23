@@ -2022,8 +2022,7 @@ async function downloadCV(cvOrId) {
   const fname = (typeof cvOrId === 'object' && cvOrId.cv_filename) ? cvOrId.cv_filename : 'cv.pdf';
   showToast('Preparing download…', '');
   try {
-    const res = await fetch('/api/cv/submissions/' + id + '/file', {
-      headers: { 'Authorization': 'Bearer ' + token }
+const res = await fetch('/api/cv/submissions/' + id + '?download=1', {      headers: { 'Authorization': 'Bearer ' + token }
     });
     if (!res.ok) { showToast('No CV file attached', 'error'); return; }
     const blob = await res.blob();
