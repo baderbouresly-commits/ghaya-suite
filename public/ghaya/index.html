@@ -2037,6 +2037,28 @@ async function downloadCV(cvOrId) {
   }
 }
 
+async function deleteCV(id, name) {
+  if (!confirm('Delete CV from ' + name + '? Cannot be undone.')) return;
+  const res = await api('DELETE', '/cv/submissions/' + id);
+  if (res?.success) { showToast('Deleted ✓', 'success'); loadCVSubmissions(); }
+  else showToast('Delete failed', 'error');
+}
+function openCVEditModal(cv) {
+  document.getElementById('cv-edit-id').value = cv.id;
+  document.getElementById('cv-edit-status').value = cv.status || 'active';
+  document.getElementById('cv-edit-notes').value = cv.notes || '';
+  document.getElementById('cv-edit-modal').classList.add('open');
+}
+function closeCVEditModal() { document.getElementById('cv-edit-modal').classList.remove('open'); }
+async function saveCVEdit() {
+  const id = document.getElementById('cv-edit-id').value;
+  const status = document.getElementById('cv-edit-status').value;
+  const notes = document.getElementById('cv-edit-notes').value.trim();
+  const res = await api('PATCH', '/cv/submissions/' + id, { status, notes });
+  if (res?.success) { showToast('Saved ✓', 'success'); closeCVEditModal(); loadCVSubmissions(); }
+  else showToast('Save failed', 'error');
+}
+  
 async function updateCVStatus(id, status) {
   const res = await api('PATCH', '/cv/submissions/' + id, { status });
   if (res?.success) {
@@ -2050,5 +2072,28 @@ async function updateCVStatus(id, status) {
 
 init();
 </script>
+
+  <div id="cv-edit-modal" class="modal-overlay" onclick="if(event.target===this)closeCVEditModal()">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header"><span>Edit Submission</span><button class="modal-close" onclick="closeCVEditModal()">×</button></div>
+    <div class="modal-body" style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <input type="hidden" id="cv-edit-id">
+      <div><label class="form-label">Status</label>
+        <select id="cv-edit-status" class="form-input">
+          <option value="active">Active</option>
+          <option value="reviewed">Reviewed</option>
+          <option value="shortlisted">Shortlisted</option>
+          <option value="rejected">Rejected</option>
+          <option value="hired">Hired</option>
+        </select>
+      </div>
+      <div><label class="form-label">Internal Notes</label>
+        <textarea id="cv-edit-notes" class="form-input" rows="4" placeholder="Notes visible only to Ghaya admin…"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="saveCVEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+  
 </body>
 </html>
