@@ -1964,8 +1964,11 @@ function renderCVList(list) {
           <td style="padding:12px 12px;font-size:13px;">${c.years_experience ? c.years_experience+'y' : '—'}</td>
           <td style="padding:12px 12px;">${statusBadge(c.status)}</td>
           <td style="padding:12px 12px;font-size:12px;color:#888;">${(c.submitted_at||'').slice(0,10)}</td>
-          <td style="padding:12px 12px;"><button onclick="event.stopPropagation();openCVModal(${c.id})" style="background:#0A2540;color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;cursor:pointer;">View</button></td>
-        </tr>`).join('')}
+<td style="padding:8px 12px;display:flex;gap:6px;">
+            <button onclick="event.stopPropagation();openCVModal(${c.id})" style="background:#0A2540;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;">View</button>
+            <button onclick="event.stopPropagation();openCVEditModal(${c.id})" style="background:#00BFA6;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;">Edit</button>
+            <button onclick="event.stopPropagation();deleteCV(${c.id},'${(c.full_name||'').replace(/'/g,String.fromCharCode(39))}')" style="background:#E8472A;color:#fff;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;">Delete</button>
+          </td>        </tr>`).join('')}
       </tbody>
     </table>`;
 }
@@ -2043,10 +2046,11 @@ async function deleteCV(id, name) {
   if (res?.success) { showToast('Deleted ✓', 'success'); loadCVSubmissions(); }
   else showToast('Delete failed', 'error');
 }
-function openCVEditModal(cv) {
-  document.getElementById('cv-edit-id').value = cv.id;
-  document.getElementById('cv-edit-status').value = cv.status || 'active';
-  document.getElementById('cv-edit-notes').value = cv.notes || '';
+function openCVEditModal(id) {
+  const cv = cvAllData ? cvAllData.find(c => c.id == id) : null;
+  document.getElementById('cv-edit-id').value = id;
+  document.getElementById('cv-edit-status').value = cv?.status || 'active';
+  document.getElementById('cv-edit-notes').value = cv?.notes || '';
   document.getElementById('cv-edit-modal').classList.add('open');
 }
 function closeCVEditModal() { document.getElementById('cv-edit-modal').classList.remove('open'); }
