@@ -46,7 +46,7 @@ export async function onRequestPost({ request, env }) {
 
   try {
     await env.DB.prepare(`
-      INSERT INTO cv_submissions
+INSERT OR REPLACE INTO cv_submissions
         (full_name, email, whatsapp, nationality, location, visa_status,
          current_title, years_experience, field, open_to, cv_link,
          cv_file, cv_filename, expected_salary, notes, status, submitted_at, updated_at)
