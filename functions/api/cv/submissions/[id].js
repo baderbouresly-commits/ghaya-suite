@@ -6,8 +6,7 @@ export async function onRequest({ request, env, params }) {
   if (!['company_admin', 'ghaya', 'ghaya_admin'].includes(auth.user.role)) {
     return error('Forbidden', 403);
   }
-  const id = parseInt(params.id, 10);
-  if (!id) return error('Invalid ID', 400);
+const id = parseInt((params.id || '').replace(/[^0-9]/g, ''), 10);  if (!id) return error('Invalid ID', 400);
 
   if (request.method === 'GET') {
     const url = new URL(request.url);
