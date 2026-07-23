@@ -1,5 +1,5 @@
-// GET  /api/cv/submissions  — list all CV submissions (Ghaya admin only)
-// POST /api/cv/submissions  — submit a new CV (public, no auth)
+// GET  /api/cv/submissions  – list all CV submissions (Ghaya admin only)
+// POST /api/cv/submissions  – submit a new CV (public, no auth)
 import { json, error, requireAuth } from '../_lib/auth.js';
 
 export async function onRequestGet({ request, env }) {
@@ -16,7 +16,8 @@ export async function onRequestGet({ request, env }) {
   const location = url.searchParams.get('location') || '';
   const status   = url.searchParams.get('status')   || '';
 
-let query = 'SELECT id,full_name,email,whatsapp,nationality,location,visa_status,current_title,years_experience,field,open_to,cv_link,cv_file,cv_filename,expected_salary,notes,status,submitted_at,updated_at FROM cv_submissions WHERE 1=1';  const binds = [];
+  let query = 'SELECT id,full_name,email,whatsapp,nationality,location,visa_status,current_title,years_experience,field,open_to,cv_link,cv_file,cv_filename,expected_salary,notes,status,submitted_at,updated_at FROM cv_submissions WHERE 1=1';
+  const binds = [];
 
   if (field)    { query += ' AND field = ?';          binds.push(field); }
   if (visa)     { query += ' AND visa_status LIKE ?'; binds.push('%'+visa+'%'); }
@@ -44,19 +45,32 @@ export async function onRequestPost({ request, env }) {
 
   if (!full_name) return error('Full name is required', 400);
 
+  // Upload PDF to R2 instead of storing base64 in D1
+  let cvFileKey = null;
+  if (cv_file && cv_file.startsWith('data:')) {
+    try {
+      const base64 = cv_file.split(',')[1];
+      const binary = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+      cvFileKey = `cvs/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.pdf`;
+      await env.R2.put(cvFileKey, binary, { httpMetadata: { contentType: 'application/pdf' } });
+    } catch (e) {
+      console.error('R2 upload error:', e);
+    }
+  }
+
   try {
     await env.DB.prepare(`
 INSERT OR REPLACE INTO cv_submissions
         (full_name, email, whatsapp, nationality, location, visa_status,
-         current_title, years_experience, field, open_to, cv_link,
-         cv_file, cv_filename, expected_salary, notes, status, submitted_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'), datetime('now'))
-    `).bind(
+        current_title, years_experience, field, open_to, cv_link,
+        cv_file, cv_filename, expected_salary, notes, status, submitted_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'), datetime('now'))
+`).bind(
       full_name || null, email || null, whatsapp || null, nationality || null,
       location || null, visa_status || null, current_title || null,
       years_experience ? parseInt(years_experience) : null,
       field || null, open_to || null, cv_link || null,
-      cv_file || null, cv_filename || null, expected_salary || null, notes || null
+      cvFileKey || null, cv_filename || null, expected_salary || null, notes || null
     ).run();
 
     return json({ success: true });
