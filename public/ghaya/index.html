@@ -2037,36 +2037,6 @@ async function downloadCV(cvOrId) {
   }
 }
 
-  // If we already have cv_file on the object, use it directly
-  if (typeof cvOrId === 'object' && cvOrId.cv_file) {
-    const a = document.createElement('a');
-    a.href = cvOrId.cv_file;
-    a.download = fname || 'cv.pdf';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    return;
-  }
-
-  // Otherwise fetch the full record from API
-  const data = await api('GET', '/cv/submissions/' + id);
-  if (!data?.submission) { showToast('No CV attached to this submission', 'error'); return; }
-  const cv = data.submission;
-
-  if (cv.cv_file) {
-    const a = document.createElement('a');
-    a.href = cv.cv_file;
-    a.download = cv.cv_filename || fname || 'cv.pdf';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  } else if (cv.cv_link) {
-    window.open(cv.cv_link, '_blank');
-  } else {
-    showToast('No CV file attached to this submission', 'error');
-  }
-}
-
 async function updateCVStatus(id, status) {
   const res = await api('PATCH', '/cv/submissions/' + id, { status });
   if (res?.success) {
