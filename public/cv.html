@@ -335,8 +335,8 @@
           <div style="font-size:32px;margin-bottom:8px">📄</div>
           <div id="dropText" style="font-size:14px;font-weight:600;color:var(--navy)" class="en">Click to upload or drag & drop</div>
           <div id="dropText" style="font-size:14px;font-weight:600;color:var(--navy)" class="ar">انقر للرفع أو اسحب وأفلت</div>
-          <div style="font-size:12px;color:var(--g400);margin-top:4px" class="en">PDF only · Max 500KB</div>
-          <div style="font-size:12px;color:var(--g400);margin-top:4px" class="ar">PDF فقط · الحد الأقصى 500KB</div>
+<div style="font-size:12px;color:var(--g400);margin-top:4px" class="en">PDF only · Max 5MB</div>
+          <div style="font-size:12px;color:var(--g400);margin-top:4px" class="ar">PDF فقط · الحد الأقصى 5MB</div>
           <div id="fileName" style="display:none;margin-top:10px;font-size:13px;font-weight:600;color:var(--teal)"></div>
         </div>
         <input type="file" id="cvFile" accept=".pdf" style="display:none" onchange="handleFile(this)"/>
@@ -434,8 +434,8 @@
       alert('Please upload a PDF file only.');
       return;
     }
-    if (file.size > 500 * 1024) {
-      alert('File is too large. Maximum size is 500KB.\nTip: compress your PDF at smallpdf.com');
+if (file.size > 5 * 1024 * 1024) {
+      alert('File is too large. Maximum size is 5MB.\nTip: compress your PDF at smallpdf.com');
       return;
     }
     const reader = new FileReader();
