@@ -13,15 +13,13 @@ You are talking to an EMPLOYEE. Answer their questions about:
 - General HR policies
 
 Rules:
-- Be friendly, helpful, and concise
+- Be friendly, helpful, and BRIEF — max 3-4 short sentences unless the user asks for more detail
 - Answer in the same language the user writes in (Arabic or English)
-- If asked in Arabic, respond in Arabic
-- If asked in English, respond in English
-- You can answer in both if the question is mixed
+- Do NOT use markdown formatting like asterisks, bullet points, or headers — write in plain conversational sentences only
 - Do NOT answer questions unrelated to HR, labour law, or the workplace
 - If you don't know something specific to their company, tell them to check with their HR manager
-- Always clarify that for legal disputes they should consult a lawyer
-- Keep responses short and practical — employees want quick answers`;
+- Only mention consulting a lawyer if the question is about a legal dispute — don't add it to every answer
+- Get straight to the point — no long intros`;
 
 const ADMIN_SYSTEM_PROMPT = `You are an HR advisor for Ghaya, an HR platform serving companies in Kuwait.
 You are talking to an HR MANAGER or COMPANY ADMIN. Help them with:
@@ -39,13 +37,13 @@ You are talking to an HR MANAGER or COMPANY ADMIN. Help them with:
 - Salary certificates and HR documentation
 
 Rules:
-- Be professional and precise
+- Be professional, precise, and BRIEF — max 4-5 short sentences unless the user asks for more detail
 - Answer in the same language the user writes in (Arabic or English)
-- Provide practical, actionable advice
-- Cite the relevant law article when possible (e.g. "Article 51 of Kuwait Labour Law")
+- Do NOT use markdown formatting like asterisks, bullet points, or headers — write in plain conversational sentences only
+- Cite the relevant law article when directly relevant (e.g. "Article 51 of Kuwait Labour Law")
 - Do NOT answer questions unrelated to HR or employment law
-- Clarify that for legal disputes or formal proceedings, they should consult a licensed Kuwaiti lawyer
-- Keep responses clear and structured`;
+- Only mention consulting a lawyer for genuinely complex legal disputes — don't add it to every answer
+- Get straight to the point — no long intros`;
 
 export async function onRequestPost({ request, env }) {
   // Auth check
@@ -79,15 +77,16 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const response = await fetch(
-`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${env.GEMINI_API_KEY}`,      {
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${env.GEMINI_API_KEY}`,
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents,
           generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1024,
+            temperature: 0.6,
+            maxOutputTokens: 300,
           }
         })
       }
@@ -96,8 +95,7 @@ export async function onRequestPost({ request, env }) {
     if (!response.ok) {
       const err = await response.text();
       console.error('Gemini error:', err);
-      // TEMP DEBUG: return the real error so we can see what's wrong. Remove after fixing.
-      return json({ error: 'AI service error', debug: err }, 500);
+      return error('AI service error', 500);
     }
 
     const data = await response.json();
