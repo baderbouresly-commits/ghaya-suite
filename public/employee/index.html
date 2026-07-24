@@ -1,1006 +1,610 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="theme-color" content="#0A2540"/>
-  <title>Ghaya Suite — My Dashboard</title>
-  <link rel="manifest" href="/manifest.json"/>
-  <link rel="apple-touch-icon" href="/icon-192.png"/>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-  <!-- OneSignal Web Push -->
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-  <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-      await OneSignal.init({
-        appId: "ded12bcc-da9a-4dca-b800-c7d3622ef474",
-        safari_web_id: "web.onesignal.auto.36762c33-c595-4251-8e66-ea9a822d3713",
-        notifyButton: { enable: true },
-      });
-      // Show in-page toast when a notification arrives while the tab is focused
-      OneSignal.Notifications.addEventListener('foregroundWillDisplay', function(event) {
-        event.preventDefault(); // suppress OS popup (tab is focused)
-        const n = event.notification;
-        showInPageToast(n.title, n.body);
-      });
-    });
-  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ghaya | Employee Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --cream:#FAF6F1; --coral:#E8472A; --navy:#0A2540; --teal:#00BFA6;
-      --charcoal:#1A1A1A; --gray:#6B7A9A; --border:#E4DDD6; --white:#FFFFFF;
-      --coral-light:#FDF0EE; --teal-light:#E6FAF7; --navy-light:#EEF2F7;
-      --shadow:0 1px 3px rgba(10,37,64,.07),0 4px 16px rgba(10,37,64,.05);
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Inter','Almarai',sans-serif;background:var(--cream);color:var(--charcoal);min-height:100vh}
-    .topnav{background:var(--navy);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-    .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-    .nav-logo svg{width:32px;height:32px}
-    .nav-logo-text{font-family:'Almarai',sans-serif;font-weight:800;font-size:18px;color:var(--white)}
-    .nav-right{display:flex;align-items:center;gap:16px}
-    .nav-user{display:flex;align-items:center;gap:8px}
-    .avatar{width:34px;height:34px;background:var(--coral);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Almarai',sans-serif;font-weight:700;font-size:13px;color:white;flex-shrink:0}
-    .nav-name{font-size:13px;color:rgba(255,255,255,.8);font-weight:500}
-    .btn-logout{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.7);font-size:12px;padding:5px 10px;cursor:pointer;transition:all .15s}
-    .btn-logout:hover{background:rgba(255,255,255,.2);color:white}
-    .lang-btns{display:flex;gap:4px}
-    .lang-btn{padding:4px 8px;border:1px solid rgba(255,255,255,.2);border-radius:5px;background:transparent;color:rgba(255,255,255,.6);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
-    .lang-btn.active{background:var(--coral);border-color:var(--coral);color:white}
-    .page{max-width:800px;margin:0 auto;padding:24px 20px 48px}
-    .greeting{margin-bottom:24px}
-    .greeting-hello{font-family:'Almarai',sans-serif;font-size:22px;font-weight:700;color:var(--navy)}
-    .greeting-date{font-size:13px;color:var(--gray);margin-top:2px}
-    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
-    .stat-card{background:var(--white);border-radius:14px;padding:18px 16px;box-shadow:var(--shadow);text-align:center}
-    .stat-value{font-family:'Almarai',sans-serif;font-size:28px;font-weight:800;color:var(--navy);line-height:1;margin-bottom:4px}
-    .stat-value.coral{color:var(--coral)}
-    .stat-value.teal{color:var(--teal)}
-    .stat-label{font-size:11px;color:var(--gray);font-weight:500}
-    .actions-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
-    .action-btn{background:var(--white);border:2px solid var(--border);border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s;text-align:left;width:100%}
-    .action-btn:hover{border-color:var(--coral);box-shadow:0 4px 16px rgba(232,71,42,.12);transform:translateY(-1px)}
-    .action-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .action-icon.coral{background:var(--coral-light)}
-    .action-icon.teal{background:var(--teal-light)}
-    .action-icon svg{width:22px;height:22px}
-    .action-title{font-family:'Almarai',sans-serif;font-size:15px;font-weight:700;color:var(--navy)}
-    .action-desc{font-size:12px;color:var(--gray);margin-top:2px}
-    .cards-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
-    .card{background:var(--white);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
-    .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-    .card-title{font-family:'Almarai',sans-serif;font-size:15px;font-weight:700;color:var(--navy)}
-    .card-link{font-size:12px;color:var(--coral);text-decoration:none;font-weight:500}
-    .card-link:hover{text-decoration:underline}
-    .leave-item{margin-bottom:14px}
-    .leave-item:last-child{margin-bottom:0}
-    .leave-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
-    .leave-name{font-size:13px;color:var(--charcoal);font-weight:500}
-    .leave-count{font-size:12px;color:var(--gray)}
-    .leave-count strong{color:var(--navy);font-weight:600}
-    .leave-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
-    .leave-bar-fill{height:100%;border-radius:3px;background:var(--coral);transition:width .5s ease}
-    .leave-bar-fill.teal{background:var(--teal)}
-    .leave-bar-fill.navy{background:var(--navy)}
-    .leave-list{display:flex;flex-direction:column;gap:8px}
-    .leave-row-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--cream);border-radius:8px;font-size:13px}
-    .leave-type-tag{font-weight:600;color:var(--navy)}
-    .leave-dates{color:var(--gray);font-size:12px}
-    .status-badge{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
-    .status-badge.pending{background:#FFF3CD;color:#856404}
-    .status-badge.approved{background:var(--teal-light);color:#007A6B}
-    .status-badge.rejected{background:var(--coral-light);color:var(--coral)}
-    .payslip-amount{font-family:'Almarai',sans-serif;font-size:32px;font-weight:800;color:var(--navy);margin-bottom:4px}
-    .payslip-period{font-size:13px;color:var(--gray);margin-bottom:16px}
-    .payslip-rows{display:flex;flex-direction:column;gap:6px}
-    .payslip-row{display:flex;justify-content:space-between;font-size:12px;color:var(--gray);padding:4px 0;border-bottom:1px solid var(--border)}
-    .payslip-row:last-child{border-bottom:none}
-    .payslip-row .label{color:var(--charcoal)}
-    .btn-download{margin-top:16px;width:100%;padding:10px;background:var(--navy-light);border:none;border-radius:8px;color:var(--navy);font-family:'Almarai',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s}
-    .btn-download:hover{background:var(--navy);color:white}
-    .alerts{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
-    .alert-banner{background:var(--coral-light);border:1px solid rgba(232,71,42,.2);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--coral)}
-    .alert-banner svg{flex-shrink:0}
-    .loading-overlay{position:fixed;inset:0;background:var(--cream);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:16px}
-    .loading-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--coral);border-radius:50%;animation:spin .7s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .loading-text{font-size:14px;color:var(--gray)}
-    .modal-overlay{position:fixed;inset:0;background:rgba(10,37,64,.5);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
-    .modal-overlay.open{display:flex}
-    .modal{background:var(--white);border-radius:16px;padding:28px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(10,37,64,.2)}
-    .modal-title{font-family:'Almarai',sans-serif;font-size:18px;font-weight:700;color:var(--navy);margin-bottom:20px}
-    .field{margin-bottom:16px}
-    .field label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:6px}
-    select,input[type="date"],input[type="number"],textarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;color:var(--charcoal);background:var(--cream);outline:none;transition:border-color .15s}
-    select:focus,input[type="date"]:focus,input[type="number"]:focus,textarea:focus{border-color:var(--coral);background:var(--white)}
-    textarea{resize:vertical;min-height:80px}
-    .modal-actions{display:flex;gap:10px;margin-top:20px}
-    .btn-cancel{flex:1;padding:11px;border:1.5px solid var(--border);border-radius:8px;background:transparent;color:var(--gray);font-weight:600;font-size:14px;cursor:pointer}
-    .btn-submit{flex:2;padding:11px;background:var(--coral);border:none;border-radius:8px;color:white;font-family:'Almarai',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:background .15s}
-    .btn-submit:hover{background:#C93920}
-    @media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr)}.actions-row{grid-template-columns:1fr}.cards-row{grid-template-columns:1fr}.topnav{padding:0 16px}.nav-name{display:none}}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Almarai', sans-serif; background: #f5f5f5; color: #333; display: flex; min-height: 100vh; }
+    .sidebar { width: 240px; background: #1a1a2e; color: white; position: fixed; height: 100vh; display: flex; flex-direction: column; }
+    .sidebar-logo { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .logo-icon { width: 44px; height: 44px; background: #E8472A; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; color: white; margin-bottom: 8px; }
+    .logo-name { font-size: 20px; font-weight: 800; color: white; }
+    .logo-sub { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; }
+    .user-card { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .user-name { font-size: 14px; font-weight: 700; color: white; }
+    .user-role { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: capitalize; margin-top: 2px; }
+    .nav { flex: 1; padding: 16px 0; }
+    .nav-label { padding: 8px 20px 4px; font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 20px; cursor: pointer; transition: background 0.2s; color: rgba(255,255,255,0.7); font-size: 14px; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .nav-item.active { background: rgba(232,71,42,0.2); color: #E8472A; border-right: 3px solid #E8472A; }
+    .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .logout-btn { display: flex; align-items: center; gap: 10px; cursor: pointer; color: rgba(255,255,255,0.5); font-size: 13px; padding: 8px 0; }
+    .logout-btn:hover { color: #E8472A; }
+    .main { margin-left: 240px; flex: 1; padding: 32px; min-height: 100vh; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .page-title { font-size: 26px; font-weight: 800; color: #1a1a2e; }
+    .page-sub { font-size: 14px; color: #888; margin-top: 2px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 28px; }
+    .stat-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .stat-icon { font-size: 28px; margin-bottom: 10px; }
+    .stat-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+    .stat-value { font-size: 28px; font-weight: 800; color: #1a1a2e; }
+    .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .card-title { font-size: 16px; font-weight: 800; color: #1a1a2e; }
+    .btn { padding: 10px 20px; border: none; border-radius: 10px; cursor: pointer; font-family: 'Almarai', sans-serif; font-size: 14px; font-weight: 700; transition: all 0.2s; }
+    .btn-primary { background: #E8472A; color: white; }
+    .btn-primary:hover { background: #d63d22; }
+    .btn-secondary { background: #f0f0f0; color: #555; }
+    .btn-secondary:hover { background: #e0e0e0; }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 12px; font-size: 12px; color: #888; border-bottom: 1px solid #f0f0f0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    td { padding: 12px 12px; font-size: 14px; color: #333; border-bottom: 1px solid #f8f8f8; }
+    tr:last-child td { border-bottom: none; }
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .badge-pending { background: #FFF3CD; color: #856404; }
+    .badge-approved { background: #D1FAE5; color: #065F46; }
+    .badge-rejected { background: #FEE2E2; color: #991B1B; }
+    .leave-balance { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .balance-item { text-align: center; padding: 20px; background: #f9f9f9; border-radius: 12px; }
+    .balance-num { font-size: 36px; font-weight: 800; color: #E8472A; }
+    .balance-label { font-size: 12px; color: #888; margin-top: 4px; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 20px; padding: 32px; width: 500px; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-size: 20px; font-weight: 800; color: #1a1a2e; margin-bottom: 24px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 13px; font-weight: 700; color: #555; margin-bottom: 6px; }
+    .form-control { width: 100%; padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 10px; font-family: 'Almarai', sans-serif; font-size: 14px; color: #333; outline: none; transition: border 0.2s; }
+    .form-control:focus { border-color: #E8472A; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .profile-item-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+    .profile-item-value { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+    .payslip-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+    .payslip-row:last-child { border-bottom: none; }
+    .empty-state { text-align: center; padding: 48px 24px; color: #888; }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-text { font-size: 16px; font-weight: 700; color: #555; }
+    .empty-sub { font-size: 13px; margin-top: 4px; }
+    .lang-toggle { display: flex; gap: 4px; }
+    .lang-btn { padding: 6px 14px; border: 1px solid #e0e0e0; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; background: white; }
+    .lang-btn.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+    body.rtl { direction: rtl; }
+    body.rtl .sidebar { left: auto; right: 0; }
+    body.rtl .main { margin-left: 0; margin-right: 240px; }
+    body.rtl .nav-item.active { border-right: none; border-left: 3px solid #E8472A; }
+    body.rtl th { text-align: right; }
+    .alert { padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; font-size: 14px; }
+    .alert-error { background: #FEE2E2; color: #991B1B; }
+    .alert-success { background: #D1FAE5; color: #065F46; }
   </style>
 </head>
 <body>
-
-<!-- Loading -->
-<div class="loading-overlay" id="loading">
-  <div class="loading-spinner"></div>
-  <div class="loading-text" id="loading-text">Loading your dashboard…</div>
-</div>
-
-<!-- Leave Request Modal -->
-<div class="modal-overlay" id="leave-modal">
-  <div class="modal">
-    <div class="modal-title" id="modal-title">Request Leave</div>
-    <div class="field">
-      <label id="ml-type">Leave Type</label>
-      <select id="leave-type-select"></select>
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">غ</div>
+      <div class="logo-name" id="app-name">Ghaya غاية</div>
+      <div class="logo-sub" id="portal-sub">EMPLOYEE PORTAL</div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="field">
-        <label id="ml-start">Start Date</label>
-        <input type="date" id="leave-start"/>
+    <div class="user-card">
+      <div class="user-name" id="user-name">Loading...</div>
+      <div class="user-role" id="user-role">Employee</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label" id="nav-lbl-overview">OVERVIEW</div>
+      <div class="nav-item active" onclick="showPage('dashboard', this)">
+        <span class="nav-icon">📊</span>
+        <span id="nav-dashboard">Dashboard</span>
       </div>
-      <div class="field">
-        <label id="ml-end">End Date</label>
-        <input type="date" id="leave-end"/>
+      <div class="nav-label" id="nav-lbl-hr">MY HR</div>
+      <div class="nav-item" onclick="showPage('leaves', this)">
+        <span class="nav-icon">🌴</span>
+        <span id="nav-leaves">My Leaves</span>
+      </div>
+      <div class="nav-item" onclick="showPage('payslips', this)">
+        <span class="nav-icon">💰</span>
+        <span id="nav-payslips">My Payslips</span>
+      </div>
+      <div class="nav-item" onclick="showPage('profile', this)">
+        <span class="nav-icon">👤</span>
+        <span id="nav-profile">My Profile</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="logout-btn" onclick="logout()">
+        <span>🚪</span>
+        <span id="nav-logout">Sign Out</span>
       </div>
     </div>
-    <div class="field">
-      <label id="ml-reason">Reason (optional)</label>
-      <textarea id="leave-reason" rows="3"></textarea>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeLeaveModal()" id="ml-cancel">Cancel</button>
-      <button class="btn-submit" onclick="submitLeave()" id="ml-submit">Submit Request</button>
-    </div>
-  </div>
-</div>
+  </aside>
 
-<!-- Overtime Modal -->
-<div class="modal-overlay" id="ot-modal">
-  <div class="modal">
-    <div class="modal-title">Submit Overtime (العمل الإضافي)</div>
-    <div class="field">
-      <label>Date</label>
-      <input type="date" id="ot-emp-date"/>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="field">
-        <label>Hours</label>
-        <input type="number" id="ot-emp-hours" min="0.5" max="16" step="0.5" placeholder="2"/>
+  <main class="main">
+    <div style="position:fixed;top:20px;right:32px;z-index:100;">
+      <div class="lang-toggle">
+        <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" id="btn-ar" onclick="setLang('ar')">ع</button>
       </div>
-      <div class="field">
-        <label>Day Type</label>
-        <select id="ot-emp-day-type">
-          <option value="normal">Normal Day (1.25×)</option>
-          <option value="holiday">Holiday/Rest Day (1.5×)</option>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <div>
+          <div class="page-title" id="title-dashboard">Dashboard</div>
+          <div class="page-sub" id="sub-dashboard">Welcome back!</div>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🌴</div>
+          <div class="stat-label" id="lbl-stat-remaining">Annual Leave Remaining</div>
+          <div class="stat-value" id="stat-remaining">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-label" id="lbl-stat-pending">Pending Requests</div>
+          <div class="stat-value" id="stat-pending">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-label" id="lbl-stat-taken">Days Taken This Year</div>
+          <div class="stat-value" id="stat-taken">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-label" id="lbl-stat-salary">Basic Salary (KWD)</div>
+          <div class="stat-value" id="stat-salary">—</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" id="title-quick-actions">Quick Actions</div>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="showPage('leaves', document.querySelector('.nav-item:nth-child(2)')); openLeaveModal()">🌴 Request Leave</button>
+          <button class="btn btn-secondary" onclick="showPage('payslips', document.querySelector('.nav-item:nth-child(3)'))">💰 View Payslip</button>
+          <button class="btn btn-secondary" onclick="showPage('profile', document.querySelector('.nav-item:nth-child(4)'))">👤 My Profile</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" id="title-recent-leaves">Recent Leave Requests</div>
+        </div>
+        <div id="recent-leaves-body">
+          <div class="empty-state"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests yet</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaves -->
+    <div id="page-leaves" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title" id="title-leaves">My Leaves</div>
+          <div class="page-sub" id="sub-leaves">View and manage your leave requests</div>
+        </div>
+        <button class="btn btn-primary" onclick="openLeaveModal()">+ <span id="btn-request-leave">Request Leave</span></button>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px;" id="title-balance">Leave Balance</div>
+        <div class="leave-balance">
+          <div class="balance-item">
+            <div class="balance-num" id="bal-remaining">—</div>
+            <div class="balance-label" id="lbl-bal-remaining">Days Remaining</div>
+          </div>
+          <div class="balance-item">
+            <div class="balance-num" id="bal-taken">—</div>
+            <div class="balance-label" id="lbl-bal-taken">Taken This Year</div>
+          </div>
+          <div class="balance-item">
+            <div class="balance-num" id="bal-pending-days">—</div>
+            <div class="balance-label" id="lbl-bal-pending">Pending Days</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" id="title-history">Leave History</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-sm btn-primary" id="filter-all" onclick="filterLeaves('all')">All</button>
+            <button class="btn btn-sm btn-secondary" id="filter-pending" onclick="filterLeaves('pending')">Pending</button>
+            <button class="btn btn-sm btn-secondary" id="filter-approved" onclick="filterLeaves('approved')">Approved</button>
+            <button class="btn btn-sm btn-secondary" id="filter-rejected" onclick="filterLeaves('rejected')">Rejected</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th id="th-type">Type</th>
+              <th id="th-start">Start</th>
+              <th id="th-end">End</th>
+              <th id="th-days">Days</th>
+              <th id="th-status">Status</th>
+            </tr>
+          </thead>
+          <tbody id="leaves-tbody">
+            <tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🌴</div><div class="empty-text">No requests yet</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Payslips -->
+    <div id="page-payslips" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title" id="title-payslips">My Payslips</div>
+          <div class="page-sub" id="sub-payslips">Monthly salary breakdown</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" id="payslip-month" style="margin-bottom:20px;">Current Month</div>
+        <div id="payslip-content">
+          <div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile -->
+    <div id="page-profile" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title" id="title-profile">My Profile</div>
+          <div class="page-sub" id="sub-profile">Your personal information</div>
+        </div>
+      </div>
+      <div class="card">
+        <div id="profile-content">
+          <div class="empty-state"><div class="empty-icon">👤</div><div class="empty-text">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Leave Modal -->
+  <div class="modal-overlay" id="leave-modal">
+    <div class="modal">
+      <div class="modal-title" id="modal-leave-title">Request Leave</div>
+      <div id="leave-alert"></div>
+      <div class="form-group">
+        <label class="form-label" id="lbl-leave-type">Leave Type</label>
+        <select class="form-control" id="leave-type">
+          <option value="annual">Annual Leave</option>
+          <option value="sick">Sick Leave</option>
+          <option value="emergency">Emergency Leave</option>
+          <option value="unpaid">Unpaid Leave</option>
         </select>
       </div>
-    </div>
-    <div class="field">
-      <label>Reason</label>
-      <textarea id="ot-emp-reason" rows="2" placeholder="e.g. Month-end closing, urgent project"></textarea>
-    </div>
-    <div id="ot-emp-preview" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:13px;display:none;margin-bottom:4px;">
-      <span id="ot-emp-preview-text"></span>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeOTModal()">Cancel</button>
-      <button class="btn-submit" onclick="submitOT()" id="ot-submit-btn">Submit Request</button>
-    </div>
-  </div>
-</div>
-
-<!-- My Documents Modal -->
-<div class="modal-overlay" id="docs-modal">
-  <div class="modal" style="max-width:520px;width:100%;">
-    <div class="modal-title">📂 My Documents</div>
-    <div id="emp-docs-list" style="min-height:80px;"></div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="document.getElementById('docs-modal').classList.remove('open')">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Top Nav -->
-<nav class="topnav">
-  <a href="/" class="nav-logo">
-    <div id="company-logo-wrap" style="display:none;width:32px;height:32px;border-radius:8px;overflow:hidden;flex-shrink:0;">
-      <img id="company-logo-img" src="" style="width:100%;height:100%;object-fit:cover;"/>
-    </div>
-    <svg id="ghaya-default-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 70,42 A 28,28 0 1 0 70,70" stroke="rgba(255,255,255,0.92)" stroke-width="12" stroke-linecap="round" fill="none"/>
-      <circle cx="61" cy="13" r="9" fill="#00BFA6"/>
-    </svg>
-    <span class="nav-logo-text" id="nav-company-name">Ghaya</span>
-  </a>
-  <div class="nav-right">
-    <div class="lang-btns">
-      <button class="lang-btn" id="lbtn-en" onclick="setLang('en')">EN</button>
-      <button class="lang-btn" id="lbtn-ar" onclick="setLang('ar')">ع</button>
-    </div>
-    <div class="nav-user" style="position:relative;cursor:pointer;" onclick="document.getElementById('photo-input').click()" title="Click to change photo">
-      <div class="avatar" id="avatar">?</div>
-      <div id="avatar-photo" style="display:none;width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;position:absolute;top:0;left:0;">
-        <img id="avatar-img" src="" style="width:100%;height:100%;object-fit:cover;"/>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" id="lbl-start">Start Date</label>
+          <input type="date" class="form-control" id="leave-start">
+        </div>
+        <div class="form-group">
+          <label class="form-label" id="lbl-end">End Date</label>
+          <input type="date" class="form-control" id="leave-end">
+        </div>
       </div>
-      <div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;background:#E8472A;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #0A2540;">
-        <svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="white" stroke-width="2.5" fill="none"/></svg>
+      <div class="form-group">
+        <label class="form-label" id="lbl-reason">Reason (optional)</label>
+        <textarea class="form-control" id="leave-reason" rows="3" style="resize:vertical;"></textarea>
       </div>
-      <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="uploadSelfPhoto(event)"/>
-      <span class="nav-name" id="nav-name"></span>
-    </div>
-    <button class="btn-logout" onclick="logout()" id="logout-btn">Logout</button>
-  </div>
-</nav>
-
-<!-- Page Content -->
-<div class="page" id="page-content" style="display:none;">
-
-  <div class="greeting">
-    <div class="greeting-hello" id="greeting-hello"></div>
-    <div class="greeting-date" id="greeting-date"></div>
-  </div>
-
-  <!-- Alerts -->
-  <div class="alerts" id="alerts-section"></div>
-
-  <!-- Announcements -->
-  <div id="announcements-section" style="display:none;margin-bottom:24px;"></div>
-
-  <!-- Clock In / Out -->
-  <div style="background:linear-gradient(135deg,#0A2540,#1a3a5c);border-radius:16px;padding:22px 24px;margin-bottom:24px;box-shadow:var(--shadow);">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
-      <div>
-        <div style="font-size:11px;color:rgba(255,255,255,.45);font-weight:700;letter-spacing:1px;margin-bottom:6px;" id="clock-status-label">NOT CLOCKED IN</div>
-        <div style="font-family:'Almarai',sans-serif;font-size:38px;font-weight:800;color:#fff;line-height:1;letter-spacing:1px;" id="live-clock">--:--:--</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:5px;" id="clock-date-label"></div>
-      </div>
-      <div style="display:flex;gap:10px;">
-        <button id="clock-in-btn" onclick="clockIn()" style="display:none;background:#E8472A;border:none;border-radius:10px;color:#fff;font-family:'Almarai',sans-serif;font-weight:700;font-size:15px;padding:13px 32px;cursor:pointer;transition:opacity .15s;">
-          ✓ Clock In
-        </button>
-        <button id="clock-out-btn" onclick="clockOut()" style="display:none;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);border-radius:10px;color:#fff;font-family:'Almarai',sans-serif;font-weight:700;font-size:15px;padding:13px 32px;cursor:pointer;transition:opacity .15s;">
-          ✗ Clock Out
-        </button>
-      </div>
-    </div>
-    <div id="clock-info" style="margin-top:10px;font-size:12px;color:rgba(255,255,255,.4);min-height:16px;"></div>
-  </div>
-
-  <!-- Stats Row -->
-  <div class="stats-row">
-    <div class="stat-card"><div class="stat-value" id="stat-leave-remaining">—</div><div class="stat-label" id="lbl-leave-remaining">Leave Days Left</div></div>
-    <div class="stat-card"><div class="stat-value coral" id="stat-leave-used">—</div><div class="stat-label" id="lbl-leave-used">Days Used</div></div>
-    <div class="stat-card"><div class="stat-value teal" id="stat-leave-pending">—</div><div class="stat-label" id="lbl-leave-pending">Pending</div></div>
-    <div class="stat-card"><div class="stat-value" id="stat-net-salary">—</div><div class="stat-label" id="lbl-net-salary">Last Net Pay</div></div>
-  </div>
-
-  <!-- Actions -->
-  <div class="actions-row">
-    <button class="action-btn" onclick="openLeaveModal()">
-      <div class="action-icon coral">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#E8472A" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      </div>
-      <div>
-        <div class="action-title" id="act-request-leave">Request Leave</div>
-        <div class="action-desc" id="act-request-leave-desc">Submit a leave request</div>
-      </div>
-    </button>
-    <button class="action-btn" onclick="viewDocuments()">
-      <div class="action-icon teal">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#00BFA6" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-      </div>
-      <div>
-        <div class="action-title" id="act-documents">My Documents</div>
-        <div class="action-desc" id="act-documents-desc">View & download your files</div>
-      </div>
-    </button>
-  </div>
-
-  <!-- Cards Row -->
-  <div class="cards-row">
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title" id="card-leave-title">Leave Balances</div>
-        <a href="#" class="card-link" id="card-leave-link">View all</a>
-      </div>
-      <div id="leave-balances-content">
-        <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading…</div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title" id="card-payslip-title">Latest Payslip</div>
-      </div>
-      <div id="payslip-content">
-        <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading…</div>
+      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;">
+        <button class="btn btn-secondary" onclick="closeLeaveModal()" id="btn-cancel">Cancel</button>
+        <button class="btn btn-primary" onclick="submitLeave()" id="btn-submit">Submit Request</button>
       </div>
     </div>
   </div>
 
-  <!-- Overtime Card -->
-  <div class="card" style="margin-bottom:24px;">
-    <div class="card-header">
-      <div class="card-title">My Overtime (العمل الإضافي)</div>
-      <button onclick="openOTModal()" style="background:#E8472A;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">+ Submit</button>
-    </div>
-    <div id="ot-history-content">
-      <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading…</div>
-    </div>
-  </div>
+  <script>
+    let token = localStorage.getItem('ghaya_token');
+    let currentUser = null;
+    let employeeData = null;
+    let lang = 'en';
 
-  <!-- Recent Leave Requests -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title" id="card-recent-title">Recent Leave Requests</div>
-    </div>
-    <div id="recent-leaves-content">
-      <div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Loading…</div>
-    </div>
-  </div>
-
-</div>
-
-<script>
-  const API = '';
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-
-  const i18n = {
-    en: {
-      loading:'Loading your dashboard…', hello:(name)=>`Hello, ${name}! 👋`, today:'Today',
-      leaveLeft:'Leave Days Left', leaveUsed:'Days Used', leavePending:'Pending', lastPay:'Last Net Pay',
-      requestLeave:'Request Leave', requestLeaveDesc:'Submit a leave request',
-      myDocs:'My Documents', myDocsDesc:'View & download your files',
-      leaveBalances:'Leave Balances', viewAll:'View all', latestPayslip:'Latest Payslip',
-      recentLeaves:'Recent Leave Requests', noPayslip:'No payslip published yet.', noLeaves:'No leave requests yet.',
-      gross:'Gross Salary', deductions:'Deductions', net:'Net Salary', download:'Download Payslip PDF',
-      leaveModal:'Request Leave', mlType:'Leave Type', mlStart:'Start Date', mlEnd:'End Date',
-      mlReason:'Reason (optional)', mlCancel:'Cancel', mlSubmit:'Submit Request', logout:'Logout',
-      docExpiry:(doc,date)=>`⚠️ ${doc} expires on ${date}`,
-    },
-    ar: {
-      loading:'جارٍ تحميل لوحة التحكم…', hello:(name)=>`مرحباً، ${name}! 👋`, today:'اليوم',
-      leaveLeft:'أيام الإجازة المتبقية', leaveUsed:'أيام مستخدمة', leavePending:'قيد الانتظار', lastPay:'آخر صافي راتب',
-      requestLeave:'طلب إجازة', requestLeaveDesc:'تقديم طلب إجازة',
-      myDocs:'وثائقي', myDocsDesc:'عرض وتنزيل الملفات',
-      leaveBalances:'أرصدة الإجازات', viewAll:'عرض الكل', latestPayslip:'آخر قسيمة راتب',
-      recentLeaves:'طلبات الإجازة الأخيرة', noPayslip:'لا توجد قسيمة راتب بعد.', noLeaves:'لا توجد طلبات إجازة بعد.',
-      gross:'الراتب الإجمالي', deductions:'الاستقطاعات', net:'صافي الراتب', download:'تنزيل قسيمة الراتب PDF',
-      leaveModal:'طلب إجازة', mlType:'نوع الإجازة', mlStart:'تاريخ البداية', mlEnd:'تاريخ النهاية',
-      mlReason:'السبب (اختياري)', mlCancel:'إلغاء', mlSubmit:'تقديم الطلب', logout:'تسجيل الخروج',
-      docExpiry:(doc,date)=>`⚠️ ${doc} تنتهي صلاحيته في ${date}`,
-    }
-  };
-
-  let lang = localStorage.getItem('ghaya_lang') || 'en';
-  let t = i18n[lang];
-  let dashData = null;
-  let leaveTypes = [];
-
-  function setLang(l) { localStorage.setItem('ghaya_lang', l); location.reload(); }
-
-  function applyLang() {
-    document.documentElement.lang = lang;
-    document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    document.getElementById('loading-text').textContent = t.loading;
-    document.getElementById('lbtn-en').classList.toggle('active', lang === 'en');
-    document.getElementById('lbtn-ar').classList.toggle('active', lang === 'ar');
-    document.getElementById('logout-btn').textContent = t.logout;
-  }
-
-  function formatDate(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    return `${d.getDate()} ${lang === 'ar' ? MONTHS_AR[d.getMonth()] : MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-  }
-  function formatMonth(m, y) {
-    return lang === 'ar' ? `${MONTHS_AR[m-1]} ${y}` : `${MONTHS[m-1]} ${y}`;
-  }
-
-  // ── Auth ─────────────────────────────────────
-  const token = localStorage.getItem('ghaya_token');
-  const user = JSON.parse(localStorage.getItem('ghaya_user') || 'null');
-  if (!token || !user) { window.location.href = '/login'; }
-
-  // Link this browser to the user's OneSignal profile
-  if (user?.id) {
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-      try { await OneSignal.login(user.id); } catch(e) {}
-    });
-  }
-
-  function setAvatarPhoto(src) {
-    const wrap = document.getElementById('avatar-photo');
-    const img = document.getElementById('avatar-img');
-    const initials = document.getElementById('avatar');
-    img.src = src;
-    wrap.style.display = 'block';
-    initials.style.opacity = '0';
-  }
-
-  async function uploadSelfPhoto(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    if (file.size > 700 * 1024) { alert('Image too large — please use an image under 700KB'); return; }
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const base64 = e.target.result;
-      setAvatarPhoto(base64);
-      const res = await apiFetch('/api/employees', { method: 'PUT', body: JSON.stringify({ photo: base64 }) });
-      if (!res?.employee) { alert('Failed to save photo'); }
+    const i18n = {
+      en: {
+        appName:'Ghaya غاية', portalSub:'EMPLOYEE PORTAL',
+        navOverview:'OVERVIEW', navDashboard:'Dashboard', navHR:'MY HR',
+        navLeaves:'My Leaves', navPayslips:'My Payslips', navProfile:'My Profile', navLogout:'Sign Out',
+        titleDashboard:'Dashboard', subDashboard:'Welcome back!',
+        lblRemaining:'Annual Leave Remaining', lblPending:'Pending Requests',
+        lblTaken:'Days Taken This Year', lblSalary:'Basic Salary (KWD)',
+        titleQuick:'Quick Actions', titleRecentLeaves:'Recent Leave Requests',
+        titleLeaves:'My Leaves', subLeaves:'View and manage your leave requests',
+        titleBalance:'Leave Balance', lblBalRemaining:'Days Remaining',
+        lblBalTaken:'Taken This Year', lblBalPending:'Pending Days',
+        titleHistory:'Leave History', thType:'Type', thStart:'Start', thEnd:'End', thDays:'Days', thStatus:'Status',
+        titlePayslips:'My Payslips', subPayslips:'Monthly salary breakdown',
+        titleProfile:'My Profile', subProfile:'Your personal information',
+        modalLeave:'Request Leave', lblLeaveType:'Leave Type',
+        lblStart:'Start Date', lblEnd:'End Date', lblReason:'Reason (optional)',
+        btnCancel:'Cancel', btnSubmit:'Submit Request', btnRequest:'Request Leave',
+      },
+      ar: {
+        appName:'غاية Ghaya', portalSub:'بوابة الموظف',
+        navOverview:'نظرة عامة', navDashboard:'الرئيسية', navHR:'الموارد البشرية',
+        navLeaves:'إجازاتي', navPayslips:'كشوف الراتب', navProfile:'ملفي', navLogout:'تسجيل الخروج',
+        titleDashboard:'الرئيسية', subDashboard:'أهلاً بك!',
+        lblRemaining:'رصيد الإجازة السنوية', lblPending:'الطلبات المعلقة',
+        lblTaken:'الأيام المستخدمة هذا العام', lblSalary:'الراتب الأساسي (د.ك)',
+        titleQuick:'إجراءات سريعة', titleRecentLeaves:'آخر طلبات الإجازة',
+        titleLeaves:'إجازاتي', subLeaves:'عرض وإدارة طلبات الإجازة',
+        titleBalance:'رصيد الإجازة', lblBalRemaining:'الأيام المتبقية',
+        lblBalTaken:'الأيام المستخدمة', lblBalPending:'الأيام قيد المراجعة',
+        titleHistory:'سجل الإجازات', thType:'النوع', thStart:'البداية', thEnd:'النهاية', thDays:'الأيام', thStatus:'الحالة',
+        titlePayslips:'كشوف الراتب', subPayslips:'تفصيل الراتب الشهري',
+        titleProfile:'ملفي الشخصي', subProfile:'بياناتك الشخصية',
+        modalLeave:'طلب إجازة', lblLeaveType:'نوع الإجازة',
+        lblStart:'تاريخ البداية', lblEnd:'تاريخ النهاية', lblReason:'السبب (اختياري)',
+        btnCancel:'إلغاء', btnSubmit:'إرسال الطلب', btnRequest:'طلب إجازة',
+      }
     };
-    reader.readAsDataURL(file);
-  }
 
-  function logout() {
-    localStorage.removeItem('ghaya_token');
-    localStorage.removeItem('ghaya_user');
-    window.location.href = '/login';
-  }
-
-  async function apiFetch(path, opts = {}) {
-    const res = await fetch(API + path, {
-      ...opts,
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) },
-    });
-    if (res.status === 401) { logout(); return null; }
-    return res.json();
-  }
-
-  // ── Dashboard ─────────────────────────────────
-  async function loadDashboard() {
-    const data = await apiFetch('/api/dashboard');
-    if (!data) return;
-    dashData = data;
-
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('page-content').style.display = 'block';
-
-    const initials = (user.name || 'U').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
-    document.getElementById('avatar').textContent = initials;
-    document.getElementById('nav-name').textContent = user.name || user.email;
-    // Show photo if available
-    if (data.employee?.photo) {
-      setAvatarPhoto(data.employee.photo);
-    }
-    // Show company logo/name in nav
-    const coName = lang === 'ar' && data.company?.name_ar ? data.company.name_ar : (data.company?.name_en || 'Ghaya');
-    document.getElementById('nav-company-name').textContent = coName;
-    if (data.company?.logo) {
-      document.getElementById('company-logo-img').src = data.company.logo;
-      document.getElementById('company-logo-wrap').style.display = '';
-      document.getElementById('ghaya-default-logo').style.display = 'none';
-    }
-
-    const now = new Date();
-    document.getElementById('greeting-hello').textContent = t.hello(user.name || user.email);
-    document.getElementById('greeting-date').textContent = `${t.today}, ${formatDate(now.toISOString())}`;
-
-    document.getElementById('lbl-leave-remaining').textContent = t.leaveLeft;
-    document.getElementById('lbl-leave-used').textContent = t.leaveUsed;
-    document.getElementById('lbl-leave-pending').textContent = t.leavePending;
-    document.getElementById('lbl-net-salary').textContent = t.lastPay;
-    document.getElementById('act-request-leave').textContent = t.requestLeave;
-    document.getElementById('act-request-leave-desc').textContent = t.requestLeaveDesc;
-    document.getElementById('act-documents').textContent = t.myDocs;
-    document.getElementById('act-documents-desc').textContent = t.myDocsDesc;
-    document.getElementById('card-leave-title').textContent = t.leaveBalances;
-    document.getElementById('card-leave-link').textContent = t.viewAll;
-    document.getElementById('card-payslip-title').textContent = t.latestPayslip;
-    document.getElementById('card-recent-title').textContent = t.recentLeaves;
-    document.getElementById('modal-title').textContent = t.leaveModal;
-    document.getElementById('ml-type').textContent = t.mlType;
-    document.getElementById('ml-start').textContent = t.mlStart;
-    document.getElementById('ml-end').textContent = t.mlEnd;
-    document.getElementById('ml-reason').textContent = t.mlReason;
-    document.getElementById('ml-cancel').textContent = t.mlCancel;
-    document.getElementById('ml-submit').textContent = t.mlSubmit;
-
-    // Alerts
-    const alertsEl = document.getElementById('alerts-section');
-    alertsEl.innerHTML = '';
-    (data.expiring_documents || []).forEach(doc => {
-      const div = document.createElement('div');
-      div.className = 'alert-banner';
-      div.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span>${t.docExpiry(doc.doc_type, formatDate(doc.expiry_date))}</span>`;
-      alertsEl.appendChild(div);
-    });
-
-    // Stats
-    const annualBalance = data.leave_balances?.find(b => b.type_name === 'Annual Leave') || data.leave_balances?.[0];
-    if (annualBalance) {
-      const remaining = annualBalance.entitled_days - annualBalance.used_days - annualBalance.pending_days;
-      document.getElementById('stat-leave-remaining').textContent = Math.max(0, remaining);
-      document.getElementById('stat-leave-used').textContent = annualBalance.used_days;
-      document.getElementById('stat-leave-pending').textContent = annualBalance.pending_days;
-    }
-    if (data.latest_payslip) {
-      document.getElementById('stat-net-salary').textContent = `KWD ${Number(data.latest_payslip.net_salary).toFixed(0)}`;
+    function setLang(l) {
+      lang = l;
+      document.body.classList.toggle('rtl', l === 'ar');
+      document.getElementById('btn-en').classList.toggle('active', l === 'en');
+      document.getElementById('btn-ar').classList.toggle('active', l === 'ar');
+      const tx = i18n[l];
+      document.getElementById('app-name').textContent = tx.appName;
+      document.getElementById('portal-sub').textContent = tx.portalSub;
+      document.getElementById('nav-lbl-overview').textContent = tx.navOverview;
+      document.getElementById('nav-dashboard').textContent = tx.navDashboard;
+      document.getElementById('nav-lbl-hr').textContent = tx.navHR;
+      document.getElementById('nav-leaves').textContent = tx.navLeaves;
+      document.getElementById('nav-payslips').textContent = tx.navPayslips;
+      document.getElementById('nav-profile').textContent = tx.navProfile;
+      document.getElementById('nav-logout').textContent = tx.navLogout;
+      document.getElementById('title-dashboard').textContent = tx.titleDashboard;
+      document.getElementById('sub-dashboard').textContent = tx.subDashboard;
+      document.getElementById('lbl-stat-remaining').textContent = tx.lblRemaining;
+      document.getElementById('lbl-stat-pending').textContent = tx.lblPending;
+      document.getElementById('lbl-stat-taken').textContent = tx.lblTaken;
+      document.getElementById('lbl-stat-salary').textContent = tx.lblSalary;
+      document.getElementById('title-quick-actions').textContent = tx.titleQuick;
+      document.getElementById('title-recent-leaves').textContent = tx.titleRecentLeaves;
+      document.getElementById('title-leaves').textContent = tx.titleLeaves;
+      document.getElementById('sub-leaves').textContent = tx.subLeaves;
+      document.getElementById('title-balance').textContent = tx.titleBalance;
+      document.getElementById('lbl-bal-remaining').textContent = tx.lblBalRemaining;
+      document.getElementById('lbl-bal-taken').textContent = tx.lblBalTaken;
+      document.getElementById('lbl-bal-pending').textContent = tx.lblBalPending;
+      document.getElementById('title-history').textContent = tx.titleHistory;
+      document.getElementById('th-type').textContent = tx.thType;
+      document.getElementById('th-start').textContent = tx.thStart;
+      document.getElementById('th-end').textContent = tx.thEnd;
+      document.getElementById('th-days').textContent = tx.thDays;
+      document.getElementById('th-status').textContent = tx.thStatus;
+      document.getElementById('title-payslips').textContent = tx.titlePayslips;
+      document.getElementById('sub-payslips').textContent = tx.subPayslips;
+      document.getElementById('title-profile').textContent = tx.titleProfile;
+      document.getElementById('sub-profile').textContent = tx.subProfile;
+      document.getElementById('modal-leave-title').textContent = tx.modalLeave;
+      document.getElementById('lbl-leave-type').textContent = tx.lblLeaveType;
+      document.getElementById('lbl-start').textContent = tx.lblStart;
+      document.getElementById('lbl-end').textContent = tx.lblEnd;
+      document.getElementById('lbl-reason').textContent = tx.lblReason;
+      document.getElementById('btn-cancel').textContent = tx.btnCancel;
+      document.getElementById('btn-submit').textContent = tx.btnSubmit;
+      document.getElementById('btn-request-leave').textContent = tx.btnRequest;
     }
 
-    renderLeaveBalances(data.leave_balances || []);
-    renderPayslip(data.latest_payslip, data.visibility);
-    renderRecentLeaves(data.recent_leaves || []);
-    loadLeaveTypes();
-    loadOTHistory();
-    loadClockStatus();
-    loadAnnouncements();
-  }
-
-  function renderLeaveBalances(balances) {
-    const colors = ['','teal','navy'];
-    const el = document.getElementById('leave-balances-content');
-    if (!balances.length) { el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">No leave balance data</div>`; return; }
-    el.innerHTML = balances.map((b,i) => {
-      const remaining = Math.max(0, b.entitled_days - b.used_days - b.pending_days);
-      const pct = b.entitled_days > 0 ? (b.used_days / b.entitled_days * 100) : 0;
-      return `<div class="leave-item">
-        <div class="leave-row">
-          <span class="leave-name">${lang === 'ar' && b.type_name_ar ? b.type_name_ar : b.type_name}</span>
-          <span class="leave-count"><strong>${remaining}</strong> / ${b.entitled_days} days</span>
-        </div>
-        <div class="leave-bar"><div class="leave-bar-fill ${colors[i]||''}" style="width:${Math.min(100,pct)}%"></div></div>
-      </div>`;
-    }).join('');
-  }
-
-  function renderPayslip(payslip, visibility) {
-    const el = document.getElementById('payslip-content');
-    if (!payslip || !visibility?.show_payslips) { el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">${t.noPayslip}</div>`; return; }
-    const gross = Number(payslip.gross_salary).toFixed(3);
-    const net = Number(payslip.net_salary).toFixed(3);
-    const deduct = (payslip.gross_salary - payslip.net_salary).toFixed(3);
-    el.innerHTML = `
-      <div class="payslip-amount">KWD ${Number(payslip.net_salary).toFixed(3)}</div>
-      <div class="payslip-period">${formatMonth(payslip.period_month, payslip.period_year)}</div>
-      <div class="payslip-rows">
-        <div class="payslip-row"><span class="label">${t.gross}</span><span>KWD ${gross}</span></div>
-        <div class="payslip-row"><span class="label">${t.deductions}</span><span>- KWD ${deduct}</span></div>
-        <div class="payslip-row"><span class="label"><strong>${t.net}</strong></span><span><strong>KWD ${net}</strong></span></div>
-      </div>
-      <button class="btn-download" onclick="downloadPayslip()">${t.download}</button>`;
-  }
-
-  function renderRecentLeaves(leaves) {
-    const el = document.getElementById('recent-leaves-content');
-    if (!leaves.length) { el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">${t.noLeaves}</div>`; return; }
-    el.innerHTML = `<div class="leave-list">${leaves.map(l => `
-      <div class="leave-row-item">
-        <div>
-          <div class="leave-type-tag">${l.type_name}</div>
-          <div class="leave-dates">${formatDate(l.start_date)} → ${formatDate(l.end_date)} (${l.days_count}d)</div>
-        </div>
-        <span class="status-badge ${l.status}">${l.status}</span>
-      </div>`).join('')}</div>`;
-  }
-
-  async function loadLeaveTypes() {
-    const data = await apiFetch('/api/leaves/types');
-    if (data?.leave_types) {
-      leaveTypes = data.leave_types;
-      const sel = document.getElementById('leave-type-select');
-      sel.innerHTML = leaveTypes.map(lt => `<option value="${lt.id}">${lang === 'ar' && lt.name_ar ? lt.name_ar : lt.name_en}</option>`).join('');
+    function showPage(page, navEl) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      if (navEl) navEl.classList.add('active');
+      if (page === 'leaves') loadLeaves('all');
+      if (page === 'payslips') loadPayslip();
+      if (page === 'profile') loadProfile();
     }
-  }
 
-  // ── Leave Modal ───────────────────────────────
-  function openLeaveModal() { document.getElementById('leave-modal').classList.add('open'); }
-  function closeLeaveModal() { document.getElementById('leave-modal').classList.remove('open'); }
-
-  async function submitLeave() {
-    const typeId = document.getElementById('leave-type-select').value;
-    const startDate = document.getElementById('leave-start').value;
-    const endDate = document.getElementById('leave-end').value;
-    const reason = document.getElementById('leave-reason').value;
-    if (!startDate || !endDate) { alert('Please select start and end dates'); return; }
-    const btn = document.getElementById('ml-submit');
-    btn.disabled = true; btn.textContent = '…';
-    const res = await apiFetch('/api/leaves', { method:'POST', body:JSON.stringify({leave_type_id:typeId,start_date:startDate,end_date:endDate,reason}) });
-    btn.disabled = false; btn.textContent = t.mlSubmit;
-    if (res?.request_id) { closeLeaveModal(); loadDashboard(); }
-    else alert(res?.error || 'Error submitting request');
-  }
-
-  async function viewDocuments() {
-    document.getElementById('docs-modal').classList.add('open');
-    const el = document.getElementById('emp-docs-list');
-    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);">Loading…</div>';
-    const data = await apiFetch('/api/documents');
-    const docs = data?.documents || [];
-    if (!docs.length) {
-      el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;">📄 No documents uploaded yet.<br><span style="font-size:12px;">Your HR admin will upload documents here (contracts, IDs, certificates, etc.)</span></div>';
-      return;
+    async function api(path, opts = {}) {
+      const res = await fetch(path, {
+        ...opts,
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...(opts.headers || {}) }
+      });
+      return res.json();
     }
-    const typeIcon = {pdf:'📄',jpg:'🖼',jpeg:'🖼',png:'🖼',webp:'🖼',doc:'📝',docx:'📝'};
-    const fmtBytes = b => { if(!b) return ''; if(b<1048576) return (b/1024).toFixed(0)+'KB'; return (b/1048576).toFixed(1)+'MB'; };
-    const fmtDate = s => s ? new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '';
-    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;">${docs.map(d => {
-      const ext = (d.file_name||'').split('.').pop().toLowerCase();
-      const icon = typeIcon[ext] || '📎';
-      return `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--cream);border-radius:10px;border:1px solid var(--border);">
-        <div style="font-size:24px;flex-shrink:0;">${icon}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-weight:600;font-size:13px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.file_name}</div>
-          <div style="font-size:11px;color:var(--gray);margin-top:2px;">${d.type_name||'Document'} · ${fmtBytes(d.file_size)} · ${fmtDate(d.created_at)}</div>
-          ${d.notes ? `<div style="font-size:11px;color:#555;margin-top:2px;">${d.notes}</div>` : ''}
-        </div>
-        <button onclick="empDownloadDoc('${d.id}','${d.file_name.replace(/'/g,"\\'")}')" style="background:var(--coral);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">⬇ Download</button>
-      </div>`;
-    }).join('')}</div>`;
-  }
 
-  function empDownloadDoc(id, name) {
-    const token = localStorage.getItem('ghaya_token');
-    fetch(`/api/documents/${id}/download`, { headers: { 'Authorization': 'Bearer ' + token } })
-      .then(r => { if (!r.ok) throw new Error(); return r.blob(); })
-      .then(blob => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href); })
-      .catch(() => alert('Download failed. Please try again.'));
-  }
-  function downloadPayslip() {
-    const ps = dashData?.latest_payslip;
-    const emp = dashData?.employee;
-    const company = dashData?.company;
-    if (!ps) { alert('No payslip available.'); return; }
+    async function init() {
+      if (!token) { window.location.href = '/login'; return; }
+      const data = await api('/api/auth/me');
+      if (data.error) { logout(); return; }
+      currentUser = data.user;
 
-    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    const period = `${monthNames[(ps.period_month||1)-1]} ${ps.period_year}`;
-    const fmt = v => `KWD ${Number(v||0).toFixed(3)}`;
-    const empName = lang === 'ar' && emp?.name_ar ? emp.name_ar : (emp?.name_en || '');
-    const coName  = lang === 'ar' && company?.name_ar ? company.name_ar : (company?.name_en || 'Company');
-    const pubDate = ps.payslip_published_at ? new Date(ps.payslip_published_at).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'}) : '';
+      if (!['employee', 'manager', 'company_admin'].includes(currentUser.role)) {
+        alert('Access denied. This portal is for employees only.');
+        logout(); return;
+      }
 
-    const rows = [
-      ['Basic Salary', ps.basic_salary],
-      ps.housing_allowance   > 0 ? ['Housing Allowance',   ps.housing_allowance]   : null,
-      ps.transport_allowance > 0 ? ['Transport Allowance', ps.transport_allowance] : null,
-      ps.other_allowances    > 0 ? ['Other Allowances',    ps.other_allowances]    : null,
-      ps.overtime_pay        > 0 ? ['Overtime Pay',        ps.overtime_pay]        : null,
-    ].filter(Boolean);
+      document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
+      document.getElementById('user-role').textContent = currentUser.role.replace(/_/g, ' ');
+      document.getElementById('sub-dashboard').textContent = `Welcome back, ${currentUser.name || currentUser.email}!`;
 
-    const deductRows = [
-      ps.pifss_employee > 0 ? ['PIFSS Contribution (10.5%)', ps.pifss_employee] : null,
-    ].filter(Boolean);
+      await loadDashboard();
+    }
 
-    const totalDeductions = deductRows.reduce((s,[,v]) => s + Number(v||0), 0);
+    async function loadDashboard() {
+      if (currentUser.employee_id) {
+        const d = await api(`/api/employees/${currentUser.employee_id}`);
+        if (!d.error) {
+          employeeData = d.employee || d;
+          document.getElementById('stat-salary').textContent = parseFloat(employeeData.basic_salary || 0).toFixed(3);
+        }
+      }
 
-    const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Payslip – ${period}</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1a1a2e; background: #fff; }
-  .page { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 20mm; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 16px; border-bottom: 3px solid #1a1a2e; margin-bottom: 20px; }
-  .company-name { font-size: 22px; font-weight: 800; color: #1a1a2e; }
-  .payslip-title { font-size: 13px; color: #666; margin-top: 4px; }
-  .badge { background: #1a1a2e; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
-  .employee-box { background: #f7f5f0; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; }
-  .emp-info div { margin-bottom: 4px; font-size: 13px; }
-  .emp-info .emp-name { font-size: 16px; font-weight: 700; }
-  .emp-info .emp-period { color: #666; font-size: 12px; }
-  .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #888; margin-bottom: 8px; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-  td { padding: 9px 12px; border-bottom: 1px solid #eee; font-size: 13px; }
-  td:last-child { text-align: right; font-weight: 600; }
-  .total-row td { background: #1a1a2e; color: #fff; font-weight: 700; font-size: 14px; border-radius: 0; }
-  .net-box { background: #e8f5e9; border: 2px solid #2e7d32; border-radius: 10px; padding: 16px 20px; text-align: center; margin-top: 10px; }
-  .net-label { font-size: 12px; color: #2e7d32; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
-  .net-amount { font-size: 28px; font-weight: 900; color: #1a1a2e; margin-top: 4px; }
-  .footer { margin-top: 30px; font-size: 10px; color: #aaa; text-align: center; border-top: 1px solid #eee; padding-top: 14px; }
-  .notice { margin-top: 16px; background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 10px 14px; font-size: 11px; color: #555; line-height: 1.5; }
-  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-</style>
-</head>
-<body>
-<div class="page">
-  <div class="header">
-    <div>
-      <div class="company-name">${coName}</div>
-      <div class="payslip-title">Official Payslip</div>
-    </div>
-    <div class="badge">PAYSLIP</div>
-  </div>
+      const ldata = await api('/api/leaves');
+      if (!ldata.error) {
+        const leaves = ldata.leaves || ldata.data || [];
+        const year = new Date().getFullYear().toString();
+        const yearLeaves = leaves.filter(l => (l.start_date || '').startsWith(year));
+        const approvedDays = yearLeaves.filter(l => l.status === 'approved').reduce((s, l) => s + (parseInt(l.days_requested) || 0), 0);
+        const pendingCount = leaves.filter(l => l.status === 'pending').length;
+        const pendingDays = leaves.filter(l => l.status === 'pending').reduce((s, l) => s + (parseInt(l.days_requested) || 0), 0);
+        const remaining = 30 - approvedDays;
 
-  <div class="employee-box">
-    <div class="emp-info">
-      <div class="emp-name">${empName}</div>
-      <div class="emp-period">Pay Period: ${period}</div>
-      ${pubDate ? `<div class="emp-period">Issued: ${pubDate}</div>` : ''}
-    </div>
-  </div>
+        document.getElementById('stat-remaining').textContent = remaining;
+        document.getElementById('stat-pending').textContent = pendingCount;
+        document.getElementById('stat-taken').textContent = approvedDays;
+        document.getElementById('bal-remaining').textContent = remaining;
+        document.getElementById('bal-taken').textContent = approvedDays;
+        document.getElementById('bal-pending-days').textContent = pendingDays;
 
-  <div class="section-title">Earnings</div>
-  <table>
-    ${rows.map(([label, val]) => `<tr><td>${label}</td><td>${fmt(val)}</td></tr>`).join('')}
-    <tr class="total-row"><td>Gross Salary</td><td>${fmt(ps.gross_salary)}</td></tr>
-  </table>
+        const recent = leaves.slice(0, 5);
+        if (recent.length > 0) {
+          document.getElementById('recent-leaves-body').innerHTML = `
+            <table>
+              <thead><tr><th>Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th></tr></thead>
+              <tbody>${recent.map(l => `
+                <tr>
+                  <td>${cap(l.leave_type || l.type || '—')}</td>
+                  <td>${l.start_date || '—'}</td>
+                  <td>${l.end_date || '—'}</td>
+                  <td>${l.days_requested || '—'}</td>
+                  <td><span class="badge badge-${l.status}">${l.status}</span></td>
+                </tr>`).join('')}
+              </tbody>
+            </table>`;
+        }
+      }
+    }
 
-  ${deductRows.length ? `
-  <div class="section-title">Deductions</div>
-  <table>
-    ${deductRows.map(([label, val]) => `<tr><td>${label}</td><td>- ${fmt(val)}</td></tr>`).join('')}
-    <tr class="total-row"><td>Total Deductions</td><td>- ${fmt(totalDeductions)}</td></tr>
-  </table>` : ''}
+    function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'; }
 
-  <div class="net-box">
-    <div class="net-label">Net Pay</div>
-    <div class="net-amount">${fmt(ps.net_salary)}</div>
-  </div>
+    async function loadLeaves(status) {
+      const url = (!status || status === 'all') ? '/api/leaves' : `/api/leaves?status=${status}`;
+      const data = await api(url);
+      const leaves = data.leaves || data.data || [];
+      const tbody = document.getElementById('leaves-tbody');
+      if (!leaves.length) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🌴</div><div class="empty-text">No leave requests</div></div></td></tr>`;
+        return;
+      }
+      tbody.innerHTML = leaves.map(l => `
+        <tr>
+          <td>${cap(l.leave_type || l.type || '—')}</td>
+          <td>${l.start_date || '—'}</td>
+          <td>${l.end_date || '—'}</td>
+          <td>${l.days_requested || '—'}</td>
+          <td><span class="badge badge-${l.status}">${l.status}</span></td>
+        </tr>`).join('');
+    }
 
-  ${ps.pifss_employer > 0 ? `<div class="notice">ℹ️ <strong>Employer PIFSS contribution (11.5%):</strong> ${fmt(ps.pifss_employer)} — paid directly by employer and not deducted from your salary.</div>` : ''}
+    function filterLeaves(status) {
+      ['all','pending','approved','rejected'].forEach(s => {
+        const btn = document.getElementById('filter-' + s);
+        btn.className = 'btn btn-sm ' + (s === status ? 'btn-primary' : 'btn-secondary');
+      });
+      loadLeaves(status);
+    }
 
-  <div class="footer">
-    This payslip is generated in accordance with Kuwait Labour Law No. 6 of 2010 and PIFSS Law 61/1976.<br>
-    ${coName} · ${period} · Confidential
-  </div>
-</div>
-<script>window.onload = function() { window.print(); };<\/script>
-</body>
-</html>`;
-
-    const win = window.open('', '_blank', 'width=900,height=700');
-    win.document.write(html);
-    win.document.close();
-  }
-
-  // ── Clock In / Out ────────────────────────────
-  let currentAttRecord = null;
-
-  function startLiveClock() {
-    function tick() {
+    async function loadPayslip() {
+      if (!employeeData && currentUser.employee_id) {
+        const d = await api(`/api/employees/${currentUser.employee_id}`);
+        if (!d.error) employeeData = d.employee || d;
+      }
+      const content = document.getElementById('payslip-content');
+      if (!employeeData) {
+        content.innerHTML = `<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">No payslip available</div><div class="empty-sub">Contact your HR administrator</div></div>`;
+        return;
+      }
+      const salary = parseFloat(employeeData.basic_salary || 0);
+      const isKuwaiti = (employeeData.nationality || '').toLowerCase() === 'kuwaiti';
+      const pifss = isKuwaiti ? salary * 0.05 : 0;
+      const net = salary - pifss;
       const now = new Date();
-      const el = document.getElementById('live-clock');
-      if (el) el.textContent = now.toLocaleTimeString('en-GB');
-      const dl = document.getElementById('clock-date-label');
-      if (dl) dl.textContent = now.toLocaleDateString('en-GB', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      document.getElementById('payslip-month').textContent = now.toLocaleString('en', {month:'long', year:'numeric'});
+      content.innerHTML = `
+        <div style="max-width:480px;">
+          <div class="payslip-row"><span>Employee</span><span style="font-weight:700;">${employeeData.first_name_en || ''} ${employeeData.last_name_en || ''}</span></div>
+          <div class="payslip-row"><span>Job Title</span><span>${employeeData.job_title_en || '—'}</span></div>
+          <div class="payslip-row"><span>Department</span><span>${employeeData.department || '—'}</span></div>
+          <div style="height:16px;"></div>
+          <div class="payslip-row"><span style="font-weight:700;">Basic Salary</span><span style="font-weight:700;">KWD ${salary.toFixed(3)}</span></div>
+          ${isKuwaiti ? `<div class="payslip-row"><span style="color:#E8472A;">PIFSS Deduction (5%)</span><span style="color:#E8472A;">- KWD ${pifss.toFixed(3)}</span></div>` : ''}
+          <div class="payslip-row" style="margin-top:8px;padding-top:16px;border-top:2px solid #1a1a2e;font-weight:800;font-size:16px;">
+            <span>Net Pay</span><span style="color:#E8472A;">KWD ${net.toFixed(3)}</span>
+          </div>
+          <div style="margin-top:20px;padding:12px 16px;background:#f9f9f9;border-radius:10px;font-size:12px;color:#888;">
+            ${isKuwaiti ? '✓ PIFSS 5% employee contribution applied (Kuwaiti national)' : '✓ No PIFSS deduction (non-Kuwaiti national)'}
+          </div>
+        </div>`;
     }
-    tick();
-    setInterval(tick, 1000);
-  }
 
-  async function loadClockStatus() {
-    const data = await apiFetch('/api/attendance/today');
-    const rec = data?.record || null;
-    currentAttRecord = rec;
-
-    const inBtn = document.getElementById('clock-in-btn');
-    const outBtn = document.getElementById('clock-out-btn');
-    const label = document.getElementById('clock-status-label');
-    const info = document.getElementById('clock-info');
-
-    if (!rec || !rec.clock_in) {
-      label.textContent = 'NOT CLOCKED IN';
-      inBtn.style.display = '';
-      outBtn.style.display = 'none';
-      info.textContent = '';
-    } else if (rec.clock_in && !rec.clock_out) {
-      label.textContent = rec.status === 'late' ? 'CLOCKED IN — LATE ⚠️' : 'CLOCKED IN ✓';
-      inBtn.style.display = 'none';
-      outBtn.style.display = '';
-      info.textContent = `Since ${rec.clock_in.slice(0,5)}`;
-    } else {
-      label.textContent = 'DONE FOR TODAY ✓';
-      inBtn.style.display = 'none';
-      outBtn.style.display = 'none';
-      info.textContent = `${rec.clock_in.slice(0,5)} → ${rec.clock_out.slice(0,5)} · ${rec.hours_worked != null ? rec.hours_worked + ' hrs worked' : ''}`;
-    }
-  }
-
-  async function getLocation() {
-    return new Promise((resolve) => {
-      if (!navigator.geolocation) return resolve({lat:null, lng:null});
-      navigator.geolocation.getCurrentPosition(
-        pos => resolve({lat: pos.coords.latitude, lng: pos.coords.longitude}),
-        () => resolve({lat:null, lng:null}),
-        {timeout: 7000}
-      );
-    });
-  }
-
-  async function clockIn() {
-    const btn = document.getElementById('clock-in-btn');
-    btn.textContent = '…'; btn.disabled = true;
-    const {lat, lng} = await getLocation();
-    const res = await apiFetch('/api/attendance/clockin', {
-      method: 'POST',
-      body: JSON.stringify({lat, lng})
-    });
-    btn.textContent = '✓ Clock In'; btn.disabled = false;
-    if (res && !res.error) {
-      await loadClockStatus();
-      if (res.message) document.getElementById('clock-info').textContent = res.message;
-    } else {
-      alert(res?.error || 'Error clocking in');
-    }
-  }
-
-  async function clockOut() {
-    const btn = document.getElementById('clock-out-btn');
-    btn.textContent = '…'; btn.disabled = true;
-    const {lat, lng} = await getLocation();
-    const res = await apiFetch('/api/attendance/clockout', {
-      method: 'POST',
-      body: JSON.stringify({lat, lng})
-    });
-    btn.textContent = '✗ Clock Out'; btn.disabled = false;
-    if (res && !res.error) {
-      await loadClockStatus();
-      if (res.message) document.getElementById('clock-info').textContent = res.message;
-    } else {
-      alert(res?.error || 'Error clocking out');
-    }
-  }
-
-  // ── Overtime ──────────────────────────────────
-  async function loadOTHistory() {
-    const data = await apiFetch('/api/overtime');
-    const list = data?.requests || [];
-    const el = document.getElementById('ot-history-content');
-    if (!list.length) { el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">No overtime records yet.</div>`; return; }
-    const sb = {pending:'🟡 Pending',approved:'🟢 Approved',rejected:'🔴 Rejected'};
-    el.innerHTML = `<div class="leave-list">${list.slice(0,5).map(r=>`
-      <div class="leave-row-item">
-        <div>
-          <div class="leave-type-tag">${r.day_type==='holiday'?'Holiday (1.5×)':'Normal (1.25×)'}</div>
-          <div class="leave-dates">${r.date} · ${parseFloat(r.hours).toFixed(1)} hrs · KWD ${parseFloat(r.overtime_pay).toFixed(3)}</div>
+    async function loadProfile() {
+      if (!employeeData && currentUser.employee_id) {
+        const d = await api(`/api/employees/${currentUser.employee_id}`);
+        if (!d.error) employeeData = d.employee || d;
+      }
+      const content = document.getElementById('profile-content');
+      if (!employeeData) {
+        content.innerHTML = `<div class="empty-state"><div class="empty-icon">👤</div><div class="empty-text">Profile not found</div><div class="empty-sub">Contact your HR administrator</div></div>`;
+        return;
+      }
+      const e = employeeData;
+      content.innerHTML = `
+        <div style="display:flex;align-items:center;gap:20px;margin-bottom:28px;">
+          <div style="width:72px;height:72px;background:#E8472A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;color:white;font-weight:800;">${(e.first_name_en||'?').charAt(0)}</div>
+          <div>
+            <div style="font-size:22px;font-weight:800;color:#1a1a2e;">${e.first_name_en||''} ${e.last_name_en||''}</div>
+            <div style="font-size:14px;color:#888;margin-top:2px;">${e.job_title_en||'Employee'}${e.department ? ' · ' + e.department : ''}</div>
+          </div>
         </div>
-        <span class="status-badge ${r.status}">${sb[r.status]||r.status}</span>
-      </div>`).join('')}</div>`;
-  }
-
-  function openOTModal() {
-    document.getElementById('ot-emp-date').value = new Date().toISOString().split('T')[0];
-    document.getElementById('ot-emp-hours').value = '';
-    document.getElementById('ot-emp-day-type').value = 'normal';
-    document.getElementById('ot-emp-reason').value = '';
-    document.getElementById('ot-emp-preview').style.display = 'none';
-    ['ot-emp-hours','ot-emp-day-type'].forEach(id => document.getElementById(id).addEventListener('input', previewEmpOT));
-    document.getElementById('ot-modal').classList.add('open');
-  }
-  function closeOTModal() { document.getElementById('ot-modal').classList.remove('open'); }
-
-  function previewEmpOT() {
-    const hours = parseFloat(document.getElementById('ot-emp-hours').value || 0);
-    const dayType = document.getElementById('ot-emp-day-type').value;
-    if (!hours || !dashData?.employee?.basic_salary) { document.getElementById('ot-emp-preview').style.display='none'; return; }
-    const salary = parseFloat(dashData.employee.basic_salary || 0);
-    const hourlyRate = salary / 208;
-    const multiplier = dayType === 'holiday' ? 1.5 : 1.25;
-    const pay = (hours * hourlyRate * multiplier).toFixed(3);
-    document.getElementById('ot-emp-preview').style.display = '';
-    document.getElementById('ot-emp-preview-text').textContent = `Estimated OT pay: KWD ${pay} (${hours} hrs × KWD ${hourlyRate.toFixed(4)}/hr × ${multiplier}×)`;
-  }
-
-  async function submitOT() {
-    const date = document.getElementById('ot-emp-date').value;
-    const hours = parseFloat(document.getElementById('ot-emp-hours').value);
-    const day_type = document.getElementById('ot-emp-day-type').value;
-    const reason = document.getElementById('ot-emp-reason').value.trim();
-    if (!date) { alert('Select a date'); return; }
-    if (!hours || hours <= 0) { alert('Enter valid hours'); return; }
-    const btn = document.getElementById('ot-submit-btn');
-    btn.disabled = true; btn.textContent = '…';
-    const res = await apiFetch('/api/overtime', { method:'POST', body:JSON.stringify({date,hours,day_type,reason}) });
-    btn.disabled = false; btn.textContent = 'Submit Request';
-    if (res && !res.error) { closeOTModal(); loadOTHistory(); alert('Overtime request submitted!'); }
-    else alert(res?.error || 'Error submitting');
-  }
-
-  // ── Announcements ─────────────────────────────
-  async function loadAnnouncements() {
-    const data = await apiFetch('/api/announcements');
-    const list = data?.announcements || [];
-    const el = document.getElementById('announcements-section');
-    if (!list.length) { el.style.display = 'none'; return; }
-    el.style.display = '';
-    const typeIcon = { general:'📢', urgent:'🚨', holiday:'🎉', policy:'📋' };
-    const typeColor = { general:'var(--navy)', urgent:'#c42a00', holiday:'#1a7a42', policy:'#1a4da0' };
-    const typeBg = { general:'var(--navy-light)', urgent:'#ffeee6', holiday:'#e6f7ee', policy:'#e6f0ff' };
-    el.innerHTML = `
-      <div style="font-family:'Almarai',sans-serif;font-size:12px;font-weight:700;color:var(--gray);letter-spacing:1px;margin-bottom:10px;">📢 COMPANY ANNOUNCEMENTS</div>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        ${list.map(a => `
-          <div style="background:var(--white);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);border-left:4px solid ${typeColor[a.type]||'var(--navy)'};">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
-              <span style="background:${typeBg[a.type]||'var(--navy-light)'};color:${typeColor[a.type]||'var(--navy)'};border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;">${typeIcon[a.type]||'📢'} ${a.type.toUpperCase()}</span>
-              ${a.is_pinned ? '<span style="font-size:11px;color:#888;">📌 Pinned</span>' : ''}
-              <span style="font-size:11px;color:var(--gray);margin-left:auto;">${a.created_at?.slice(0,10)||''}</span>
-            </div>
-            <div style="font-family:\'Almarai\',sans-serif;font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px;">${a.title}</div>
-            <div style="font-size:13px;color:var(--charcoal);line-height:1.6;">${a.body}</div>
-          </div>`).join('')}
-      </div>`;
-  }
-
-  // ── In-page notification toast ─────────────────
-  function showInPageToast(title, body) {
-    // Remove any existing toast
-    const old = document.getElementById('ghaya-toast');
-    if (old) old.remove();
-
-    const toast = document.createElement('div');
-    toast.id = 'ghaya-toast';
-    toast.innerHTML = `
-      <div style="display:flex;align-items:flex-start;gap:10px;">
-        <div style="font-size:22px;flex-shrink:0;">🔔</div>
-        <div style="flex:1;">
-          <div style="font-weight:700;font-size:14px;margin-bottom:3px;">${title || 'Notification'}</div>
-          ${body ? `<div style="font-size:13px;color:#eee;line-height:1.4;">${body}</div>` : ''}
-        </div>
-        <button onclick="document.getElementById('ghaya-toast').remove()"
-          style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">✕</button>
-      </div>`;
-    Object.assign(toast.style, {
-      position:'fixed', bottom:'24px', right:'24px', zIndex:'9999',
-      background:'#0A2540', color:'#fff', padding:'14px 18px',
-      borderRadius:'14px', maxWidth:'340px', width:'calc(100% - 48px)',
-      boxShadow:'0 8px 32px rgba(0,0,0,0.35)',
-      animation:'slideUp .3s ease', cursor:'default',
-    });
-
-    // Inject keyframe once
-    if (!document.getElementById('toast-style')) {
-      const s = document.createElement('style');
-      s.id = 'toast-style';
-      s.textContent = `@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`;
-      document.head.appendChild(s);
+        <div class="profile-grid">
+          <div><div class="profile-item-label">Civil ID</div><div class="profile-item-value">${e.civil_id||'—'}</div></div>
+          <div><div class="profile-item-label">Nationality</div><div class="profile-item-value">${e.nationality||'—'}</div></div>
+          <div><div class="profile-item-label">Work Email</div><div class="profile-item-value">${e.work_email||currentUser.email||'—'}</div></div>
+          <div><div class="profile-item-label">Phone</div><div class="profile-item-value">${e.phone||'—'}</div></div>
+          <div><div class="profile-item-label">Department</div><div class="profile-item-value">${e.department||'—'}</div></div>
+          <div><div class="profile-item-label">Contract Type</div><div class="profile-item-value">${cap(e.contract_type||'—')}</div></div>
+          <div><div class="profile-item-label">Start Date</div><div class="profile-item-value">${e.employment_start_date||'—'}</div></div>
+          <div><div class="profile-item-label">Status</div><div class="profile-item-value">${e.is_active ? '🟢 Active' : '🔴 Inactive'}</div></div>
+          ${e.first_name_ar ? `<div><div class="profile-item-label">الاسم بالعربي</div><div class="profile-item-value">${e.first_name_ar} ${e.last_name_ar||''}</div></div>` : ''}
+        </div>`;
     }
 
-    document.body.appendChild(toast);
-    // Auto-dismiss after 6 seconds
-    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 6000);
-  }
-
-  // ── PWA install prompt ────────────────────────
-  let _pwaPrompt = null;
-  window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    _pwaPrompt = e;
-    if (!localStorage.getItem('pwa-dismissed') && !window.matchMedia('(display-mode: standalone)').matches) {
-      const banner = document.getElementById('pwa-banner');
-      if (banner) banner.style.display = 'flex';
+    function openLeaveModal() {
+      document.getElementById('leave-modal').classList.add('open');
+      document.getElementById('leave-alert').innerHTML = '';
+      document.getElementById('leave-reason').value = '';
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('leave-start').value = today;
+      document.getElementById('leave-end').value = today;
     }
-  });
 
-  // ── Start ─────────────────────────────────────
-  applyLang();
-  startLiveClock();
-  loadDashboard();
-</script>
+    function closeLeaveModal() { document.getElementById('leave-modal').classList.remove('open'); }
 
-<!-- PWA: Add to Home Screen banner -->
-<div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;background:#0A2540;color:#fff;padding:14px 20px;align-items:center;gap:14px;box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
-  <img src="/icon-192.png" style="width:44px;height:44px;border-radius:10px;flex-shrink:0;"/>
-  <div style="flex:1;">
-    <div style="font-weight:800;font-size:14px;">Install Ghaya Suite</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:2px;">Add to your home screen for quick access</div>
-  </div>
-  <button id="pwa-install-btn" style="background:#E8472A;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;">Install</button>
-  <button onclick="document.getElementById('pwa-banner').style.display='none';localStorage.setItem('pwa-dismissed','1');" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;">✕</button>
-</div>
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  }
-  document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
-    if (!_pwaPrompt) return;
-    _pwaPrompt.prompt();
-    const { outcome } = await _pwaPrompt.userChoice;
-    _pwaPrompt = null;
-    document.getElementById('pwa-banner').style.display = 'none';
-    if (outcome === 'accepted') localStorage.setItem('pwa-dismissed', '1');
-  });
-</script>
+    async function submitLeave() {
+      const alertEl = document.getElementById('leave-alert');
+      const start = document.getElementById('leave-start').value;
+      const end = document.getElementById('leave-end').value;
+      const type = document.getElementById('leave-type').value;
+      const reason = document.getElementById('leave-reason').value;
+      if (!start || !end) { alertEl.innerHTML = '<div class="alert alert-error">Please select dates.</div>'; return; }
+      if (end < start) { alertEl.innerHTML = '<div class="alert alert-error">End date must be after start date.</div>'; return; }
+      const data = await api('/api/leaves', { method: 'POST', body: JSON.stringify({ leave_type: type, start_date: start, end_date: end, reason }) });
+      if (data.error) { alertEl.innerHTML = `<div class="alert alert-error">${data.error}</div>`; return; }
+      closeLeaveModal();
+      await loadDashboard();
+      if (document.getElementById('page-leaves').classList.contains('active')) loadLeaves('all');
+    }
+
+    function logout() { localStorage.removeItem('ghaya_token'); window.location.href = '/login'; }
+
+    document.getElementById('leave-modal').addEventListener('click', function(e) { if (e.target === this) closeLeaveModal(); });
+
+    init();
+  </script>
 </body>
 </html>
