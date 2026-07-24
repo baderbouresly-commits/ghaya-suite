@@ -97,7 +97,8 @@ export async function onRequestPost({ request, env }) {
     if (!response.ok) {
       const err = await response.text();
       console.error('Gemini error:', err);
-      return error('AI service error', 500);
+      // TEMP DEBUG: return the real error so we can see what's wrong. Remove after fixing.
+      return json({ error: 'AI service error', debug: err }, 500);
     }
 
     const data = await response.json();
