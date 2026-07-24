@@ -49,37 +49,58 @@ async function getEmployeeContext(env, user) {
   if (!user.employee_id) return '';
   try {
     const db = env.DB;
-    const emp = await db.prepare(
-      'SELECT first_name_en, last_name_en, nationality, basic_salary, department, job_title_en, contract_type, employment_start_date FROM employees WHERE id = ?'
-    ).bind(user.employee_id).first();
+    const year = new Date().getFullYear();
 
-    const leaves = await db.prepare(
-      "SELECT leave_type, start_date, end_date, days_requested, status FROM leaves WHERE employee_id = ? ORDER BY start_date DESC LIMIT 20"
-    ).bind(user.employee_id).all();
-
-    const leaveRows = leaves?.results || [];
-    const year = new Date().getFullYear().toString();
-    const yearLeaves = leaveRows.filter(l => (l.start_date || '').startsWith(year));
-    const approvedDays = yearLeaves.filter(l => l.status === 'approved').reduce((s, l) => s + (parseInt(l.days_requested) || 0), 0);
-    const pendingCount = leaveRows.filter(l => l.status === 'pending').length;
-    const remaining = 30 - approvedDays;
+    const emp = await db.prepare(`
+      SELECT e.*, d.name_en as dept_name, j.title_en as job_title
+      FROM employees e
+      LEFT JOIN departments d ON d.id = e.department_id
+      LEFT JOIN job_titles j ON j.id = e.job_title_id
+      WHERE e.id = ? AND e.company_id = ?
+    `).bind(user.employee_id, user.company_id).first();
 
     if (!emp) return '';
 
+    const { results: balances } = await db.prepare(`
+      SELECT lb.*, lt.name_en as type_name
+      FROM leave_balances lb
+      JOIN leave_types lt ON lt.id = lb.leave_type_id
+      WHERE lb.employee_id = ? AND lb.year = ?
+    `).bind(user.employee_id, year).all();
+
+    const { results: recentLeaves } = await db.prepare(`
+      SELECT lr.start_date, lr.end_date, lr.days_count, lr.status, lt.name_en as type_name
+      FROM leave_requests lr
+      JOIN leave_types lt ON lt.id = lr.leave_type_id
+      WHERE lr.employee_id = ? AND lr.company_id = ?
+      ORDER BY lr.start_date DESC LIMIT 5
+    `).bind(user.employee_id, user.company_id).all();
+
+    const balanceLines = (balances || []).map(b => {
+      const remaining = (b.entitled_days || 0) - (b.used_days || 0) - (b.pending_days || 0);
+      return `${b.type_name}: ${remaining} days remaining (entitled ${b.entitled_days}, used ${b.used_days}, pending ${b.pending_days})`;
+    }).join('\n');
+
+    const leaveHistoryLines = (recentLeaves || [])
+      .map(l => `${l.type_name} from ${l.start_date} to ${l.end_date}, ${l.days_count} days, status: ${l.status}`)
+      .join('\n');
+
     return `
 
-CURRENT EMPLOYEE DATA (use this to answer personal questions about their own leave/salary/profile — do not say you don't have access, this IS their real data):
-- Name: ${emp.first_name_en || ''} ${emp.last_name_en || ''}
-- Nationality: ${emp.nationality || 'unknown'}
-- Job Title: ${emp.job_title_en || 'unknown'}
-- Department: ${emp.department || 'unknown'}
-- Contract Type: ${emp.contract_type || 'unknown'}
-- Start Date: ${emp.employment_start_date || 'unknown'}
-- Basic Salary: ${emp.basic_salary || 'unknown'} KWD
-- Annual Leave Remaining This Year: ${remaining} days (out of 30)
-- Annual Leave Taken This Year: ${approvedDays} days
-- Pending Leave Requests: ${pendingCount}
-- Recent Leave History: ${leaveRows.slice(0, 5).map(l => `${l.leave_type} ${l.start_date} to ${l.end_date} (${l.status})`).join('; ') || 'none'}
+CURRENT EMPLOYEE DATA (this is their real data — use it directly to answer questions about their own leave balance, salary, or profile; never say you don't have access to it):
+Name: ${emp.first_name_en || ''} ${emp.last_name_en || ''}
+Nationality: ${emp.nationality || 'unknown'}
+Job Title: ${emp.job_title || 'unknown'}
+Department: ${emp.dept_name || 'unknown'}
+Employment Type: ${emp.employment_type || 'unknown'}
+Hire Date: ${emp.hire_date || 'unknown'}
+Basic Salary: ${emp.basic_salary || 0} KWD
+
+Leave Balances for ${year}:
+${balanceLines || 'No leave balance records set up yet for this year.'}
+
+Recent Leave Requests:
+${leaveHistoryLines || 'No leave requests on record.'}
 `;
   } catch (e) {
     console.error('Employee context error:', e);
