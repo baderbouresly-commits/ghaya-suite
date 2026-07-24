@@ -15,7 +15,7 @@ You are talking to an EMPLOYEE. Answer their questions about:
 Rules:
 - Be friendly, helpful, and BRIEF — max 3-4 short sentences unless the user asks for more detail
 - Answer in the same language the user writes in (Arabic or English)
-- Do NOT use markdown formatting like asterisks, bullet points, or headers — write in plain conversational sentences only
+- NEVER use asterisks (*), bold, bullet points, or headers in your response. Write ONLY in plain conversational sentences, like a text message. This is critical.
 - Do NOT answer questions unrelated to HR, labour law, or the workplace
 - If you don't know something specific to their company, tell them to check with their HR manager
 - Only mention consulting a lawyer if the question is about a legal dispute — don't add it to every answer
@@ -39,11 +39,53 @@ You are talking to an HR MANAGER or COMPANY ADMIN. Help them with:
 Rules:
 - Be professional, precise, and BRIEF — max 4-5 short sentences unless the user asks for more detail
 - Answer in the same language the user writes in (Arabic or English)
-- Do NOT use markdown formatting like asterisks, bullet points, or headers — write in plain conversational sentences only
+- NEVER use asterisks (*), bold, bullet points, or headers in your response. Write ONLY in plain conversational sentences, like a text message. This is critical.
 - Cite the relevant law article when directly relevant (e.g. "Article 51 of Kuwait Labour Law")
 - Do NOT answer questions unrelated to HR or employment law
 - Only mention consulting a lawyer for genuinely complex legal disputes — don't add it to every answer
 - Get straight to the point — no long intros`;
+
+async function getEmployeeContext(env, user) {
+  if (!user.employee_id) return '';
+  try {
+    const db = env.DB;
+    const emp = await db.prepare(
+      'SELECT first_name_en, last_name_en, nationality, basic_salary, department, job_title_en, contract_type, employment_start_date FROM employees WHERE id = ?'
+    ).bind(user.employee_id).first();
+
+    const leaves = await db.prepare(
+      "SELECT leave_type, start_date, end_date, days_requested, status FROM leaves WHERE employee_id = ? ORDER BY start_date DESC LIMIT 20"
+    ).bind(user.employee_id).all();
+
+    const leaveRows = leaves?.results || [];
+    const year = new Date().getFullYear().toString();
+    const yearLeaves = leaveRows.filter(l => (l.start_date || '').startsWith(year));
+    const approvedDays = yearLeaves.filter(l => l.status === 'approved').reduce((s, l) => s + (parseInt(l.days_requested) || 0), 0);
+    const pendingCount = leaveRows.filter(l => l.status === 'pending').length;
+    const remaining = 30 - approvedDays;
+
+    if (!emp) return '';
+
+    return `
+
+CURRENT EMPLOYEE DATA (use this to answer personal questions about their own leave/salary/profile — do not say you don't have access, this IS their real data):
+- Name: ${emp.first_name_en || ''} ${emp.last_name_en || ''}
+- Nationality: ${emp.nationality || 'unknown'}
+- Job Title: ${emp.job_title_en || 'unknown'}
+- Department: ${emp.department || 'unknown'}
+- Contract Type: ${emp.contract_type || 'unknown'}
+- Start Date: ${emp.employment_start_date || 'unknown'}
+- Basic Salary: ${emp.basic_salary || 'unknown'} KWD
+- Annual Leave Remaining This Year: ${remaining} days (out of 30)
+- Annual Leave Taken This Year: ${approvedDays} days
+- Pending Leave Requests: ${pendingCount}
+- Recent Leave History: ${leaveRows.slice(0, 5).map(l => `${l.leave_type} ${l.start_date} to ${l.end_date} (${l.status})`).join('; ') || 'none'}
+`;
+  } catch (e) {
+    console.error('Employee context error:', e);
+    return '';
+  }
+}
 
 export async function onRequestPost({ request, env }) {
   // Auth check
@@ -56,7 +98,13 @@ export async function onRequestPost({ request, env }) {
   const { message, history = [], portal = 'employee' } = body;
   if (!message || !message.trim()) return error('Message is required', 400);
 
-  const systemPrompt = portal === 'admin' ? ADMIN_SYSTEM_PROMPT : EMPLOYEE_SYSTEM_PROMPT;
+  let systemPrompt = portal === 'admin' ? ADMIN_SYSTEM_PROMPT : EMPLOYEE_SYSTEM_PROMPT;
+
+  // Inject the employee's real data (leave balance, salary, etc.) for employee portal
+  if (portal !== 'admin') {
+    const context = await getEmployeeContext(env, auth.user);
+    systemPrompt += context;
+  }
 
   // Build conversation history for Gemini
   const contents = [];
@@ -99,8 +147,11 @@ export async function onRequestPost({ request, env }) {
     }
 
     const data = await response.json();
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    let reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!reply) return error('No response from AI', 500);
+
+    // Safety net: strip markdown artifacts in case the model still adds them
+    reply = reply.replace(/\*\*/g, '').replace(/\*/g, '').replace(/^#+\s*/gm, '');
 
     return json({ reply });
   } catch (e) {
