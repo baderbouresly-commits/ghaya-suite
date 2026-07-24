@@ -86,6 +86,35 @@
     .alert { padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; font-size: 14px; }
     .alert-error { background: #FEE2E2; color: #991B1B; }
     .alert-success { background: #D1FAE5; color: #065F46; }
+    /* ── CHATBOT ── */
+    .chat-bubble { position: fixed; bottom: 28px; right: 28px; z-index: 9999; }
+    .chat-toggle { width: 56px; height: 56px; border-radius: 50%; background: #E8472A; border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(232,71,42,0.4); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.2s; }
+    .chat-toggle:hover { transform: scale(1.08); }
+    .chat-badge { position: absolute; top: -4px; right: -4px; width: 18px; height: 18px; background: #00BFA6; border-radius: 50%; font-size: 10px; font-weight: 800; color: white; display: none; align-items: center; justify-content: center; }
+    .chat-window { position: fixed; bottom: 96px; right: 28px; width: 360px; height: 520px; background: white; border-radius: 20px; box-shadow: 0 8px 40px rgba(0,0,0,0.18); display: none; flex-direction: column; z-index: 9998; overflow: hidden; }
+    .chat-window.open { display: flex; }
+    .chat-header { background: #1a1a2e; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+    .chat-avatar { width: 36px; height: 36px; background: #E8472A; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .chat-header-info { flex: 1; }
+    .chat-header-name { font-size: 14px; font-weight: 700; color: white; }
+    .chat-header-sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+    .chat-close { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 20px; padding: 4px; line-height: 1; }
+    .chat-close:hover { color: white; }
+    .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 13px; line-height: 1.5; }
+    .chat-msg.bot { background: #f0f0f0; color: #333; border-bottom-left-radius: 4px; align-self: flex-start; }
+    .chat-msg.user { background: #E8472A; color: white; border-bottom-right-radius: 4px; align-self: flex-end; }
+    .chat-msg.typing { background: #f0f0f0; color: #888; align-self: flex-start; border-bottom-left-radius: 4px; }
+    .chat-suggestions { padding: 0 16px 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .chat-suggestion { padding: 5px 10px; border: 1px solid #e0e0e0; border-radius: 20px; font-size: 11px; cursor: pointer; color: #555; background: white; transition: all 0.2s; white-space: nowrap; font-family: inherit; }
+    .chat-suggestion:hover { background: #E8472A; color: white; border-color: #E8472A; }
+    .chat-input-row { padding: 12px 16px; border-top: 1px solid #f0f0f0; display: flex; gap: 8px; }
+    .chat-input { flex: 1; padding: 9px 14px; border: 1px solid #e0e0e0; border-radius: 20px; font-size: 13px; outline: none; font-family: inherit; resize: none; max-height: 80px; overflow-y: auto; }
+    .chat-input:focus { border-color: #E8472A; }
+    .chat-send { width: 36px; height: 36px; background: #E8472A; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s; }
+    .chat-send:hover { background: #d63d22; }
+    .chat-send:disabled { background: #ccc; cursor: default; }
+    .chat-send svg { width: 16px; height: 16px; fill: white; }
   </style>
 </head>
 <body>
@@ -269,6 +298,31 @@
       </div>
     </div>
   </main>
+
+  <!-- HR Chatbot -->
+  <div class="chat-bubble">
+    <div class="chat-window" id="chat-window">
+      <div class="chat-header">
+        <div class="chat-avatar">🤖</div>
+        <div class="chat-header-info">
+          <div class="chat-header-name">HR Assistant</div>
+          <div class="chat-header-sub">Powered by Ghaya AI</div>
+        </div>
+        <button class="chat-close" onclick="toggleChat()">✕</button>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-suggestions" id="chat-suggestions"></div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chat-input" placeholder="Ask an HR question..." rows="1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+        <button class="chat-send" id="chat-send-btn" onclick="sendChat()">
+          <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+    <button class="chat-toggle" onclick="toggleChat()" title="HR Assistant">💬</button>
+    <div class="chat-badge" id="chat-badge">1</div>
+  </div>
 
   <!-- Leave Modal -->
   <div class="modal-overlay" id="leave-modal">
@@ -605,6 +659,102 @@
     document.getElementById('leave-modal').addEventListener('click', function(e) { if (e.target === this) closeLeaveModal(); });
 
     init();
+
+    // ── CHATBOT ─────────────────────────────────────────────────
+    const CHAT_SUGGESTIONS = [
+      'How many leave days do I get?',
+      'What is my notice period?',
+      'كيف أحسب مكافأة نهاية الخدمة؟',
+      'What is PIFSS?',
+    ];
+
+    let chatHistory = [];
+    let chatOpen = false;
+    let chatInitialized = false;
+
+    function toggleChat() {
+      chatOpen = !chatOpen;
+      document.getElementById('chat-window').classList.toggle('open', chatOpen);
+      document.getElementById('chat-badge').style.display = 'none';
+      if (chatOpen && !chatInitialized) initChat();
+      if (chatOpen) setTimeout(() => document.getElementById('chat-input').focus(), 100);
+    }
+
+    function initChat() {
+      chatInitialized = true;
+      appendChatMsg('bot', "Hello! I'm your HR assistant. Ask me about your leave balance, Kuwait labour law rights, notice period, end of service, or any HR question.");
+      renderChatSuggestions(CHAT_SUGGESTIONS);
+    }
+
+    function renderChatSuggestions(items) {
+      document.getElementById('chat-suggestions').innerHTML = items.map(s =>
+        `<button class="chat-suggestion" onclick="useSuggestion(this)">${s}</button>`
+      ).join('');
+    }
+
+    function useSuggestion(btn) {
+      document.getElementById('chat-input').value = btn.textContent;
+      document.getElementById('chat-suggestions').innerHTML = '';
+      sendChat();
+    }
+
+    function appendChatMsg(role, text) {
+      const el = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = `chat-msg ${role}`;
+      div.textContent = text;
+      el.appendChild(div);
+      el.scrollTop = el.scrollHeight;
+      return div;
+    }
+
+    function showTyping() {
+      const el = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = 'chat-msg typing';
+      div.id = 'chat-typing';
+      div.textContent = '...';
+      el.appendChild(div);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function removeTyping() {
+      const t = document.getElementById('chat-typing');
+      if (t) t.remove();
+    }
+
+    async function sendChat() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (!message) return;
+      input.value = '';
+      document.getElementById('chat-suggestions').innerHTML = '';
+      document.getElementById('chat-send-btn').disabled = true;
+      appendChatMsg('user', message);
+      showTyping();
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ message, history: chatHistory, portal: 'employee' })
+        });
+        const data = await res.json();
+        removeTyping();
+        if (data.error) { appendChatMsg('bot', 'Sorry, something went wrong. Please try again.'); return; }
+        chatHistory.push({ role: 'user', content: message });
+        chatHistory.push({ role: 'assistant', content: data.reply });
+        if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+        appendChatMsg('bot', data.reply);
+      } catch (e) {
+        removeTyping();
+        appendChatMsg('bot', 'Connection error. Please try again.');
+      } finally {
+        document.getElementById('chat-send-btn').disabled = false;
+        input.focus();
+      }
+    }
+
+    setTimeout(() => { if (!chatOpen) document.getElementById('chat-badge').style.display = 'flex'; }, 3000);
   </script>
 </body>
 </html>
