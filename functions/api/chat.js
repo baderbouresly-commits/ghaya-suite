@@ -35,6 +35,7 @@ You are talking to an HR MANAGER or COMPANY ADMIN. Help them with:
 - Maternity leave employer obligations
 - Employment contracts — required clauses under Kuwait law
 - Salary certificates and HR documentation
+- Their company's own live HR data (headcount, who's on leave, pending leave requests, department sizes, probations ending soon)
 
 Rules:
 - Be professional, precise, and BRIEF — max 4-5 short sentences unless the user asks for more detail
@@ -108,6 +109,68 @@ ${leaveHistoryLines || 'No leave requests on record.'}
   }
 }
 
+async function getAdminContext(env, user) {
+  if (!user.company_id) return '';
+  try {
+    const db = env.DB;
+    const companyId = user.company_id;
+
+    const [headcount, onLeave, pending, departments] = await Promise.all([
+      db.prepare("SELECT COUNT(*) as total FROM employees WHERE company_id = ? AND status = 'active'").bind(companyId).first(),
+      db.prepare("SELECT COUNT(*) as total FROM employees WHERE company_id = ? AND status = 'on_leave'").bind(companyId).first(),
+      db.prepare("SELECT COUNT(*) as total FROM leave_requests WHERE company_id = ? AND status = 'pending'").bind(companyId).first(),
+      db.prepare("SELECT d.name_en, COUNT(e.id) as count FROM departments d LEFT JOIN employees e ON e.department_id = d.id AND e.status='active' WHERE d.company_id = ? GROUP BY d.id ORDER BY count DESC").bind(companyId).all(),
+    ]);
+
+    const { results: pendingLeaves } = await db.prepare(`
+      SELECT lr.id, lr.start_date, lr.end_date, lr.days_count,
+             e.first_name_en || ' ' || e.last_name_en as employee_name,
+             lt.name_en as type_name
+      FROM leave_requests lr
+      JOIN employees e ON e.id = lr.employee_id
+      JOIN leave_types lt ON lt.id = lr.leave_type_id
+      WHERE lr.company_id = ? AND lr.status = 'pending'
+      ORDER BY lr.created_at ASC LIMIT 10
+    `).bind(companyId).all();
+
+    const { results: probationEnding } = await db.prepare(`
+      SELECT first_name_en || ' ' || last_name_en as name, probation_end_date
+      FROM employees WHERE company_id = ? AND status = 'probation'
+        AND probation_end_date IS NOT NULL
+        AND date(probation_end_date) <= date('now', '+14 days')
+        AND date(probation_end_date) >= date('now')
+      ORDER BY probation_end_date ASC
+    `).bind(companyId).all();
+
+    const company = await db.prepare('SELECT name_en FROM companies WHERE id = ?').bind(companyId).first();
+
+    const deptLines = (departments.results || []).map(d => `${d.name_en}: ${d.count}`).join('\n');
+    const pendingLines = (pendingLeaves || []).map(l => `${l.employee_name}: ${l.type_name}, ${l.start_date} to ${l.end_date} (${l.days_count} days)`).join('\n');
+    const probationLines = (probationEnding || []).map(p => `${p.name}: probation ends ${p.probation_end_date}`).join('\n');
+
+    return `
+
+CURRENT COMPANY DATA (this is the real, live data for ${company?.name_en || 'this company'} — use it directly to answer questions about headcount, pending leaves, departments, or probations; never say you don't have access to it):
+Company: ${company?.name_en || 'unknown'}
+Active Employees: ${headcount?.total || 0}
+Employees Currently on Leave: ${onLeave?.total || 0}
+Pending Leave Requests: ${pending?.total || 0}
+
+Department Breakdown:
+${deptLines || 'No departments set up.'}
+
+Pending Leave Request Details:
+${pendingLines || 'No pending leave requests.'}
+
+Probations Ending Soon (next 14 days):
+${probationLines || 'None.'}
+`;
+  } catch (e) {
+    console.error('Admin context error:', e);
+    return '';
+  }
+}
+
 export async function onRequestPost({ request, env }) {
   // Auth check
   const auth = await requireAuth(request, env);
@@ -121,8 +184,12 @@ export async function onRequestPost({ request, env }) {
 
   let systemPrompt = portal === 'admin' ? ADMIN_SYSTEM_PROMPT : EMPLOYEE_SYSTEM_PROMPT;
 
-  // Inject the employee's real data (leave balance, salary, etc.) for employee portal
-  if (portal !== 'admin') {
+  // Inject real, live data so the bot can answer questions about the user's own
+  // leave balance/salary (employee) or company headcount/leaves (admin)
+  if (portal === 'admin') {
+    const context = await getAdminContext(env, auth.user);
+    systemPrompt += context;
+  } else {
     const context = await getEmployeeContext(env, auth.user);
     systemPrompt += context;
   }
