@@ -24,6 +24,30 @@ function json(data, status=200) {
   return new Response(JSON.stringify(data), {status, headers:{'Content-Type':'application/json'}});
 }
 
+// Send a push notification via OneSignal REST API (non-blocking)
+async function sendPush(env, { userIds, heading, content, url }) {
+  const appId = env.ONESIGNAL_APP_ID;
+  const apiKey = env.ONESIGNAL_REST_API_KEY;
+  if (!appId || !apiKey) { console.log('[OneSignal] missing env vars'); return; }
+  const body = { app_id: appId, headings: { en: heading }, contents: { en: content } };
+  if (userIds && userIds.length > 0) {
+    body.include_aliases = { external_id: userIds.map(String) };
+    body.target_channel = 'push';
+  } else {
+    body.included_segments = ['All'];
+  }
+  if (url) body.url = url;
+  try {
+    const res = await fetch('https://api.onesignal.com/notifications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Key ${apiKey}` },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    console.log('[OneSignal]', res.status, JSON.stringify(data));
+  } catch(e) { console.log('[OneSignal error]', e.message); }
+}
+
 function getMonthRange() {
   const now = new Date();
   const year = now.getFullYear();
@@ -129,7 +153,7 @@ export async function onRequest({request, env, params}) {
     if (hours > 8) return json({error:'Cannot request more than 8 hours at once'}, 400);
 
     // Check monthly limit
-    const emp = await env.DB.prepare('SELECT company_id FROM employees WHERE id = ?').bind(employeeId).first();
+    const emp = await env.DB.prepare('SELECT company_id, first_name_en, last_name_en FROM employees WHERE id = ?').bind(employeeId).first();
     if (!emp) return json({error:'Employee not found'}, 404);
     const company = await env.DB.prepare('SELECT permission_hours_monthly FROM companies WHERE id = ?').bind(emp.company_id).first();
     const monthlyLimit = company?.permission_hours_monthly ?? 4;
@@ -151,6 +175,23 @@ export async function onRequest({request, env, params}) {
        VALUES (?,?,?,?,?,?,?,?,'pending')`
     ).bind(id, emp.company_id, employeeId, date, start_time, end_time, hours, reason||null).run();
 
+    // Notify company admins/managers (non-blocking)
+    try {
+      const { results: admins } = await env.DB.prepare(
+        "SELECT id FROM users WHERE company_id = ? AND role IN ('company_admin','manager') AND is_active = 1"
+      ).bind(emp.company_id).all();
+      const adminIds = (admins || []).map(a => a.id);
+      const empName = `${emp.first_name_en || ''} ${emp.last_name_en || ''}`.trim() || 'An employee';
+      if (adminIds.length) {
+        await sendPush(env, {
+          userIds: adminIds,
+          heading: 'New Permission Request 🕐',
+          content: `${empName} requested ${hours} hour${hours !== 1 ? 's' : ''} of time off on ${date}.`,
+          url: 'https://ghaya-suite.pages.dev/admin/',
+        });
+      }
+    } catch(e) { console.log('[NOTIF ERROR]', e?.message); }
+
     const req = await env.DB.prepare('SELECT * FROM permission_requests WHERE id = ?').bind(id).first();
     return json({request: req, message:'Permission request submitted'}, 201);
   }
@@ -171,7 +212,21 @@ export async function onRequest({request, env, params}) {
     const newStatus = action === 'approve' ? 'approved' : 'rejected';
     await env.DB.prepare(
       `UPDATE permission_requests SET status = ?, approved_by = ?, approved_at = datetime('now') WHERE id = ?`
-    ).bind(newStatus, user.id, seg).run();
+    ).bind(newStatus, user.sub, seg).run();
+
+    // Notify the employee (non-blocking)
+    try {
+      const emp = await env.DB.prepare('SELECT user_id FROM employees WHERE id = ?').bind(perm.employee_id).first();
+      if (emp?.user_id) {
+        const emoji = newStatus === 'approved' ? '✅' : '❌';
+        await sendPush(env, {
+          userIds: [emp.user_id],
+          heading: `Permission ${newStatus === 'approved' ? 'Approved' : 'Rejected'} ${emoji}`,
+          content: `Your permission request (${perm.hours} hour${perm.hours !== 1 ? 's' : ''} on ${perm.date}) has been ${newStatus}.`,
+          url: 'https://ghaya-suite.pages.dev/employee/',
+        });
+      }
+    } catch(e) { console.log('[NOTIF ERROR]', e?.message); }
 
     const updated = await env.DB.prepare('SELECT * FROM permission_requests WHERE id = ?').bind(seg).first();
     return json({request: updated, message:`Request ${newStatus}`});
