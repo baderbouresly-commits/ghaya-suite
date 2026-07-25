@@ -1,5 +1,5 @@
 // /api/announcements/* — company admins post, employees read
-import { requireAuth, json, error } from '../_lib/auth.js';
+import { requireAuth, json, error, sendPushNotification } from '../_lib/auth.js';
 
 export async function onRequest({ request, env, params }) {
   const result = await requireAuth(request, env);
@@ -43,6 +43,24 @@ export async function onRequest({ request, env, params }) {
     const id = crypto.randomUUID();
     await db.prepare(`INSERT INTO announcements (id, company_id, created_by, type, title, body, is_pinned, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(id, user.company_id, user.sub, annType, title.trim(), msgBody.trim(), is_pinned ? 1 : 0, expires_at || null).run();
+
+    // Notify all company employees (non-blocking)
+    try {
+      const { results: emps } = await db.prepare(
+        "SELECT user_id FROM employees WHERE company_id = ? AND user_id IS NOT NULL AND status = 'active'"
+      ).bind(user.company_id).all();
+      const empIds = (emps || []).map(e => e.user_id).filter(Boolean);
+      const typeEmoji = annType === 'urgent' ? '🚨' : annType === 'holiday' ? '🎉' : annType === 'policy' ? '📋' : '📢';
+      if (empIds.length) {
+        await sendPushNotification(env, {
+          userIds: empIds,
+          heading: `${typeEmoji} ${title.trim()}`,
+          content: msgBody.trim().slice(0, 140),
+          url: 'https://ghaya-suite.pages.dev/employee/',
+        });
+      }
+    } catch(e) { console.log('[NOTIF ERROR]', e?.message); }
+
     return json({ message: 'Announcement posted', id }, 201);
   }
 
