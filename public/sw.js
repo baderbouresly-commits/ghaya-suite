@@ -1,6 +1,5 @@
 // Ghaya Suite Service Worker
-importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDKWorker.js");
-
+importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
 const CACHE = 'ghaya-v1';
 const OFFLINE_URLS = ['/', '/admin/', '/employee/'];
 
