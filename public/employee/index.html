@@ -817,5 +817,14 @@
 
     init();
   </script>
+  <script>
+(function(){
+  var b = document.getElementById('pwa-banner');
+  if (!b) return;
+  function enforce(){ if (localStorage.getItem('pwa-dismissed')) b.style.display = 'none'; }
+  enforce();
+  new MutationObserver(enforce).observe(b, { attributes:true, attributeFilter:['style'] });
+})();
+</script>
 </body>
 </html>
