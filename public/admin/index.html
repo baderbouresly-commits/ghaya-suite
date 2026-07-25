@@ -3076,7 +3076,7 @@ setTimeout(() => { if (!chatOpen) document.getElementById('chat-badge').style.di
       if (banner) banner.style.display = 'none';
     });
   document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
-    if (!_pwaPrompt) return;
+    if (!_pwaPrompt) { document.getElementById('pwa-banner').style.display='none'; localStorage.setItem('pwa-dismissed','1'); return; }
     _pwaPrompt.prompt();
     const { outcome } = await _pwaPrompt.userChoice;
     _pwaPrompt = null;
