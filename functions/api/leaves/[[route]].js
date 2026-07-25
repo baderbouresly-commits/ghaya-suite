@@ -124,6 +124,24 @@ export async function onRequest({ request, env, params }) {
       ).bind(days, empId, leave_type_id, year).run();
     }
 
+    // Notify company admins/managers of the new request (non-blocking)
+    try {
+      const { results: admins } = await db.prepare(
+        "SELECT id FROM users WHERE company_id = ? AND role IN ('company_admin','manager') AND is_active = 1"
+      ).bind(companyId).all();
+      const adminIds = (admins || []).map(a => a.id);
+      const empRow = await db.prepare('SELECT first_name_en, last_name_en FROM employees WHERE id = ?').bind(empId).first();
+      const empName = empRow ? `${empRow.first_name_en || ''} ${empRow.last_name_en || ''}`.trim() : 'An employee';
+      if (adminIds.length) {
+        await sendPushNotification(env, {
+          userIds: adminIds,
+          heading: 'New Leave Request 🌴',
+          content: `${empName} requested ${days} day${days !== 1 ? 's' : ''} of leave.`,
+          url: 'https://ghaya-suite.pages.dev/admin/',
+        });
+      }
+    } catch(e) { console.log('[NOTIF ERROR]', e?.message); }
+
     return json({ request_id: id, days_count: days, message: 'Leave request submitted' }, 201);
   }
 
@@ -157,23 +175,21 @@ export async function onRequest({ request, env, params }) {
       ).bind(lr.days_count, lr.employee_id, lr.leave_type_id, new Date(lr.start_date).getFullYear()).run();
     }
 
-// Push notification to the employee (non-blocking — never breaks approval)
-try {
-  const emp = await db.prepare(
-    'SELECT user_id FROM employees WHERE id = ?'
-  ).bind(lr.employee_id).first();
-  if (emp?.user_id && typeof sendPushNotification === 'function') {
-    const emoji = newStatus === 'approved' ? '✅' : '❌';
-    await sendPushNotification(env, {
-      userIds: [emp.user_id],
-      heading: `Leave ${newStatus === 'approved' ? 'Approved' : 'Rejected'} ${emoji}`,
-      content: `Your leave request (${lr.days_count} day${lr.days_count !== 1 ? 's' : ''}) has been ${newStatus}.`,
-      url: 'https://ghaya-suite.pages.dev/employee/',
-    });
-  }
-} catch(e) { console.log('[NOTIF ERROR]', e?.message); }
-
-    return json({ message: `Leave request ${newStatus}` });
+    // Push notification to the employee (non-blocking — never breaks approval)
+    try {
+      const emp = await db.prepare(
+        'SELECT user_id FROM employees WHERE id = ?'
+      ).bind(lr.employee_id).first();
+      if (emp?.user_id) {
+        const emoji = newStatus === 'approved' ? '✅' : '❌';
+        await sendPushNotification(env, {
+          userIds: [emp.user_id],
+          heading: `Leave ${newStatus === 'approved' ? 'Approved' : newStatus === 'rejected' ? 'Rejected' : 'Cancelled'} ${emoji}`,
+          content: `Your leave request (${lr.days_count} day${lr.days_count !== 1 ? 's' : ''}) has been ${newStatus}.`,
+          url: 'https://ghaya-suite.pages.dev/employee/',
+        });
+      }
+    } catch(e) { console.log('[NOTIF ERROR]', e?.message); }
 
     return json({ message: `Leave request ${newStatus}` });
   }
