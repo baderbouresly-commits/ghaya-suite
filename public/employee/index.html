@@ -3,8 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0A2540">
+  <link rel="manifest" href="/manifest.json">
   <title>Ghaya | Employee Portal</title>
   <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap" rel="stylesheet">
+  <!-- OneSignal Web Push -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "ded12bcc-da9a-4dca-b800-c7d3622ef474",
+        safari_web_id: "web.onesignal.auto.36762c33-c595-4251-8e66-ea9a822d3713",
+        notifyButton: { enable: true, offset: { bottom: '96px', right: '28px' } },
+        serviceWorkerParam: { scope: '/' },
+        serviceWorkerPath: 'sw.js',
+      });
+    });
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Almarai', sans-serif; background: #f5f5f5; color: #333; display: flex; min-height: 100vh; }
@@ -101,15 +117,15 @@
     .chat-close { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 20px; padding: 4px; line-height: 1; }
     .chat-close:hover { color: white; }
     .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-    .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 13px; line-height: 1.5; }
+    .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 13px; line-height: 1.5; font-family: 'Almarai', sans-serif; }
     .chat-msg.bot { background: #f0f0f0; color: #333; border-bottom-left-radius: 4px; align-self: flex-start; }
     .chat-msg.user { background: #E8472A; color: white; border-bottom-right-radius: 4px; align-self: flex-end; }
     .chat-msg.typing { background: #f0f0f0; color: #888; align-self: flex-start; border-bottom-left-radius: 4px; }
     .chat-suggestions { padding: 0 16px 12px; display: flex; flex-wrap: wrap; gap: 6px; }
-    .chat-suggestion { padding: 5px 10px; border: 1px solid #e0e0e0; border-radius: 20px; font-size: 11px; cursor: pointer; color: #555; background: white; transition: all 0.2s; white-space: nowrap; font-family: inherit; }
+    .chat-suggestion { padding: 5px 10px; border: 1px solid #e0e0e0; border-radius: 20px; font-size: 11px; cursor: pointer; color: #555; background: white; transition: all 0.2s; white-space: nowrap; font-family: 'Almarai', sans-serif; }
     .chat-suggestion:hover { background: #E8472A; color: white; border-color: #E8472A; }
     .chat-input-row { padding: 12px 16px; border-top: 1px solid #f0f0f0; display: flex; gap: 8px; }
-    .chat-input { flex: 1; padding: 9px 14px; border: 1px solid #e0e0e0; border-radius: 20px; font-size: 13px; outline: none; font-family: inherit; resize: none; max-height: 80px; overflow-y: auto; }
+    .chat-input { flex: 1; padding: 9px 14px; border: 1px solid #e0e0e0; border-radius: 20px; font-size: 13px; outline: none; font-family: 'Almarai', sans-serif; resize: none; max-height: 80px; overflow-y: auto; }
     .chat-input:focus { border-color: #E8472A; }
     .chat-send { width: 36px; height: 36px; background: #E8472A; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s; }
     .chat-send:hover { background: #d63d22; }
@@ -299,31 +315,6 @@
     </div>
   </main>
 
-  <!-- HR Chatbot -->
-  <div class="chat-bubble">
-    <div class="chat-window" id="chat-window">
-      <div class="chat-header">
-        <div class="chat-avatar">🤖</div>
-        <div class="chat-header-info">
-          <div class="chat-header-name">HR Assistant</div>
-          <div class="chat-header-sub">Powered by Ghaya AI</div>
-        </div>
-        <button class="chat-close" onclick="toggleChat()">✕</button>
-      </div>
-      <div class="chat-messages" id="chat-messages"></div>
-      <div class="chat-suggestions" id="chat-suggestions"></div>
-      <div class="chat-input-row">
-        <textarea class="chat-input" id="chat-input" placeholder="Ask an HR question..." rows="1"
-          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
-        <button class="chat-send" id="chat-send-btn" onclick="sendChat()">
-          <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
-        </button>
-      </div>
-    </div>
-    <button class="chat-toggle" onclick="toggleChat()" title="HR Assistant">💬</button>
-    <div class="chat-badge" id="chat-badge">1</div>
-  </div>
-
   <!-- Leave Modal -->
   <div class="modal-overlay" id="leave-modal">
     <div class="modal">
@@ -357,6 +348,42 @@
         <button class="btn btn-primary" onclick="submitLeave()" id="btn-submit">Submit Request</button>
       </div>
     </div>
+  </div>
+
+  <!-- HR Chatbot -->
+  <div class="chat-bubble">
+    <div class="chat-window" id="chat-window">
+      <div class="chat-header">
+        <div class="chat-avatar">🤖</div>
+        <div class="chat-header-info">
+          <div class="chat-header-name">HR Assistant</div>
+          <div class="chat-header-sub">Powered by Ghaya AI</div>
+        </div>
+        <button class="chat-close" onclick="toggleChat()">✕</button>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-suggestions" id="chat-suggestions"></div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chat-input" placeholder="Ask an HR question..." rows="1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+        <button class="chat-send" id="chat-send-btn" onclick="sendChat()">
+          <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+    <button class="chat-toggle" onclick="toggleChat()" title="HR Assistant">💬</button>
+    <div class="chat-badge" id="chat-badge">1</div>
+  </div>
+
+  <!-- PWA: Add to Home Screen banner -->
+  <div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9990;background:#0A2540;color:#fff;padding:14px 18px;align-items:center;gap:14px;">
+    <img src="/icon-192.png" style="width:44px;height:44px;border-radius:10px;flex-shrink:0;"/>
+    <div style="flex:1;">
+      <div style="font-weight:800;font-size:14px;">Install Ghaya Suite</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-top:2px;">Add to your home screen for quick access</div>
+    </div>
+    <button id="pwa-install-btn" style="background:#E8472A;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer;font-family:'Almarai',sans-serif;">Install</button>
+    <button onclick="document.getElementById('pwa-banner').style.display='none';localStorage.setItem('pwa-dismissed','1');" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:20px;cursor:pointer;padding:4px;">✕</button>
   </div>
 
   <script>
@@ -472,7 +499,7 @@
     }
 
     async function init() {
-      if (!token) { window.location.href = '/login'; return; }
+      if (!token) { window.location.href = '/login.html'; return; }
       const data = await api('/api/auth/me');
       if (data.error) { logout(); return; }
       currentUser = data.user;
@@ -480,6 +507,12 @@
       if (!['employee', 'manager', 'company_admin'].includes(currentUser.role)) {
         alert('Access denied. This portal is for employees only.');
         logout(); return;
+      }
+
+      // Link this browser to the employee's OneSignal profile
+      if (currentUser.sub) {
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) { try { await OneSignal.login(currentUser.sub); } catch(e){} });
       }
 
       document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
@@ -490,6 +523,7 @@
     }
 
     async function loadDashboard() {
+      // Load employee profile
       if (currentUser.employee_id) {
         const d = await api(`/api/employees/${currentUser.employee_id}`);
         if (!d.error) {
@@ -498,6 +532,7 @@
         }
       }
 
+      // Load leaves for stats
       const ldata = await api('/api/leaves');
       if (!ldata.error) {
         const leaves = ldata.leaves || ldata.data || [];
@@ -654,20 +689,17 @@
       if (document.getElementById('page-leaves').classList.contains('active')) loadLeaves('all');
     }
 
-    function logout() { localStorage.removeItem('ghaya_token'); window.location.href = '/login'; }
+    function logout() { localStorage.removeItem('ghaya_token'); window.location.href = '/login.html'; }
 
     document.getElementById('leave-modal').addEventListener('click', function(e) { if (e.target === this) closeLeaveModal(); });
 
-    init();
-
     // ── CHATBOT ─────────────────────────────────────────────────
-    const CHAT_SUGGESTIONS = [
-      'How many leave days do I get?',
+    const CHAT_SUGGESTIONS_EMPLOYEE = [
+      'How many leave days do I have left?',
       'What is my notice period?',
       'كيف أحسب مكافأة نهاية الخدمة؟',
       'What is PIFSS?',
     ];
-
     let chatHistory = [];
     let chatOpen = false;
     let chatInitialized = false;
@@ -682,8 +714,8 @@
 
     function initChat() {
       chatInitialized = true;
-      appendChatMsg('bot', "Hello! I'm your HR assistant. Ask me about your leave balance, Kuwait labour law rights, notice period, end of service, or any HR question.");
-      renderChatSuggestions(CHAT_SUGGESTIONS);
+      appendChatMsg('bot', "Hello! I'm your HR assistant. Ask me about your leave balance, Kuwait labour law rights, payslip, notice period, or any HR question.");
+      renderChatSuggestions(CHAT_SUGGESTIONS_EMPLOYEE);
     }
 
     function renderChatSuggestions(items) {
@@ -755,6 +787,35 @@
     }
 
     setTimeout(() => { if (!chatOpen) document.getElementById('chat-badge').style.display = 'flex'; }, 3000);
+
+    // ── PWA: service worker + install banner ────────────────────
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+    let _pwaPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      _pwaPrompt = e;
+      if (!localStorage.getItem('pwa-dismissed') && !window.matchMedia('(display-mode: standalone)').matches) {
+        const banner = document.getElementById('pwa-banner');
+        if (banner) banner.style.display = 'flex';
+      }
+    });
+    window.addEventListener('appinstalled', () => {
+      localStorage.setItem('pwa-dismissed', '1');
+      const banner = document.getElementById('pwa-banner');
+      if (banner) banner.style.display = 'none';
+    });
+    document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
+      if (!_pwaPrompt) return;
+      _pwaPrompt.prompt();
+      const { outcome } = await _pwaPrompt.userChoice;
+      _pwaPrompt = null;
+      document.getElementById('pwa-banner').style.display = 'none';
+      if (outcome === 'accepted') localStorage.setItem('pwa-dismissed', '1');
+    });
+
+    init();
   </script>
 </body>
 </html>
