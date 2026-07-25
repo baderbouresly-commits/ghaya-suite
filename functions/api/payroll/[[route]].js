@@ -1,5 +1,5 @@
 // /api/payroll/* — payroll runs, entries, publish
-import { requireAuth, json, error } from '../_lib/auth.js';
+import { requireAuth, json, error, sendPushNotification } from '../_lib/auth.js';
 
 export async function onRequest({ request, env, params }) {
   if (request.method === 'OPTIONS') return new Response(null, {
@@ -204,6 +204,26 @@ export async function onRequest({ request, env, params }) {
           updated_at = datetime('now')
         WHERE id = ? AND company_id = ?
       `).bind(user.sub, slug, companyId).run();
+
+      // Notify each employee their payslip is ready (non-blocking)
+      try {
+        const { results: emps } = await db.prepare(`
+          SELECT e.user_id FROM payroll_entries pe
+          JOIN employees e ON e.id = pe.employee_id
+          WHERE pe.payroll_run_id = ? AND e.user_id IS NOT NULL
+        `).bind(slug).all();
+        const empIds = (emps || []).map(e => e.user_id).filter(Boolean);
+        const months = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+        const periodLabel = `${months[run.period_month] || run.period_month} ${run.period_year}`;
+        if (empIds.length) {
+          await sendPushNotification(env, {
+            userIds: empIds,
+            heading: 'Payslip Ready 💰',
+            content: `Your payslip for ${periodLabel} is now available.`,
+            url: 'https://ghaya-suite.pages.dev/employee/',
+          });
+        }
+      } catch(e) { console.log('[NOTIF ERROR]', e?.message); }
     } else {
       await db.prepare(`
         UPDATE payroll_runs SET status = ?, updated_at = datetime('now')
