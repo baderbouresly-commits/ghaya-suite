@@ -188,6 +188,25 @@
           <div class="page-sub" id="sub-dashboard">Welcome back!</div>
         </div>
       </div>
+
+      <!-- Clock In / Out -->
+      <div class="card" id="attendance-card">
+        <div class="card-header">
+          <div class="card-title">🕐 Attendance</div>
+          <div id="att-badge"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+          <div>
+            <div id="att-clock" style="font-size:32px;font-weight:800;color:#1a1a2e;">--:--</div>
+            <div id="att-info" style="font-size:13px;color:#888;margin-top:2px;">Loading…</div>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-primary" id="clockin-btn" onclick="clockIn()" style="display:none;">🟢 Clock In</button>
+            <button class="btn btn-secondary" id="clockout-btn" onclick="clockOut()" style="display:none;">🔴 Clock Out</button>
+          </div>
+        </div>
+      </div>
+
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon">🌴</div>
@@ -376,7 +395,7 @@
   </div>
 
   <!-- PWA: Add to Home Screen banner -->
-  <div id="pwa-banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);min-width:300px;max-width:420px;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.3);z-index:9990;background:#0A2540;color:#fff;padding:14px 18px;align-items:center;gap:14px;">
+  <div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9990;background:#0A2540;color:#fff;padding:14px 18px;align-items:center;gap:14px;">
     <img src="/icon-192.png" style="width:44px;height:44px;border-radius:10px;flex-shrink:0;"/>
     <div style="flex:1;">
       <div style="font-weight:800;font-size:14px;">Install Ghaya Suite</div>
@@ -520,6 +539,7 @@
       document.getElementById('sub-dashboard').textContent = `Welcome back, ${currentUser.name || currentUser.email}!`;
 
       await loadDashboard();
+      loadAttendanceToday();
     }
 
     async function loadDashboard() {
@@ -693,6 +713,96 @@
 
     document.getElementById('leave-modal').addEventListener('click', function(e) { if (e.target === this) closeLeaveModal(); });
 
+    // ── ATTENDANCE (Clock In / Out) ─────────────────────────────
+    let attToday = null;
+    let attCompany = null;
+
+    function fmtTime(t) { return t ? t.slice(0,5) : '--:--'; }
+
+    async function loadAttendanceToday() {
+      try {
+        const data = await api('/api/attendance/today');
+        attToday = data.record || null;
+        attCompany = data.company || null;
+        renderAttendance();
+      } catch(e) {
+        document.getElementById('att-info').textContent = 'Could not load attendance.';
+      }
+    }
+
+    function renderAttendance() {
+      const inBtn = document.getElementById('clockin-btn');
+      const outBtn = document.getElementById('clockout-btn');
+      const info = document.getElementById('att-info');
+      const clock = document.getElementById('att-clock');
+      const badge = document.getElementById('att-badge');
+      const geo = attCompany?.geofence_enabled ? ' · 📍 location required' : '';
+
+      if (!attToday || !attToday.clock_in) {
+        inBtn.style.display = 'inline-block';
+        outBtn.style.display = 'none';
+        info.textContent = 'You have not clocked in today' + geo;
+        badge.innerHTML = '';
+      } else if (attToday.clock_in && !attToday.clock_out) {
+        inBtn.style.display = 'none';
+        outBtn.style.display = 'inline-block';
+        info.textContent = `Clocked in at ${fmtTime(attToday.clock_in)}` + geo;
+        badge.innerHTML = '<span class="badge badge-approved">On the clock</span>';
+      } else {
+        inBtn.style.display = 'none';
+        outBtn.style.display = 'none';
+        info.textContent = `In ${fmtTime(attToday.clock_in)} · Out ${fmtTime(attToday.clock_out)} · ${attToday.hours_worked ?? '—'} hrs`;
+        badge.innerHTML = '<span class="badge badge-approved">Done for today ✅</span>';
+      }
+    }
+
+    function getLocation() {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) { resolve({ lat: null, lng: null }); return; }
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          () => resolve({ lat: null, lng: null }),
+          { enableHighAccuracy: true, timeout: 8000 }
+        );
+      });
+    }
+
+    async function doClock(endpoint, btn) {
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.textContent = '📍 Locating…';
+      const { lat, lng } = await getLocation();
+      btn.textContent = 'Saving…';
+      try {
+        const res = await fetch(`/api/attendance/${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ lat, lng })
+        });
+        const data = await res.json();
+        if (data.error) { alert(data.error); }
+        else { attToday = data.record; }
+      } catch(e) {
+        alert('Connection error. Please try again.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+        await loadAttendanceToday();
+      }
+    }
+
+    function clockIn()  { doClock('clockin',  document.getElementById('clockin-btn')); }
+    function clockOut() { doClock('clockout', document.getElementById('clockout-btn')); }
+
+    // Live wall clock
+    setInterval(() => {
+      const el = document.getElementById('att-clock');
+      if (el) {
+        const now = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Kuwait', hour12: false });
+        el.textContent = now.split(', ')[1]?.slice(0,5) || '--:--';
+      }
+    }, 1000);
+
     // ── CHATBOT ─────────────────────────────────────────────────
     const CHAT_SUGGESTIONS_EMPLOYEE = [
       'How many leave days do I have left?',
@@ -807,7 +917,7 @@
       if (banner) banner.style.display = 'none';
     });
     document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
-      if (!_pwaPrompt) { document.getElementById('pwa-banner').style.display='none'; localStorage.setItem('pwa-dismissed','1'); return; }
+      if (!_pwaPrompt) return;
       _pwaPrompt.prompt();
       const { outcome } = await _pwaPrompt.userChoice;
       _pwaPrompt = null;
@@ -817,14 +927,5 @@
 
     init();
   </script>
-  <script>
-(function(){
-  var b = document.getElementById('pwa-banner');
-  if (!b) return;
-  function enforce(){ if (localStorage.getItem('pwa-dismissed')) b.style.display = 'none'; }
-  enforce();
-  new MutationObserver(enforce).observe(b, { attributes:true, attributeFilter:['style'] });
-})();
-</script>
 </body>
 </html>
