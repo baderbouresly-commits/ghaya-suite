@@ -12,6 +12,30 @@ async function verifyJWT(token,secret){
 function json(data,status=200){return new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json','Access-Control-Allow-Origin':'*'}});}
 function err(msg,status=400){return json({error:msg},status);}
 
+// Send a push notification via OneSignal REST API (non-blocking)
+async function sendPush(env, { userIds, heading, content, url }) {
+  const appId = env.ONESIGNAL_APP_ID;
+  const apiKey = env.ONESIGNAL_REST_API_KEY;
+  if (!appId || !apiKey) { console.log('[OneSignal] missing env vars'); return; }
+  const body = { app_id: appId, headings: { en: heading }, contents: { en: content } };
+  if (userIds && userIds.length > 0) {
+    body.include_aliases = { external_id: userIds.map(String) };
+    body.target_channel = 'push';
+  } else {
+    body.included_segments = ['All'];
+  }
+  if (url) body.url = url;
+  try {
+    const res = await fetch('https://api.onesignal.com/notifications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Key ${apiKey}` },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    console.log('[OneSignal]', res.status, JSON.stringify(data));
+  } catch(e) { console.log('[OneSignal error]', e.message); }
+}
+
 async function requireAuth(request,env){
   const auth=request.headers.get('Authorization')||'';
   const token=auth.startsWith('Bearer ')?auth.slice(7):null;
@@ -128,6 +152,34 @@ export async function onRequest({request,env,params}){
       .bind(id,companyId,empId,date,parseFloat(hours),day_type,rate_multiplier,
         parseFloat(hourly_rate.toFixed(6)),overtime_pay,reason||null,status,approved_by,approved_at).run();
 
+    // Notifications (non-blocking)
+    try {
+      if (!isAdmin) {
+        // Employee submitted → notify admins
+        const { results: admins } = await db.prepare(
+          "SELECT id FROM users WHERE company_id = ? AND role IN ('company_admin','manager') AND is_active = 1"
+        ).bind(companyId).all();
+        const adminIds = (admins || []).map(a => a.id);
+        const empName = `${emp.first_name_en || ''} ${emp.last_name_en || ''}`.trim() || 'An employee';
+        if (adminIds.length) {
+          await sendPush(env, {
+            userIds: adminIds,
+            heading: 'New Overtime Request ⏱️',
+            content: `${empName} logged ${hours} overtime hour${parseFloat(hours) !== 1 ? 's' : ''} on ${date}.`,
+            url: 'https://ghaya-suite.pages.dev/admin/',
+          });
+        }
+      } else if (emp.user_id) {
+        // Admin added overtime for an employee (auto-approved) → notify employee
+        await sendPush(env, {
+          userIds: [emp.user_id],
+          heading: 'Overtime Added ⏱️',
+          content: `${hours} overtime hour${parseFloat(hours) !== 1 ? 's' : ''} on ${date} was added to your record (KWD ${overtime_pay}).`,
+          url: 'https://ghaya-suite.pages.dev/employee/',
+        });
+      }
+    } catch(e) { console.log('[NOTIF ERROR]', e?.message); }
+
     const record=await db.prepare('SELECT * FROM overtime_records WHERE id=?').bind(id).first();
     return json({record},201);
   }
@@ -142,6 +194,21 @@ export async function onRequest({request,env,params}){
     if(!rec)return err('Not found',404);
     await db.prepare(`UPDATE overtime_records SET status=?,approved_by=?,approved_at=datetime('now'),notes=?,updated_at=datetime('now') WHERE id=?`)
       .bind(status,user.sub||user.id,notes||null,seg0).run();
+
+    // Notify the employee (non-blocking)
+    try {
+      const emp = await db.prepare('SELECT user_id FROM employees WHERE id = ?').bind(rec.employee_id).first();
+      if (emp?.user_id) {
+        const emoji = status === 'approved' ? '✅' : '❌';
+        await sendPush(env, {
+          userIds: [emp.user_id],
+          heading: `Overtime ${status === 'approved' ? 'Approved' : 'Rejected'} ${emoji}`,
+          content: `Your overtime request (${rec.hours} hour${rec.hours !== 1 ? 's' : ''} on ${rec.date}) has been ${status}.`,
+          url: 'https://ghaya-suite.pages.dev/employee/',
+        });
+      }
+    } catch(e) { console.log('[NOTIF ERROR]', e?.message); }
+
     const updated=await db.prepare('SELECT * FROM overtime_records WHERE id=?').bind(seg0).first();
     return json({record:updated});
   }
