@@ -302,7 +302,11 @@ select.form-input{cursor:pointer}
       <div class="section-card">
         <div class="section-header">
           <div><div class="section-title">All Employees</div><div class="section-sub" id="emp-count">—</div></div>
-          <div class="section-actions">
+<div class="section-actions">
+            <div class="filter-row" style="margin-right:8px;">
+              <button class="filter-btn active" id="emp-view-active" onclick="setEmpView('active')">Active</button>
+              <button class="filter-btn" id="emp-view-archived" onclick="setEmpView('archived')">Archived</button>
+            </div>
             <input class="search-bar" id="emp-search" placeholder="Search..." oninput="filterEmployees()"/>
             <button class="btn btn-ghost btn-sm" onclick="exportEmployeesCSV()">📥 CSV</button>
             <button class="btn btn-primary" onclick="openAddEmployee()">+ Add Employee</button>
@@ -1407,12 +1411,22 @@ function renderDashLeaves(list){
 }
 
 /* ── EMPLOYEES ── */
+let empView='active';
 async function loadEmployees(){
   document.getElementById('employees-list').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const data=await apicall('GET','/employees');
+  const path=empView==='archived'?'/employees?status=archived':'/employees';
+  const data=await apicall('GET',path);
   employeesData=data?.employees||[];
-  document.getElementById('emp-count').textContent=`${employeesData.length} employees`;
+  document.getElementById('emp-count').textContent=`${employeesData.length} ${empView==='archived'?'archived':'employees'}`;
   renderEmployeesTable(employeesData);
+}
+function setEmpView(view){
+  empView=view;
+  const a=document.getElementById('emp-view-active'),ar=document.getElementById('emp-view-archived');
+  if(a)a.classList.toggle('active',view==='active');
+  if(ar)ar.classList.toggle('active',view==='archived');
+  const s=document.getElementById('emp-search');if(s)s.value='';
+  loadEmployees();
 }
 function filterEmployees(){
   const q=document.getElementById('emp-search').value.toLowerCase();
@@ -1422,6 +1436,24 @@ function renderEmployeesTable(list){
   const el=document.getElementById('employees-list');
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No employees found</div><div class="empty-sub">Add your first employee using the button above</div></div>';return;}
   el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Title / Dept</th><th>Nationality</th><th>Basic Salary</th><th>Hire Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>${list.map((e,i)=>{const initials=`${e.first_name_en?.[0]||''}${e.last_name_en?.[0]||''}`.toUpperCase();const avatarHtml=e.photo?`<img src="${e.photo}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #e8e0d8;"/>`:`<div style="width:34px;height:34px;border-radius:50%;background:#E8472A;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;">${initials}</div>`;return`<tr><td style="color:#888;font-size:12px">${i+1}</td><td><div style="display:flex;align-items:center;gap:10px;">${avatarHtml}<div><div style="font-weight:700">${e.first_name_en} ${e.last_name_en}</div><div style="font-size:11px;color:#888">${e.first_name_ar||''} ${e.last_name_ar||''}</div></div></div></td><td><div>${getJobTitle(e.job_title_en)}</div><div style="font-size:11px;color:#888">${getDeptName(e.department)}</div></td><td style="font-size:12px">${e.nationality||'—'}</td><td style="font-weight:700">KWD ${parseFloat(e.basic_salary||0).toFixed(3)}</td><td style="font-size:12px;color:#888">${e.hire_date||'—'}</td><td><span class="badge ${e.status==='active'?'badge-green':'badge-gray'}">${e.status==='active'?'Active':'Inactive'}</span></td><td style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${e.id}')">Edit</button><button class="btn btn-purple btn-sm" onclick="viewEOS('${e.id}')">EOS</button><button class="btn btn-sm" style="background:#f0f4ff;color:#1a4da0;border:1px solid #c0d0f0;" onclick="openResetPwd('${e.id}','${e.first_name_en} ${e.last_name_en}')">🔑 Reset</button><button class="btn btn-sm" style="background:#fff8e1;color:#b07800;border:1px solid #f0d080;" onclick="openDocs('${e.id}','${e.first_name_en} ${e.last_name_en}')">📂 Docs</button></td></tr>`;}).join('')}</tbody></table></div>`;
+}
+async function deleteEmployee(id,name){
+  if(!confirm('Archive '+name+'?\n\nThey will be hidden from your active list and their login disabled. Their email is freed for reuse, and all their history is kept. You can restore them anytime from the Archived tab.'))return;
+  const res=await apicall('POST','/employees/'+id+'/archive');
+  if(res&&!res.error){showToast('Employee archived ✓','success');loadEmployees();}
+  else showToast(res?.error||'Error archiving','error');
+}
+async function restoreEmployee(id){
+  const res=await apicall('POST','/employees/'+id+'/restore');
+  if(res&&!res.error){showToast('Employee restored ✓','success');loadEmployees();}
+  else showToast(res?.error||'Error restoring','error');
+}
+async function permanentDeleteEmployee(id,name){
+  if(!confirm('⚠️ PERMANENTLY DELETE '+name+'?\n\nThis cannot be undone. The record and their login are removed forever, and historical payroll reports referencing them may be affected.\n\nOnly do this for test or mistaken entries.'))return;
+  if(!confirm('Are you absolutely sure? This is your last chance to cancel.'))return;
+  const res=await apicall('DELETE','/employees/'+id+'?permanent=1');
+  if(res&&!res.error){showToast('Employee permanently deleted','');loadEmployees();}
+  else showToast(res?.error||'Error deleting','error');
 }
 function viewEOS(id){currentEOSId=id;document.getElementById('modal-eos').classList.add('open');loadEOS(id,'termination');}
 async function loadEOS(id,type){
