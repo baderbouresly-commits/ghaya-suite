@@ -11,6 +11,7 @@ export async function onRequest({ request, env, params }) {
   const url = new URL(request.url);
   const route = params.route || [];
   const employeeId = Array.isArray(route) ? route[0] : route;
+  const subAction = Array.isArray(route) ? route[1] : null;
 
   // Only ghaya_admin, company_admin, manager can access employee data
   if (!['ghaya_admin','company_admin','manager','employee'].includes(user.role)) {
@@ -46,13 +47,17 @@ export async function onRequest({ request, env, params }) {
     : user.company_id;
   if (!companyId) return error('company_id required');
 
-  // GET /api/employees
+  // GET /api/employees   (?status=archived to view archived)
   if (method === 'GET' && !employeeId) {
+    const viewArchived = url.searchParams.get('status') === 'archived';
     // Managers only see their own department
     const deptFilter = user.role === 'manager' && user.department_id
       ? 'AND e.department_id = ?' : '';
     const binds = deptFilter
       ? [companyId, user.department_id] : [companyId];
+    const statusFilter = viewArchived
+      ? "e.status = 'archived'"
+      : "e.status NOT IN ('terminated','archived')";
     const { results } = await db.prepare(`
       SELECT e.*, d.name_en as dept_name, j.title_en as job_title,
         u.email as login_email
@@ -60,7 +65,7 @@ export async function onRequest({ request, env, params }) {
       LEFT JOIN departments d ON d.id = e.department_id
       LEFT JOIN job_titles j ON j.id = e.job_title_id
       LEFT JOIN users u ON u.id = e.user_id
-      WHERE e.company_id = ? AND e.status != 'terminated' ${deptFilter}
+      WHERE e.company_id = ? AND ${statusFilter} ${deptFilter}
       ORDER BY e.first_name_en
     `).bind(...binds).all();
     return json({ employees: results, total: results.length });
@@ -79,6 +84,53 @@ export async function onRequest({ request, env, params }) {
     `).bind(employeeId, companyId).first();
     if (!emp) return error('Employee not found', 404);
     return json({ employee: emp });
+  }
+
+  // POST /api/employees/:id/archive — soft archive + free the email (reversible)
+  if (method === 'POST' && employeeId && subAction === 'archive') {
+    if (!['ghaya_admin','company_admin'].includes(user.role)) return error('Forbidden', 403);
+    const emp = await db.prepare('SELECT user_id, work_email FROM employees WHERE id = ? AND company_id = ?').bind(employeeId, companyId).first();
+    if (!emp) return error('Employee not found', 404);
+    const stamp = Date.now();
+    // Archive the employee + tombstone their work_email so it can be reused
+    await db.prepare(
+      "UPDATE employees SET status = 'archived', work_email = CASE WHEN work_email IS NOT NULL THEN work_email || '.archived.' || ? ELSE NULL END, updated_at = datetime('now') WHERE id = ? AND company_id = ?"
+    ).bind(stamp, employeeId, companyId).run();
+    // Disable the login + release the login email
+    if (emp.user_id) {
+      await db.prepare(
+        "UPDATE users SET is_active = 0, email = email || '.archived.' || ?, updated_at = datetime('now') WHERE id = ?"
+      ).bind(stamp, emp.user_id).run();
+    }
+    await db.prepare(
+      "INSERT INTO audit_log (company_id, user_id, action, entity_type, entity_id, new_values) VALUES (?,?,?,?,?,?)"
+    ).bind(companyId, user.sub, 'employee.archive', 'employee', employeeId, JSON.stringify({ stamp })).run();
+    return json({ message: 'Employee archived' });
+  }
+
+  // POST /api/employees/:id/restore — bring an archived employee back
+  if (method === 'POST' && employeeId && subAction === 'restore') {
+    if (!['ghaya_admin','company_admin'].includes(user.role)) return error('Forbidden', 403);
+    const emp = await db.prepare('SELECT user_id, work_email FROM employees WHERE id = ? AND company_id = ?').bind(employeeId, companyId).first();
+    if (!emp) return error('Employee not found', 404);
+    const origWork = emp.work_email ? emp.work_email.replace(/\.archived\.\d+$/, '') : null;
+    // Guard: don't restore if the original email is now used by an active account
+    if (emp.user_id && origWork) {
+      const taken = await db.prepare("SELECT id FROM users WHERE email = ? AND is_active = 1").bind(origWork.toLowerCase()).first();
+      if (taken) return error('Cannot restore: ' + origWork + ' is now used by another active account. Change that email first.', 409);
+    }
+    await db.prepare(
+      "UPDATE employees SET status = 'active', work_email = ?, updated_at = datetime('now') WHERE id = ? AND company_id = ?"
+    ).bind(origWork, employeeId, companyId).run();
+    if (emp.user_id) {
+      await db.prepare(
+        "UPDATE users SET is_active = 1, email = ?, updated_at = datetime('now') WHERE id = ?"
+      ).bind(origWork ? origWork.toLowerCase() : null, emp.user_id).run();
+    }
+    await db.prepare(
+      "INSERT INTO audit_log (company_id, user_id, action, entity_type, entity_id, new_values) VALUES (?,?,?,?,?,?)"
+    ).bind(companyId, user.sub, 'employee.restore', 'employee', employeeId, '{}').run();
+    return json({ message: 'Employee restored' });
   }
 
   // POST /api/employees — create employee
@@ -196,7 +248,22 @@ export async function onRequest({ request, env, params }) {
     return json({ employee: updated, message: 'Employee updated' });
   }
 
-  // DELETE /api/employees/:id — soft delete (terminate)
+  // DELETE /api/employees/:id?permanent=1 — permanently remove (from Archived view only)
+  if (method === 'DELETE' && employeeId && url.searchParams.get('permanent') === '1') {
+    if (!['ghaya_admin','company_admin'].includes(user.role)) return error('Forbidden', 403);
+    const emp = await db.prepare('SELECT user_id FROM employees WHERE id = ? AND company_id = ?').bind(employeeId, companyId).first();
+    if (!emp) return error('Employee not found', 404);
+    if (emp.user_id) {
+      await db.prepare("DELETE FROM users WHERE id = ?").bind(emp.user_id).run();
+    }
+    await db.prepare("DELETE FROM employees WHERE id = ? AND company_id = ?").bind(employeeId, companyId).run();
+    await db.prepare(
+      "INSERT INTO audit_log (company_id, user_id, action, entity_type, entity_id, new_values) VALUES (?,?,?,?,?,?)"
+    ).bind(companyId, user.sub, 'employee.delete', 'employee', employeeId, '{}').run();
+    return json({ message: 'Employee permanently deleted' });
+  }
+
+  // DELETE /api/employees/:id — soft delete (terminate / EOS)
   if (method === 'DELETE' && employeeId) {
     if (!['ghaya_admin','company_admin'].includes(user.role)) return error('Forbidden', 403);
     await db.prepare(
