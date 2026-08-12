@@ -72,8 +72,7 @@ export async function onRequestPost(context) {
 export async function onRequestGet(context) {
   const { request, env } = context;
 
-  const { requireAuth } = await import('../_lib/auth.js');
-  const user = await requireAuth(request, env);
+const { requireAuth } = await import('./_lib/auth.js');  const user = await requireAuth(request, env);
   if (user instanceof Response) return user;
   if (user.role !== 'ghaya_admin') {
     return Response.json({ error: 'Forbidden' }, { status: 403 });
