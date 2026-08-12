@@ -1,5 +1,5 @@
 // functions/api/leads.js
-// Public endpoint — no auth required. Saves demo/trial requests to D1 and notifies ghaya_admin.
+// Public endpoint — saves demo/trial requests to D1 and notifies ghaya_admin.
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -11,22 +11,6 @@ export async function onRequestPost(context) {
     if (!name || !company || !email || !whatsapp) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
-
-    // Create table on first run (safe — IF NOT EXISTS)
-    await env.DB.exec(`
-      CREATE TABLE IF NOT EXISTS leads (
-        id           INTEGER PRIMARY KEY AUTOINCREMENT,
-        name         TEXT NOT NULL,
-        company      TEXT NOT NULL,
-        email        TEXT NOT NULL,
-        whatsapp     TEXT NOT NULL,
-        employees    TEXT,
-        interested_in TEXT,
-        status       TEXT DEFAULT 'new',
-        notes        TEXT,
-        created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
 
     // Save the lead
     await env.DB.prepare(`
@@ -66,21 +50,4 @@ export async function onRequestPost(context) {
     console.error('leads error:', e);
     return Response.json({ error: 'Something went wrong, please try again.' }, { status: 500 });
   }
-}
-
-// GET — returns all leads (ghaya_admin only, for the dashboard)
-export async function onRequestGet(context) {
-  const { request, env } = context;
-
-const { requireAuth } = await import('./_lib/auth.js');  const user = await requireAuth(request, env);
-  if (user instanceof Response) return user;
-  if (user.role !== 'ghaya_admin') {
-    return Response.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
-  const leads = await env.DB.prepare(
-    `SELECT * FROM leads ORDER BY created_at DESC`
-  ).all();
-
-  return Response.json({ leads: leads.results });
 }
