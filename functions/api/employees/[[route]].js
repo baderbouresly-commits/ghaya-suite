@@ -55,9 +55,9 @@ export async function onRequest({ request, env, params }) {
       ? 'AND e.department_id = ?' : '';
     const binds = deptFilter
       ? [companyId, user.department_id] : [companyId];
-    const statusFilter = viewArchived
-      ? "e.status = 'archived'"
-      : "e.status NOT IN ('terminated','archived')";
+const statusFilter = viewArchived
+      ? "e.archived = 1"
+      : "(e.archived IS NULL OR e.archived = 0) AND e.status != 'terminated'";
     const { results } = await db.prepare(`
       SELECT e.*, d.name_en as dept_name, j.title_en as job_title,
         u.email as login_email
@@ -94,8 +94,7 @@ export async function onRequest({ request, env, params }) {
     const stamp = Date.now();
     // Archive the employee + tombstone their work_email so it can be reused
     await db.prepare(
-      "UPDATE employees SET status = 'archived', work_email = CASE WHEN work_email IS NOT NULL THEN work_email || '.archived.' || ? ELSE NULL END, updated_at = datetime('now') WHERE id = ? AND company_id = ?"
-    ).bind(stamp, employeeId, companyId).run();
+"UPDATE employees SET archived = 1, work_email = CASE WHEN work_email IS NOT NULL THEN work_email || '.archived.' || ? ELSE NULL END, updated_at = datetime('now') WHERE id = ? AND company_id = ?"    ).bind(stamp, employeeId, companyId).run();
     // Disable the login + release the login email
     if (emp.user_id) {
       await db.prepare(
@@ -120,8 +119,7 @@ export async function onRequest({ request, env, params }) {
       if (taken) return error('Cannot restore: ' + origWork + ' is now used by another active account. Change that email first.', 409);
     }
     await db.prepare(
-      "UPDATE employees SET status = 'active', work_email = ?, updated_at = datetime('now') WHERE id = ? AND company_id = ?"
-    ).bind(origWork, employeeId, companyId).run();
+"UPDATE employees SET archived = 0, work_email = ?, updated_at = datetime('now') WHERE id = ? AND company_id = ?"    ).bind(origWork, employeeId, companyId).run();
     if (emp.user_id) {
       await db.prepare(
         "UPDATE users SET is_active = 1, email = ?, updated_at = datetime('now') WHERE id = ?"
