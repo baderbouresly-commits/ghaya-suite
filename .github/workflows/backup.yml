@@ -1,0 +1,34 @@
+name: Daily D1 Backup
+
+on:
+  schedule:
+    - cron: '0 2 * * *'      # every day at 02:00 UTC (05:00 Kuwait)
+  workflow_dispatch: {}       # adds a manual "Run workflow" button
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      - name: Export the D1 database
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          wrangler d1 export ghaya-db --remote --output="ghaya-backup-$DATE.sql"
+          echo "Backed up to ghaya-backup-$DATE.sql"
+
+      - name: Save the backup (private artifact, kept 90 days)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghaya-db-backup
+          path: "*.sql"
+          retention-days: 90
