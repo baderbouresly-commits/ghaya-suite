@@ -716,11 +716,38 @@
     document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
     if (!isOpen) item.classList.add('open');
   }
-  function submitDemo(e) {
+async function submitDemo(e) {
     e.preventDefault();
-    const btn = e.target.querySelector('.f-submit');
+    const form = e.target;
+    const btn = form.querySelector('.f-submit');
     btn.textContent = 'Sending…'; btn.disabled = true;
-    setTimeout(() => { e.target.style.display='none'; document.getElementById('demo-ok').style.display='block'; }, 1000);
+
+    const inputs = form.querySelectorAll('input');
+    const selects = form.querySelectorAll('select');
+    const data = {
+      name:          inputs[0]?.value.trim() || '',
+      company:       inputs[1]?.value.trim() || '',
+      email:         inputs[2]?.value.trim() || '',
+      whatsapp:      inputs[3]?.value.trim() || '',
+      employees:     selects[0]?.value || '',
+      interested_in: selects[1]?.value || ''
+    };
+
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      if (json.success) {
+        form.style.display = 'none';
+        document.getElementById('demo-ok').style.display = 'block';
+      } else { throw new Error(json.error); }
+    } catch(err) {
+      btn.textContent = 'Send Demo Request →'; btn.disabled = false;
+      alert('Something went wrong. Please try again.');
+    }
   }
 </script>
 </body>
