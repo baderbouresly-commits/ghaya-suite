@@ -1,5 +1,5 @@
 // functions/api/leads.js
-// Public endpoint — saves demo/trial requests to D1 and notifies ghaya_admin.
+// Public endpoint — saves demo/trial requests to D1 and pushes full details to ghaya_admin.
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -18,26 +18,34 @@ export async function onRequestPost(context) {
       VALUES (?, ?, ?, ?, ?, ?)
     `).bind(name, company, email, whatsapp, employees || '', interested_in || '').run();
 
-    // Push notification to ghaya_admin
-    if (env.ONESIGNAL_API_KEY && env.ONESIGNAL_APP_ID) {
+    // Push full details to ghaya_admin
+    if (env.ONESIGNAL_REST_API_KEY && env.ONESIGNAL_APP_ID) {
       const admins = await env.DB.prepare(
         `SELECT id FROM users WHERE role = 'ghaya_admin'`
       ).all();
 
       if (admins.results.length > 0) {
         const adminIds = admins.results.map(a => String(a.id));
+        const details =
+          `Name: ${name}\n` +
+          `Company: ${company}\n` +
+          `Email: ${email}\n` +
+          `WhatsApp: ${whatsapp}\n` +
+          `Employees: ${employees || '—'}\n` +
+          `Interested in: ${interested_in || '—'}`;
+
         await fetch('https://onesignal.com/api/v1/notifications', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Key ${env.ONESIGNAL_API_KEY}`
+            'Authorization': `Key ${env.ONESIGNAL_REST_API_KEY}`
           },
           body: JSON.stringify({
             app_id: env.ONESIGNAL_APP_ID,
             target_channel: 'push',
             include_aliases: { external_id: adminIds },
-            headings: { en: '🎯 New Demo Request!' },
-            contents: { en: `${name} · ${company} · ${interested_in}\nWhatsApp: ${whatsapp}` },
+            headings: { en: `🎯 New Lead — ${company}` },
+            contents: { en: details },
             url: 'https://ghaya-suite.pages.dev/ghaya/'
           })
         });
