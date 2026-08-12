@@ -36,7 +36,7 @@ export async function onRequestPost(context) {
         },
         body: JSON.stringify({
           from: 'Ghaya Leads <onboarding@resend.dev>',
-          to: ['baderbouresly@gmail.com'],
+          to: ['bader_bouresly@hotmail.com'],
           subject: `🎯 New Lead — ${company} (${interested_in || 'HR'})`,
           html: `
             <div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;border:1px solid #eee;border-radius:12px;overflow:hidden">
