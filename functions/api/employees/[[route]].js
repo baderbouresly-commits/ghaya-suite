@@ -246,18 +246,37 @@ const statusFilter = viewArchived
     return json({ employee: updated, message: 'Employee updated' });
   }
 
-  // DELETE /api/employees/:id?permanent=1 — permanently remove (from Archived view only)
+// DELETE /api/employees/:id?permanent=1 — permanently remove (from Archived view only)
   if (method === 'DELETE' && employeeId && url.searchParams.get('permanent') === '1') {
     if (!['ghaya_admin','company_admin'].includes(user.role)) return error('Forbidden', 403);
-    const emp = await db.prepare('SELECT user_id FROM employees WHERE id = ? AND company_id = ?').bind(employeeId, companyId).first();
+    const emp = await db.prepare('SELECT id FROM employees WHERE id = ? AND company_id = ?').bind(employeeId, companyId).first();
     if (!emp) return error('Employee not found', 404);
-    if (emp.user_id) {
-      await db.prepare("DELETE FROM users WHERE id = ?").bind(emp.user_id).run();
+
+    // Break the employees -> users reference so the linked login can be removed
+    await db.prepare("UPDATE employees SET user_id = NULL WHERE id = ?").bind(employeeId).run();
+
+    // Clear this employee's rows from every table that references them
+    const tbls = await db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
+    for (const t of (tbls.results || [])) {
+      const name = t.name;
+      if (name === 'employees' || name.startsWith('sqlite_') || name.startsWith('_cf')) continue;
+      let cols;
+      try { cols = await db.prepare(`PRAGMA table_info(${name})`).all(); } catch (e) { continue; }
+      const colNames = (cols.results || []).map(c => c.name);
+      if (colNames.includes('employee_id')) {
+        try { await db.prepare(`DELETE FROM ${name} WHERE employee_id = ?`).bind(employeeId).run(); } catch (e) {}
+      }
     }
+
+    // Finally remove the employee record
     await db.prepare("DELETE FROM employees WHERE id = ? AND company_id = ?").bind(employeeId, companyId).run();
-    await db.prepare(
-      "INSERT INTO audit_log (company_id, user_id, action, entity_type, entity_id, new_values) VALUES (?,?,?,?,?,?)"
-    ).bind(companyId, user.sub, 'employee.delete', 'employee', employeeId, '{}').run();
+
+    try {
+      await db.prepare(
+        "INSERT INTO audit_log (company_id, user_id, action, entity_type, entity_id, new_values) VALUES (?,?,?,?,?,?)"
+      ).bind(companyId, user.sub, 'employee.delete', 'employee', employeeId, '{}').run();
+    } catch (e) {}
+
     return json({ message: 'Employee permanently deleted' });
   }
 
