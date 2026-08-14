@@ -35,8 +35,8 @@ export async function onRequestPost(context) {
           'Authorization': `Bearer ${env.RESEND_API_KEY}`
         },
         body: JSON.stringify({
-          from: 'Ghaya Leads <onboarding@resend.dev>',
-          to: ['bader_bouresly@hotmail.com'],
+          from: 'Ghaya Leads <info@tryghaya.com>',
+          to: ['info@tryghaya.com'],
           subject: `🎯 New Lead — ${company} (${interested_in || 'HR'})`,
           html: `
             <div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;border:1px solid #eee;border-radius:12px;overflow:hidden">
